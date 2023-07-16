@@ -1,0 +1,8 @@
+{
+  "screenTimoutSec": 60,
+  "autoSwitchSec": 5,
+  "ssid": "TheNet",
+  "sspw": "",
+  "ftpid": "ftp01",
+  "ftppw": "ftp01"
+}
