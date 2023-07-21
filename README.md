@@ -5,7 +5,7 @@ ESPF32 Wifi radio
 ## Description
 
 A fully functional internet radio with LCD. Keeping it as simple as possible.  
-If you want a version with more functionalities (and a lot of more code): [ESP32-MiniWebRadio V2](https://github.com/schreibfaul1/ESP32-MiniWebRadio)
+If you want a version with more functionalities (and a lot of more code, that is not my project): [ESP32-MiniWebRadio V2](https://github.com/schreibfaul1/ESP32-MiniWebRadio)
 
 Features:
 
