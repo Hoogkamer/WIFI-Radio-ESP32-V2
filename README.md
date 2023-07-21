@@ -126,23 +126,24 @@ Find URLs here:
 
 Edit the wifiradio\stations.csv
 
-> *Tab separated, you can keep column Active empty with "-". fill test column with "t"  
-> *Category StationName StreamURL Active test  
-> Retro ON70s http://0n-80s.radionetz.de:8000/0n-70s.mp3 - t  
-> Retro ON80s http://0n-80s.radionetz.de:8000/0n-80s.mp3 - t  
-> Retro ON90s http://0n-90s.radionetz.de:8000/0n-90s.mp3 - t
+> *Tab separated!  
+> *Category StationName StreamURL
+>
+> Retro ON70s http://0n-80s.radionetz.de:8000/0n-70s.mp3  
+> Retro ON80s http://0n-80s.radionetz.de:8000/0n-80s.mp3  
+> Retro ON90s http://0n-90s.radionetz.de:8000/0n-90s.mp3
 
 Lines starting with \* are ignored  
-fill in: category, station name, url, -, t  
-So there are 5 columns, each separated by a TAB
+So there are 3 columns, each separated by a TAB
 
-#### using images for station categories and station names
+#### Using images for station categories and station names
 
 in the \wifiradio\img\category folder, but the picture to display for the category with exactly the category name and ending with ".jpg"
-Picture should be 240x80.
+Picture for category should be 240x80.
 
 in the \wifiradio\img\radio folder, put the picture to display for the radio with exactly the radio name and edingn with ".jpg"
-Resolution of each image should be 240 pixels wide and max 240 pixels high.
+Resolution of each image should be 240 pixels wide and max 240 pixels high. Note that there are only 2 example images for the radio station, due to potential copyright issues.
+You can copy your own images and scale them to 240px.
 
 ## Operating the Internet radio
 
@@ -180,7 +181,20 @@ I opted for the second option as I also want to be able to use the CD player sti
 
 [SC-HC3](https://support-nl.panasonic.eu/app/products/detail/p/20174)
 
-### Open the radio
+### Creating the "IPOD"
+
+You first need to find a case where you can contain the components in. I used a old VHS tape case as the thickness is just right.
+
+- cut it to size with a jigsaw/sharp (hot)knife
+- cut out the hole for the LCD screen and a small hole for the IR led
+- (hot) glue the display to the bottom and the card reader to one of the sides
+- then fit in the audio board at the bottom and finally put the ESP32 on top
+
+![IPOD](/readme_info/images/IPOD.jpg)
+![IPOD](/readme_info/images/IPOFRONT.jpg)
+![IPOD](/readme_info/images/npo.jpg)
+
+### Feeding the wires through the radio
 
 First remove the speaker grills, they are clipped on, so just pull them off.
 
@@ -196,7 +210,7 @@ Then remove the 5 screws and also the 8 small screws of the silver top and botto
 
 ![RadioOpen1](/readme_info/images/radioopen1.jpg)
 
-You can also remove the power adapter, so you have room to remove the docking adaptor piece at the bottom, so freeing up some more space. It is probably not needed to do. If you remove the docking adaptor, notice the switch at the bottom right. You eighter need to short the connection from the inside, or glue the switch in the closed position. If you do not do this the radio thinks the docking station is open and it gives an error message so the sliding door does not work.
+You can also remove the ipod connector adapter, so you have room to remove the docking adaptor piece at the bottom, so freeing up some more space. It is probably not needed to do. If you remove the docking adaptor, notice the switch at the bottom right. You eighter need to short the connection from the inside, or glue the switch in the closed position. If you do not do this the radio thinks the docking station is open and it gives an error message so the sliding door does not work.
 
 Then drill a hole large enough for the audio cable and the usb cable from the front side, and a hole from the backside.
 
