@@ -3,7 +3,7 @@
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
 
-#include "Arduino_JSON.h"
+// #include "Arduino_JSON.h"
 #include "Arduino.h"
 #include <FS.h>
 #include "Audio.h"
@@ -22,7 +22,11 @@
 #include <WiFiManager.h>
 
 #include <AsyncTCP.h>
+
 #include <ESPAsyncWebServer.h>
+#include "AsyncJson.h"
+#include "ArduinoJson.h"
+
 #include "SPIFFS.h"
 
 // Digital I/O used

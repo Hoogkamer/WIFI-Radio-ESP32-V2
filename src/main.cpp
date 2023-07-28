@@ -464,15 +464,15 @@ void loadSettings()
   String jO = file.readString();
   file.close();
 
-  JSONVar jV = JSON.parse(jO);
-  screenTimeoutSec = (uint8_t)jV["screenTimoutSec"];
-  autoSwitchSec = (uint8_t)jV["autoSwitchSec"];
+  // JSONVar jV = JSON.parse(jO);
+  // screenTimeoutSec = (uint8_t)jV["screenTimoutSec"];
+  // autoSwitchSec = (uint8_t)jV["autoSwitchSec"];
 
-  _ssid = (const char *)jV["ssid"];
-  _sspw = (const char *)jV["sspw"];
-  ftp_username = (const char *)jV["ftpid"];
-  ftp_pw = (const char *)jV["ftppw"];
-  Serial.println("1");
+  // _ssid = (const char *)jV["ssid"];
+  // _sspw = (const char *)jV["sspw"];
+  // ftp_username = (const char *)jV["ftpid"];
+  // ftp_pw = (const char *)jV["ftppw"];
+  // Serial.println("1");
 }
 
 void saveSettings()
@@ -545,9 +545,10 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 
 void initWebSocket()
 {
-  ws.onEvent(onEvent);
-  server.addHandler(&ws);
+  // ws.onEvent(onEvent);
+  // server.addHandler(&ws);
 }
+
 void startWebServer()
 {
   if (!SPIFFS.begin(true))
@@ -559,6 +560,19 @@ void startWebServer()
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/index.html", "text/html"); });
+  server.on("/get-message", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+              StaticJsonDocument<100> data;
+              if (request->hasParam("message"))
+              {
+                data["message"] = request->getParam("message")->value();
+              }
+              else {
+                data["message"] = "No message parameter";
+              }
+              String response;
+              serializeJson(data, response);
+              request->send(200, "application/json", response); });
 
   // Route to load style.css file
   server.serveStatic("/", SPIFFS, "/");

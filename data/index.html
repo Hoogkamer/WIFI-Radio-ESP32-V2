@@ -1,37 +1,27 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <style>
-      .logs {
-      }
-    </style>
+    <title>Radio stations</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
   </head>
-
   <body>
-    <h1>Stations:</h1>
-    <div id="app">
-      <div class="logs" ref="refLogs">
-        <input type="text" v-for="station in stations" v-model="station.name" />
+    <div class="container">
+      <h2>Radio Stations</h2>
+
+      <div class="catdiv">
+        <span>Category</span>
+        <select id="categoryDropdown" onchange="selectCategory()"></select>
       </div>
+      <hr />
+      <form id="arrayForm">
+        <div id="stationsContainer"></div>
+
+        <button class="button-9" role="button" onclick="addStation()">
+          Add Station
+        </button>
+        <button class="button-9" role="button" onclick="Save()">Save</button>
+      </form>
     </div>
-
-    <script>
-      const { createApp, ref, onMounted } = Vue;
-      createApp({
-        setup() {
-          let stations = ref([]);
-
-          onMounted(() => {
-            stations.value.push({ name: "a", url: "b" });
-            stations.value.push({ name: "a1", url: "b1" });
-            console.log(stations);
-          });
-          return {
-            stations,
-          };
-        },
-      }).mount("#app");
-    </script>
+    <script src="script.js"></script>
   </body>
 </html>

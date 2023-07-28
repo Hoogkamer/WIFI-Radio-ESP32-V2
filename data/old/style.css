@@ -1,0 +1,15 @@
+.inprecord {
+  padding: 10px 0px;
+}
+.inpname {
+  width: 15ch;
+}
+.inpurl {
+  width: 25ch;
+}
+* {
+  font-size: 26px;
+}
+body {
+  font-family: Roboto, Arial, sans-serif;
+}
