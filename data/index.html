@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+      .logs {
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Stations:</h1>
+    <div id="app">
+      <div class="logs" ref="refLogs">
+        <input type="text" v-for="station in stations" v-model="station.name" />
+      </div>
+    </div>
+
+    <script>
+      const { createApp, ref, onMounted } = Vue;
+      createApp({
+        setup() {
+          let stations = ref([]);
+
+          onMounted(() => {
+            stations.value.push({ name: "a", url: "b" });
+            stations.value.push({ name: "a1", url: "b1" });
+            console.log(stations);
+          });
+          return {
+            stations,
+          };
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>

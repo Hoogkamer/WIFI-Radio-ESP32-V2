@@ -11,8 +11,8 @@ int previousRadioStation = 0;
 int screenTimeoutSec = 10;
 int autoSwitchSec = 3;
 
-String _sspw = "";
-String _ssid = "";
+String _sspw = "ho03840384";
+String _ssid = "Pixel_5047";
 
 String ftp_username = "";
 String ftp_pw = "";
@@ -24,6 +24,7 @@ int nrOfStations = 0;
 int activeCategory = 0;
 
 TFT tft(0, 0);
+WiFiManager manager;
 
 FtpServer ftpSrv;
 Audio audio;
@@ -31,6 +32,9 @@ IRrecv irrecv(kRecvPin);
 decode_results results;
 
 bool radioIsOn = true;
+
+AsyncWebServer server(80);
+AsyncWebSocket ws("/ws");
 
 /***********************************************************************************************************************
  *                                                 I M A G E                                                           *
@@ -474,6 +478,92 @@ void loadSettings()
 void saveSettings()
 {
 }
+String processor(const String &var)
+{
+  Serial.println(var);
+  String ledState;
+  if (var == "STATE")
+  {
+    ledState = "test";
+    return ledState;
+  }
+  return String();
+}
+
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
+{
+  AwsFrameInfo *info = (AwsFrameInfo *)arg;
+  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
+  {
+    data[len] = 0;
+    // message = (char*)data;
+    // if (message.indexOf("1s") >= 0) {
+    //   sliderValue1 = message.substring(2);
+    //   dutyCycle1 = map(sliderValue1.toInt(), 0, 100, 0, 255);
+    //   Serial.println(dutyCycle1);
+    //   Serial.print(getSliderValues());
+    //   notifyClients(getSliderValues());
+    // }
+    // if (message.indexOf("2s") >= 0) {
+    //   sliderValue2 = message.substring(2);
+    //   dutyCycle2 = map(sliderValue2.toInt(), 0, 100, 0, 255);
+    //   Serial.println(dutyCycle2);
+    //   Serial.print(getSliderValues());
+    //   notifyClients(getSliderValues());
+    // }
+    // if (message.indexOf("3s") >= 0) {
+    //   sliderValue3 = message.substring(2);
+    //   dutyCycle3 = map(sliderValue3.toInt(), 0, 100, 0, 255);
+    //   Serial.println(dutyCycle3);
+    //   Serial.print(getSliderValues());
+    //   notifyClients(getSliderValues());
+    // }
+    // if (strcmp((char*)data, "getValues") == 0) {
+    //   notifyClients(getSliderValues());
+    // }
+  }
+}
+
+void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
+{
+  switch (type)
+  {
+  case WS_EVT_CONNECT:
+    Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+    break;
+  case WS_EVT_DISCONNECT:
+    Serial.printf("WebSocket client #%u disconnected\n", client->id());
+    break;
+  case WS_EVT_DATA:
+    handleWebSocketMessage(arg, data, len);
+    break;
+  case WS_EVT_PONG:
+  case WS_EVT_ERROR:
+    break;
+  }
+}
+
+void initWebSocket()
+{
+  ws.onEvent(onEvent);
+  server.addHandler(&ws);
+}
+void startWebServer()
+{
+  if (!SPIFFS.begin(true))
+  {
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return;
+  }
+  initWebSocket();
+  // Route for root / web page
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, "/index.html", "text/html"); });
+
+  // Route to load style.css file
+  server.serveStatic("/", SPIFFS, "/");
+  server.begin();
+}
 
 void setup()
 {
@@ -497,52 +587,53 @@ void setup()
   tft.print("Starting...");
   tft.setTextColor(TFT_BLACK);
   Serial.println("----Start2");
-  loadSettings();
+  // loadSettings();
 
-  loadStationsCSV();
+  // loadStationsCSV();
 
   connectToWIFI();
-  displayStation();
-  audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
-  audio.setVolume(12);
-  ftpSrv.begin(SD, ftp_username, ftp_pw); // username, password for ftp.
+  startWebServer();
+  // displayStation();
+  // audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
+  // audio.setVolume(12);
+  // ftpSrv.begin(SD, ftp_username, ftp_pw); // username, password for ftp.
 
-  irrecv.enableIRIn();
+  // irrecv.enableIRIn();
 }
 
 void loop()
 {
-  if (irrecv.decode(&results))
-  {
-    handleRemotePress(results.value);
-    irrecv.resume(); // Receive the next value
-  }
-  if (!radioIsOn)
-  {
-    return;
-  }
-  if ((autoSwitchSec > -1) && (radioSwitchMillis > 0) && (millis() - radioSwitchMillis > autoSwitchSec * 1000))
-  {
-    radioSwitchMillis = 0;
-    Serial.println("auto switching??");
-    if (radioStation != previousRadioStation)
-    {
-      previousRadioStation = radioStation;
-      startRadioStream();
-      Serial.println("auto switching!!");
-    }
-  }
-  if ((screenTimeoutSec > 1) && (previousMillis > 0) && (millis() - previousMillis > screenTimeoutSec * 1000))
-  {
-    previousMillis = 0;
-    setTFTbrightness(0);
-  }
-  if (!audio.isRunning())
-  {
-    startRadioStream();
-  }
-  audio.loop();
-  ftpSrv.handleFTP();
+  // if (irrecv.decode(&results))
+  // {
+  //   handleRemotePress(results.value);
+  //   irrecv.resume(); // Receive the next value
+  // }
+  // if (!radioIsOn)
+  // {
+  //   return;
+  // }
+  // if ((autoSwitchSec > -1) && (radioSwitchMillis > 0) && (millis() - radioSwitchMillis > autoSwitchSec * 1000))
+  // {
+  //   radioSwitchMillis = 0;
+  //   Serial.println("auto switching??");
+  //   if (radioStation != previousRadioStation)
+  //   {
+  //     previousRadioStation = radioStation;
+  //     startRadioStream();
+  //     Serial.println("auto switching!!");
+  //   }
+  // }
+  // if ((screenTimeoutSec > 1) && (previousMillis > 0) && (millis() - previousMillis > screenTimeoutSec * 1000))
+  // {
+  //   previousMillis = 0;
+  //   setTFTbrightness(0);
+  // }
+  // if (!audio.isRunning())
+  // {
+  //   startRadioStream();
+  // }
+  // audio.loop();
+  // ftpSrv.handleFTP();
 }
 void printError(const char *error)
 {
@@ -551,8 +642,21 @@ void printError(const char *error)
   tft.setCursor(25, 80);
   tft.print(error);
 }
-
 void connectToWIFI()
+{
+  // manager.resetSettings();
+  bool success = manager.autoConnect("WIFI_RADIO");
+
+  if (!success)
+  {
+    Serial.println("Failed to connect");
+  }
+  else
+  {
+    Serial.println("Connected");
+  }
+}
+void connectToWIFI1()
 {
   WiFi.mode(WIFI_MODE_STA);
   setTFTbrightness(100);
