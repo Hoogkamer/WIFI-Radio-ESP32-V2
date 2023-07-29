@@ -32,6 +32,10 @@ body {
   height: 100%;
   margin: 0px;
 }
+a {
+  all: unset;
+  text-decoration: none !important;
+}
 
 /* CSS */
 .button-9 {
@@ -73,4 +77,16 @@ body {
   box-shadow: rgba(50, 50, 93, 0.1) 0 0 0 1px inset,
     rgba(50, 50, 93, 0.2) 0 6px 15px 0, rgba(0, 0, 0, 0.1) 0 2px 2px 0,
     rgba(50, 151, 211, 0.3) 0 0 0 4px;
+}
+.widthmax {
+  width: 100%;
+}
+.right {
+  float: right;
+  margin: 0px 10px;
+}
+.linetitle {
+  border-bottom: 3px solid grey;
+  padding: 0px;
+  margin-bottom: 10px;
 }

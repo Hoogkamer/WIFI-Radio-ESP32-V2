@@ -29,6 +29,8 @@
 
 #include "SPIFFS.h"
 
+#define CORS_DEBUG true
+
 // Digital I/O used
 #define SD_CS 5
 #define SPI_MOSI 23

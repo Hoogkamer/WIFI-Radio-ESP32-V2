@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Edit stations</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h2>Edit Stations</h2>
+
+      <div class="catdiv">
+        <div class="linetitle">Category</div>
+        <select id="categoryDropdown" onchange="selectCategory()"></select>
+
+        <button class="button-9 right" role="button" onclick="deleteCategory()">
+          Delete
+        </button>
+        <button class="button-9 right" role="button" onclick="addCategory()">
+          Add
+        </button>
+      </div>
+      <div class="linetitle">Stations</div>
+
+      <div id="stationsContainer"></div>
+
+      <button class="button-9" role="button" onclick="addStation()">
+        Add Station
+      </button>
+      <button class="button-9" role="button" onclick="Save()">Save</button>
+
+      <button class="button-9" role="link">
+        <a href="./index.html"> Back</a>
+      </button>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,17 +1,27 @@
 // Sample array data (replace with your own data)
-let stations = [
-  ["Veronica", "HTTP://veronical.nl", "Pop"],
-  ["Item 2", "Value 2", "Pop"],
-  ["Item 3", "Value 3", "Jazz"],
-];
-const categories = ["Jazz", "Chill", "Pop", "News", "Local"];
-let currentCategory = categories[0];
 
+let data;
+let currentCategory;
+
+async function getData() {
+  let stations = [
+    ["Veronica", "HTTP://veronical.nl", "Pop"],
+    ["Item 2", "Value 2", "Pop"],
+    ["Item 3", "Value 3", "Jazz"],
+  ];
+  let categories = ["Jazz", "Chill", "Pop", "News", "Local"];
+  data = { stations: stations, categories: categories };
+
+  const response = fetch("http://192.168.244.189/get-data");
+  const result = await (await response).json();
+
+  return result;
+}
 // Function to create input fields for each row in the array
 function renderStationFields(selectedCategory) {
   const stationsContainer = document.getElementById("stationsContainer");
   stationsContainer.innerHTML = "";
-  stations.forEach((station, index) => {
+  data.stations.forEach((station, index) => {
     if (station[2] === selectedCategory) {
       const stationContainer = document.createElement("div");
       stationContainer.id = index;
@@ -44,7 +54,7 @@ function renderStationFields(selectedCategory) {
 // Function to add a new station to the array
 function addStation() {
   updateStations();
-  stations.push(["", "", currentCategory]);
+  data.stations.push(["", "", currentCategory]);
   renderStationFields(currentCategory);
 }
 function updateStations() {
@@ -56,15 +66,12 @@ function updateStations() {
     name = stationDiv.querySelectorAll('input[name="name"]')[0].value;
     url = stationDiv.querySelectorAll('input[name="url"]')[0].value;
     if (name && url) {
-      stations[stationNr][0] = name;
-      stations[stationNr][1] = url;
+      data.stations[stationNr][0] = name;
+      data.stations[stationNr][1] = url;
     } else {
-      stations.splice(stationNr, 1);
+      data.stations.splice(stationNr, 1);
     }
-    console.log(name, url, stationNr);
   });
-
-  console.log(inputFields);
 }
 
 // Render the initial input fields on page load
@@ -77,11 +84,15 @@ function populateCategories() {
   categoryDropdown.innerHTML = "";
 
   // Create and add new options based on the array data
-  categories.forEach((value) => {
+  data.categories.forEach((value) => {
     const option = document.createElement("option");
     option.text = value;
     categoryDropdown.add(option);
   });
+  if (!currentCategory || !data.categories.includes(currentCategory))
+    currentCategory = data.categories[0];
+
+  categoryDropdown.value = currentCategory;
 }
 function selectCategory() {
   updateStations();
@@ -93,20 +104,30 @@ function selectCategory() {
 function Save() {
   console.log("Saving stations....");
 }
-
+function deleteCategory() {
+  if (confirm("This will also delete the stations for this category")) {
+    data.stations = data.stations.filter((s) => s[2] !== currentCategory);
+    data.categories = data.categories.filter((c) => c !== currentCategory);
+    populateCategories();
+    renderStationFields(currentCategory);
+  }
+}
+function addCategory() {
+  const newcat = prompt("Category Name:");
+  if (!data.categories.includes(newcat)) {
+    data.categories.push(newcat);
+  }
+  currentCategory = newcat;
+  populateCategories();
+  renderStationFields(currentCategory);
+}
 // Call the function to populate the dropdown on page load
-populateCategories();
-renderStationFields(currentCategory);
 
-// Handle form submission (you can customize this as needed)
-document
-  .getElementById("arrayForm")
-  .addEventListener("submit", function (event) {
-    event.preventDefault(); // Prevent the form from submitting for this example
-    const formData = new FormData(event.target);
-
-    // Display the submitted data (you can handle the data as per your requirements)
-    for (const entry of formData.entries()) {
-      console.log(entry);
-    }
+function init() {
+  data = getData().then((dt) => {
+    data = dt;
+    populateCategories();
+    renderStationFields(currentCategory);
   });
+}
+init();

@@ -615,6 +615,11 @@ void startWebServer()
 
   // Route to load style.css file
   server.serveStatic("/", SPIFFS, "/");
+
+#ifdef CORS_DEBUG
+  DefaultHeaders::Instance().addHeader(F("Access-Control-Allow-Origin"), F("*"));
+  DefaultHeaders::Instance().addHeader(F("Access-Control-Allow-Headers"), F("content-type"));
+#endif
   server.begin();
 }
 
