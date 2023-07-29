@@ -549,6 +549,52 @@ void initWebSocket()
   // server.addHandler(&ws);
 }
 
+String getStationData()
+{
+  String result;
+  result = "";
+
+  File configurations = SPIFFS.open("/stations.json", "r"); // Enter the file name
+  if (!configurations || !configurations.size())
+  {
+    Serial.println("json stations not found");
+    DynamicJsonDocument data(2048);
+    JsonArray categories = data.createNestedArray("categories");
+    categories.add("Pop");
+    categories.add("Chill");
+    categories.add("Retro");
+    categories.add("Jazz");
+
+    JsonArray stations = data.createNestedArray("stations");
+    JsonArray station1 = stations.createNestedArray();
+    station1.add("Veronica");
+    station1.add("https://playerservices.streamtheworld.com/api/livestream-redirect/VERONICA.mp3");
+    station1.add("Pop");
+
+    serializeJson(data, result);
+  }
+  else
+  {
+    DynamicJsonDocument schedulesjson(20000);
+    DeserializationError err = deserializeJson(schedulesjson, configurations);
+    Serial.println(err.c_str());
+    if (err)
+    {
+      Serial.print(F("deserializeJson() failed with code "));
+      Serial.println(err.c_str());
+    }
+    else
+    {
+      serializeJson(schedulesjson, result);
+    }
+
+    Serial.println("Found!");
+    Serial.println(result);
+  }
+  configurations.close();
+
+  return result;
+}
 void startWebServer()
 {
   if (!SPIFFS.begin(true))
@@ -561,44 +607,13 @@ void startWebServer()
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/index.html", "text/html"); });
   server.on("/get-data", HTTP_GET, [](AsyncWebServerRequest *request)
-            {
-              Serial.println("yesyes");
-              StaticJsonDocument<1000> data;
-              // if (request->hasParam("message"))
-              // {
-              //   data["message"] = request->getParam("message")->value();
-              // }
-              // else {
-              //   data["message"] = "No message parameter";
-              // }
-              JsonArray categories = data.createNestedArray("categories");
-              categories.add("Jazz");
-              categories.add("Pop");
-              categories.add("Local");
-              categories.add("Retro");
-
-              JsonArray stations = data.createNestedArray("stations");
-              JsonArray station1 = stations.createNestedArray();
-              station1.add("Veronica");
-              station1.add("HTTP://www.veronica.nl");
-              station1.add("Pop");
-              JsonArray station2 = stations.createNestedArray();
-              station2.add("sublime");
-              station2.add("HTTP://www.sublime.nl");
-              station2.add("Pop");
-
-
-              serializeJson(data, Serial);
-
-
-              String response;
-              serializeJson(data, response);
-              request->send(200, "application/json", response); });
-
+            { request->send(200, "application/json", getStationData()); });
+  server.on("/post", HTTP_POST, [](AsyncWebServerRequest *request)
+            { request->send(200, "text/plain", "Post route"); });
   AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler("/post-message", [](AsyncWebServerRequest *request, JsonVariant &json)
                                                                          {
       Serial.println("post start");
-      StaticJsonDocument<200> data;
+      DynamicJsonDocument data(20000);
       if (json.is<JsonArray>())
       {
         data = json.as<JsonArray>();
@@ -610,15 +625,24 @@ void startWebServer()
       String response;
       serializeJson(data, response);
       request->send(200, "application/json", response);
-      Serial.println(response); });
+      Serial.println(response); 
+  File configurations = SPIFFS.open("/stations.json", "w");
+
+  if(configurations.print(response)) {
+    Serial.println("config written");
+  } else {
+    Serial.println("config NOT written");
+  } });
   server.addHandler(handler);
 
   // Route to load style.css file
   server.serveStatic("/", SPIFFS, "/");
 
 #ifdef CORS_DEBUG
-  DefaultHeaders::Instance().addHeader(F("Access-Control-Allow-Origin"), F("*"));
-  DefaultHeaders::Instance().addHeader(F("Access-Control-Allow-Headers"), F("content-type"));
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+
 #endif
   server.begin();
 }

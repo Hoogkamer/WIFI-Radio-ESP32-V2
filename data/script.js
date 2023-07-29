@@ -2,6 +2,8 @@
 
 let data;
 let currentCategory;
+let apiUrl = "http://192.168.244.189";
+//apiUrl = "";
 
 async function getData() {
   let stations = [
@@ -12,7 +14,7 @@ async function getData() {
   let categories = ["Jazz", "Chill", "Pop", "News", "Local"];
   data = { stations: stations, categories: categories };
 
-  const response = fetch("http://192.168.244.189/get-data");
+  const response = fetch(apiUrl + "/get-data");
   const result = await (await response).json();
 
   return result;
@@ -102,7 +104,22 @@ function selectCategory() {
 }
 
 function Save() {
-  console.log("Saving stations....");
+  updateStations();
+  console.log(data);
+  fetch(apiUrl + "/post-message", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("Response from API:", data);
+    })
+    .catch((error) => {
+      console.error("Error sending data:", error);
+    });
 }
 function deleteCategory() {
   if (confirm("This will also delete the stations for this category")) {
@@ -123,6 +140,30 @@ function addCategory() {
 }
 // Call the function to populate the dropdown on page load
 
+function exportStations() {
+  alert(JSON.stringify(data));
+}
+function importStations() {
+  let newdata = window.prompt("Paste json", "");
+  let newjson;
+  try {
+    newjson = JSON.parse(newdata);
+  } catch (e) {
+    // alert(
+    //   "wrong json, use the same format as you get with [Export all] button"
+    // );
+  }
+
+  if (!newjson || !newjson.categories || !newjson.stations) {
+    alert(
+      "wrong json, use the same format as you get with [Export all] button"
+    );
+    return;
+  }
+  data = newjson;
+  populateCategories();
+  renderStationFields(currentCategory);
+}
 function init() {
   data = getData().then((dt) => {
     data = dt;

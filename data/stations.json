@@ -1,0 +1,10 @@
+{
+  "categories": ["Pop", "Jazz", "Local", "Retro"],
+  "stations": [
+    [
+      "Veronica",
+      "https://playerservices.streamtheworld.com/api/livestream-redirect/VERONICA.mp3",
+      "Pop"
+    ]
+  ]
+}
