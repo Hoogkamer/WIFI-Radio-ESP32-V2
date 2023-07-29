@@ -14,10 +14,10 @@ int autoSwitchSec = 3;
 String _sspw = "ho03840384";
 String _ssid = "Pixel_5047";
 
-String ftp_username = "";
-String ftp_pw = "";
+String ftp_username = "ftp";
+String ftp_pw = "ftp";
 
-RadioStation radioStations[99];
+RadioStation radioStations[200];
 String radioCategories[99];
 int nrOfCategories = 0;
 int nrOfStations = 0;
@@ -123,92 +123,42 @@ int findStringIndex(String arr[], int size, String target)
  *                                                  P R O G R A M                                                      *
  ***********************************************************************************************************************/
 
-boolean loadStationsCSV()
+void loadStations()
 {
-  String Category = "", Name = "", URL = "";
-  String currentLine = "", tmp = "";
+  Serial.println("START Loading stations>>");
+  String configurations = getStationData();
 
-  uint16_t cnt = 0;
-  // StationList
-  if (!SD.exists("/wifiradio/stations.csv"))
+  DynamicJsonDocument schedulesjson(20000);
+  DeserializationError err = deserializeJson(schedulesjson, configurations);
+
+  JsonArray array = schedulesjson["stations"].as<JsonArray>();
+  int cnt = 0;
+  for (JsonVariant v : array)
   {
-    Serial.println("stations not found");
-    return false;
-  }
+    JsonArray stat = v.as<JsonArray>();
 
-  File file = SD.open("/wifiradio/stations.csv");
-
-  if (!file)
-  {
-    Serial.println("cannot open stations");
-    return false;
-  }
-
-  while (file.available())
-  {
-    currentLine = file.readStringUntil('\n');
-    int rfound = currentLine.indexOf('\r');
-    Serial.println(">>" + currentLine + "<<");
-    if (rfound != -1)
-    {
-      currentLine.remove(rfound);
-    }
-    Serial.println("!>>" + currentLine + "<<");
-    uint p = 0, q = 0;
-    Category = "";
-    Name = "";
-    URL = "";
-    for (int i = 0; i < currentLine.length() + 1; i++)
-    {
-      if (currentLine[i] == '\t' || i == currentLine.length())
-      {
-        if (p == 0)
-          Category = currentLine.substring(q, i);
-        if (p == 1)
-          Name = currentLine.substring(q, i);
-        if (p == 2)
-          URL = currentLine.substring(q, i);
-
-        p++;
-        i++;
-        q = i;
-      }
-    }
-    if (Name == "")
-      continue; // is empty
-    if (startsWith(Category.c_str(), "*"))
-      continue;
-    if (URL == "")
-      continue; // is empty
-    radioStations[cnt] = RadioStation(Category, Name, URL);
+    radioStations[cnt] = RadioStation(stat[2].as<String>(), stat[0].as<String>(), stat[1].as<String>());
+    Serial.print("Station:");
     radioStations[cnt].printDetails();
     cnt++;
-    // Check if the category is already present
-    bool categoryExists = false;
-    for (int i = 0; i < nrOfCategories; ++i)
-    {
-      if (radioCategories[i] == Category)
-      {
-        categoryExists = true;
-        break;
-      }
-    }
-    if (!categoryExists)
-    {
-      radioCategories[nrOfCategories] = Category;
-      nrOfCategories++;
-    }
   }
   nrOfStations = cnt;
-  file.close();
-  Serial.println("stationlist internally loaded");
-  Serial.println("number of stations: " + String(nrOfStations));
 
-  Serial.println("number of categories: " + String(nrOfCategories));
+  int ccnt = 0;
+  JsonArray array1 = schedulesjson["categories"].as<JsonArray>();
+  for (JsonVariant v : array1)
+  {
+
+    radioCategories[ccnt] = v.as<String>();
+    Serial.print("Categorie:");
+    Serial.println(radioCategories[ccnt]);
+    ccnt++;
+  }
+  nrOfCategories = ccnt;
+  Serial.println("<< END Loading stations");
   loadSavedStation();
-
-  return true;
 }
+
 void nextStation()
 {
   radioStation++;
@@ -413,46 +363,40 @@ void handleRemotePress(int64_t remotecode)
 
 void saveTheStation()
 {
-  File file1 = SD.open("/wifiradio/savedStation.txt", "w", true);
+  File file1 = SPIFFS.open("/savedStation.txt", "w", true);
   if (file1)
   {
-    file1.print(radioStation);
+    file1.print(radioStations[radioStation].Name);
   }
+  file1.close();
 }
 void loadSavedStation()
 {
-  File file1 = SD.open("/wifiradio/savedStation.txt", "r", false);
+  File file1 = SPIFFS.open("/savedStation.txt", "r", false);
+  radioStation = 0;
   if (file1)
   {
-    String line = file1.readString();
-    radioStation = stoi(line.c_str());
-    Serial.print("1.1 Radiostation read:");
-    Serial.println(line);
-    Serial.println(radioStation);
+    String stationName = file1.readString();
+    for (int i = 0; i < nrOfStations; i++)
+    {
+      if (radioStations[i].Name == stationName)
+      {
+        radioStation = i;
+        break;
+      }
+    }
   }
-  Serial.println("2");
-  if (radioStation < 0)
-  {
-    radioStation = 0;
-  }
-  if (radioStation > nrOfStations)
-  {
-    radioStation = 0;
-  }
+
   previousRadioStation = radioStation;
-
   file1.close();
-
   Serial.println("Loaded station" + String(radioStation));
 }
 void loadSettings()
 {
-  if (!SD.begin(5))
-  {
-    Serial.println("SD Card Mount Failed");
-    printError("SD Card Mount Failed");
-    return;
-  }
+  // todo:
+  // screenTimoutSec
+  // autoSwitchSec
+
   delay(1500);
   File file = SD.open("/wifiradio/settings.json", "r", false);
   delay(1500);
@@ -463,16 +407,6 @@ void loadSettings()
   }
   String jO = file.readString();
   file.close();
-
-  // JSONVar jV = JSON.parse(jO);
-  // screenTimeoutSec = (uint8_t)jV["screenTimoutSec"];
-  // autoSwitchSec = (uint8_t)jV["autoSwitchSec"];
-
-  // _ssid = (const char *)jV["ssid"];
-  // _sspw = (const char *)jV["sspw"];
-  // ftp_username = (const char *)jV["ftpid"];
-  // ftp_pw = (const char *)jV["ftppw"];
-  // Serial.println("1");
 }
 
 void saveSettings()
@@ -597,11 +531,7 @@ String getStationData()
 }
 void startWebServer()
 {
-  if (!SPIFFS.begin(true))
-  {
-    Serial.println("An Error has occurred while mounting SPIFFS");
-    return;
-  }
+
   initWebSocket();
   // Route for root / web page https://raphaelpralat.medium.com/example-of-json-rest-api-for-esp32-4a5f64774a05
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -642,6 +572,8 @@ void startWebServer()
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+  DefaultHeaders::Instance().addHeader("Connection", "keep-alive");
+  DefaultHeaders::Instance().addHeader("Keep-Alive", "timeout=5, max=100");
 
 #endif
   server.begin();
@@ -669,9 +601,17 @@ void setup()
   tft.print("Starting...");
   tft.setTextColor(TFT_BLACK);
   Serial.println("----Start2");
-  // loadSettings();
-
-  // loadStationsCSV();
+  if (!SD.begin(5))
+  {
+    Serial.println("SD Card Mount Failed");
+  }
+  if (!SPIFFS.begin(true))
+  {
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return;
+  }
+  loadSettings();
+  loadStations();
 
   connectToWIFI();
   startWebServer();

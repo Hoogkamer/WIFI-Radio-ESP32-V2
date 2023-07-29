@@ -106,12 +106,14 @@ function selectCategory() {
 function Save() {
   updateStations();
   console.log(data);
+  let jsontext = JSON.stringify(data);
+  console.log(jsontext);
   fetch(apiUrl + "/post-message", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(data),
+    body: jsontext,
   })
     .then((response) => response.json())
     .then((data) => {
@@ -141,7 +143,7 @@ function addCategory() {
 // Call the function to populate the dropdown on page load
 
 function exportStations() {
-  alert(JSON.stringify(data));
+  alert(JSON.stringify(data, null, 2));
 }
 function importStations() {
   let newdata = window.prompt("Paste json", "");
