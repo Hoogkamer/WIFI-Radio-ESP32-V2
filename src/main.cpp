@@ -557,22 +557,61 @@ void startWebServer()
     return;
   }
   initWebSocket();
-  // Route for root / web page
+  // Route for root / web page https://raphaelpralat.medium.com/example-of-json-rest-api-for-esp32-4a5f64774a05
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/index.html", "text/html"); });
-  server.on("/get-message", HTTP_GET, [](AsyncWebServerRequest *request)
+  server.on("/get-data", HTTP_GET, [](AsyncWebServerRequest *request)
             {
-              StaticJsonDocument<100> data;
-              if (request->hasParam("message"))
-              {
-                data["message"] = request->getParam("message")->value();
-              }
-              else {
-                data["message"] = "No message parameter";
-              }
+              Serial.println("yesyes");
+              StaticJsonDocument<1000> data;
+              // if (request->hasParam("message"))
+              // {
+              //   data["message"] = request->getParam("message")->value();
+              // }
+              // else {
+              //   data["message"] = "No message parameter";
+              // }
+              JsonArray categories = data.createNestedArray("categories");
+              categories.add("Jazz");
+              categories.add("Pop");
+              categories.add("Local");
+              categories.add("Retro");
+
+              JsonArray stations = data.createNestedArray("stations");
+              JsonArray station1 = stations.createNestedArray();
+              station1.add("Veronica");
+              station1.add("HTTP://www.veronica.nl");
+              station1.add("Pop");
+              JsonArray station2 = stations.createNestedArray();
+              station2.add("sublime");
+              station2.add("HTTP://www.sublime.nl");
+              station2.add("Pop");
+
+
+              serializeJson(data, Serial);
+
+
               String response;
               serializeJson(data, response);
               request->send(200, "application/json", response); });
+
+  AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler("/post-message", [](AsyncWebServerRequest *request, JsonVariant &json)
+                                                                         {
+      Serial.println("post start");
+      StaticJsonDocument<200> data;
+      if (json.is<JsonArray>())
+      {
+        data = json.as<JsonArray>();
+      }
+      else if (json.is<JsonObject>())
+      {
+        data = json.as<JsonObject>();
+      }
+      String response;
+      serializeJson(data, response);
+      request->send(200, "application/json", response);
+      Serial.println(response); });
+  server.addHandler(handler);
 
   // Route to load style.css file
   server.serveStatic("/", SPIFFS, "/");
