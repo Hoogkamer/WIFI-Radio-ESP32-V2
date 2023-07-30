@@ -18,11 +18,8 @@
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRutils.h>
-#include "ESP32FtpServer.h"
 #include <WiFiManager.h>
-
 #include <AsyncTCP.h>
-
 #include <ESPAsyncWebServer.h>
 #include "AsyncJson.h"
 #include "ArduinoJson.h"

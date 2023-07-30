@@ -3,7 +3,7 @@
   "stations": [
     [
       "Veronica",
-      "https://playerservices.streamtheworld.com/api/livestream-redirect/VERONICA.mp3",
+      "http://playerservices.streamtheworld.com/api/livestream-redirect/VERONICA.mp3",
       "Pop"
     ]
   ]

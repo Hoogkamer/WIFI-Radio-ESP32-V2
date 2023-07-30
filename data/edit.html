@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Edit stations</title>
     <link rel="stylesheet" type="text/css" href="./style.css" />
   </head>
@@ -12,10 +13,18 @@
         <div class="linetitle">Category</div>
         <select id="categoryDropdown" onchange="selectCategory()"></select>
 
-        <button class="button-9 right" role="button" onclick="deleteCategory()">
+        <button
+          class="button-9 widthsmall"
+          role="button"
+          onclick="deleteCategory()"
+        >
           Delete
         </button>
-        <button class="button-9 right" role="button" onclick="addCategory()">
+        <button
+          class="button-9 widthsmall"
+          role="button"
+          onclick="addCategory()"
+        >
           Add
         </button>
       </div>

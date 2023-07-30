@@ -8,19 +8,16 @@ long radioSwitchMillis = 0;
 
 int radioStation = 0;
 int previousRadioStation = 0;
-int screenTimeoutSec = 10;
-int autoSwitchSec = 3;
+int screenTimeoutSec = 60;
+int autoSwitchSec = 5;
 
 File stationsFile;
 
 String _sspw = "";
 String _ssid = "";
 
-String ftp_username = "ftp";
-String ftp_pw = "ftp";
-
-RadioStation radioStations[200];
-String radioCategories[99];
+RadioStation radioStations[100];
+String radioCategories[30];
 int nrOfCategories = 0;
 int nrOfStations = 0;
 int activeCategory = 0;
@@ -28,15 +25,15 @@ int activeCategory = 0;
 TFT tft(0, 0);
 WiFiManager manager;
 
-FtpServer ftpSrv;
 Audio audio;
 IRrecv irrecv(kRecvPin);
 decode_results results;
 
 bool radioIsOn = true;
+bool playRadio = true;
 
 AsyncWebServer server(80);
-AsyncWebSocket ws("/ws");
+// AsyncWebSocket ws("/ws");
 
 /***********************************************************************************************************************
  *                                                 I M A G E                                                           *
@@ -282,6 +279,10 @@ void handleRemotePress(int64_t remotecode)
     }
     return;
   }
+  if (remotecode == 70386011603005) // STOP stream
+  {
+    playRadio = false;
+  }
   if (remotecode == 70386011640495) // left: previous station
   {
     prevStation();
@@ -304,6 +305,7 @@ void handleRemotePress(int64_t remotecode)
   }
   if (remotecode == 70386011660258) // ok: Wakeup screen and show station and set active station
   {
+    playRadio = true;
     displayStation();
     if (radioStation != previousRadioStation)
     {
@@ -324,11 +326,11 @@ void handleRemotePress(int64_t remotecode)
     tft.setCursor(25, 140);
     tft.print("ID:");
     tft.setCursor(100, 140);
-    tft.print(ftp_username);
+    // tft.print(ftp_username);
     tft.setCursor(25, 170);
     tft.print("PW:");
     tft.setCursor(100, 170);
-    tft.print(ftp_pw);
+    // tft.print(ftp_pw);
   }
 
   if (remotecode == 70386010088896) // auto preset
@@ -402,64 +404,64 @@ void loadSettings()
 void saveSettings()
 {
 }
-void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
-{
-  AwsFrameInfo *info = (AwsFrameInfo *)arg;
-  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
-  {
-    data[len] = 0;
-    // message = (char*)data;
-    // if (message.indexOf("1s") >= 0) {
-    //   sliderValue1 = message.substring(2);
-    //   dutyCycle1 = map(sliderValue1.toInt(), 0, 100, 0, 255);
-    //   Serial.println(dutyCycle1);
-    //   Serial.print(getSliderValues());
-    //   notifyClients(getSliderValues());
-    // }
-    // if (message.indexOf("2s") >= 0) {
-    //   sliderValue2 = message.substring(2);
-    //   dutyCycle2 = map(sliderValue2.toInt(), 0, 100, 0, 255);
-    //   Serial.println(dutyCycle2);
-    //   Serial.print(getSliderValues());
-    //   notifyClients(getSliderValues());
-    // }
-    // if (message.indexOf("3s") >= 0) {
-    //   sliderValue3 = message.substring(2);
-    //   dutyCycle3 = map(sliderValue3.toInt(), 0, 100, 0, 255);
-    //   Serial.println(dutyCycle3);
-    //   Serial.print(getSliderValues());
-    //   notifyClients(getSliderValues());
-    // }
-    // if (strcmp((char*)data, "getValues") == 0) {
-    //   notifyClients(getSliderValues());
-    // }
-  }
-}
+// void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
+// {
+//   AwsFrameInfo *info = (AwsFrameInfo *)arg;
+//   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
+//   {
+//     data[len] = 0;
+//     // message = (char*)data;
+//     // if (message.indexOf("1s") >= 0) {
+//     //   sliderValue1 = message.substring(2);
+//     //   dutyCycle1 = map(sliderValue1.toInt(), 0, 100, 0, 255);
+//     //   Serial.println(dutyCycle1);
+//     //   Serial.print(getSliderValues());
+//     //   notifyClients(getSliderValues());
+//     // }
+//     // if (message.indexOf("2s") >= 0) {
+//     //   sliderValue2 = message.substring(2);
+//     //   dutyCycle2 = map(sliderValue2.toInt(), 0, 100, 0, 255);
+//     //   Serial.println(dutyCycle2);
+//     //   Serial.print(getSliderValues());
+//     //   notifyClients(getSliderValues());
+//     // }
+//     // if (message.indexOf("3s") >= 0) {
+//     //   sliderValue3 = message.substring(2);
+//     //   dutyCycle3 = map(sliderValue3.toInt(), 0, 100, 0, 255);
+//     //   Serial.println(dutyCycle3);
+//     //   Serial.print(getSliderValues());
+//     //   notifyClients(getSliderValues());
+//     // }
+//     // if (strcmp((char*)data, "getValues") == 0) {
+//     //   notifyClients(getSliderValues());
+//     // }
+//   }
+// }
 
-void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
-{
-  switch (type)
-  {
-  case WS_EVT_CONNECT:
-    Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
-    break;
-  case WS_EVT_DISCONNECT:
-    Serial.printf("WebSocket client #%u disconnected\n", client->id());
-    break;
-  case WS_EVT_DATA:
-    handleWebSocketMessage(arg, data, len);
-    break;
-  case WS_EVT_PONG:
-  case WS_EVT_ERROR:
-    break;
-  }
-}
+// void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
+// {
+//   switch (type)
+//   {
+//   case WS_EVT_CONNECT:
+//     Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+//     break;
+//   case WS_EVT_DISCONNECT:
+//     Serial.printf("WebSocket client #%u disconnected\n", client->id());
+//     break;
+//   case WS_EVT_DATA:
+//     handleWebSocketMessage(arg, data, len);
+//     break;
+//   case WS_EVT_PONG:
+//   case WS_EVT_ERROR:
+//     break;
+//   }
+// }
 
-void initWebSocket()
-{
-  // ws.onEvent(onEvent);
-  // server.addHandler(&ws);
-}
+// void initWebSocket()
+// {
+//   // ws.onEvent(onEvent);
+//   // server.addHandler(&ws);
+// }
 
 String getStationData()
 {
@@ -520,8 +522,8 @@ String getStationData()
 void startWebServer()
 {
 
-  initWebSocket();
-  // Route for root / web page https://raphaelpralat.medium.com/example-of-json-rest-api-for-esp32-4a5f64774a05
+  // initWebSocket();
+  //  Route for root / web page https://raphaelpralat.medium.com/example-of-json-rest-api-for-esp32-4a5f64774a05
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/index.html", "text/html"); });
   server.on("/get-data", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -598,15 +600,12 @@ void setup()
   loadSettings();
   loadStations();
   loadSavedStation();
-
   connectToWIFI();
-  startWebServer();
   displayStation();
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
   audio.setVolume(12);
-  ftpSrv.begin(SD, ftp_username, ftp_pw); // username, password for ftp.
-
   irrecv.enableIRIn();
+  startWebServer();
 }
 
 void loop()
@@ -636,12 +635,14 @@ void loop()
     previousMillis = 0;
     setTFTbrightness(0);
   }
-  if (!audio.isRunning())
+  if (playRadio)
   {
-    startRadioStream();
+    if (!audio.isRunning())
+    {
+      startRadioStream();
+    }
+    audio.loop();
   }
-  audio.loop();
-  ftpSrv.handleFTP();
 }
 void printError(const char *error)
 {

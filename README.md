@@ -10,11 +10,11 @@ If you want a version with more functionalities (and a lot of more code, that is
 Features:
 
 - Use a remote to operate
-- Radio stations specified in a CSV file you put on the SD card
+- Radio stations configurable with website
 - Each station can have a category. You can switch +/- a radio station within the category
 - You can switch +/- between categories
 - You can save 1 station which is then selected when you switch on the device
-- You can specify images for the categories and the radio stations
+- You can specify images for the categories and the radio stations (via the optional SD card)
 
 ![RadioRemote](/readme_info/images/radioandremote.jpg)
 
@@ -44,7 +44,7 @@ I2S PCM5102A Dac Decoder
 
 [IRR Aliexpress](https://nl.aliexpress.com/item/1005003194864725.html?spm=a2g0o.order_list.order_list_main.23.2b0c79d2hiKNqB&gatewayAdapt=glo2nld)
 
-### SD Card Reader:
+### SD Card Reader (optional):
 
 AZDelivery 3 x SPI Reader Micro Memory SD TF Module Card
 
@@ -98,43 +98,20 @@ If you want to use a different remote you can replace the remote codes.
 The platformio will display the remote control code of the button you are pressing in the Serial Monitor.
 Search for "remote codes" in the main.cpp file and change the codes as desired.
 
+### Uploading the Filesystem image
+
+This contains the website.
+In VSCODE:
+PlatformIO > ESP32 > Platform > Build Filesystem Image, and then Upload Filesystem Image
+
+This will uploade everything in the "data" folder
+[More] (https://randomnerdtutorials.com/esp32-vs-code-platformio-spiffs/)
+
 ### Preparing the SD Card
 
-See the folder "SD", copy this to the SD card. Root folder copied should be " wifiradio".
+The SD card is optional, you do not have to use this.
 
-#### config.json
-
-> {  
-> "screenTimoutSec": 5,  
-> "ssid": "TheNet",  
-> "sspw": "",  
-> "ftpid": "ftp01",  
-> "ftppw": "ftp01"  
-> }
-
-ssid: fill in the name of your wifi access point  
-sspw: fill in the password
-screenTimOutSec: screen off after last button press x second (specify 0 for allways on)
-autoSwitchSec: after selecting a new station, tune to it after x seconds (specify -1 for never). You want to set this to a few seconds to be able to quickly navigate through the stations, otherwise you have to wait until the station is tuned before you can navigate to the next station.
-
-#### stations.csv
-
-Find URLs here:
-
-- http://fmstream.org/index.php?s=0n
-- https://www.webradiostreams.nl/index.html
-
-Edit the wifiradio\stations.csv
-
-> *Tab separated!  
-> *Category StationName StreamURL
->
-> Retro ON70s http://0n-80s.radionetz.de:8000/0n-70s.mp3  
-> Retro ON80s http://0n-80s.radionetz.de:8000/0n-80s.mp3  
-> Retro ON90s http://0n-90s.radionetz.de:8000/0n-90s.mp3
-
-Lines starting with \* are ignored  
-So there are 3 columns, each separated by a TAB
+See the folder "SD", copy this to the SD card. Root folder copied should be "wifiradio".
 
 #### Using images for station categories and station names
 
@@ -147,12 +124,34 @@ You can copy your own images and scale them to 240px.
 
 ## Operating the Internet radio
 
+### Connecting to a new WIFI access point
+
+When the Radio cannot connect to a wifi access point, it will startup an access point "WIFI_RADIO"
+Connect with your Phone/Computer to that access point and navigate to 192.168.1.4
+
+[More](https://github.com/tzapu/WiFiManager#using)
+
+### Showing the IP address
+
+Shows the screen with IP address how you can access the webpage.
+You can configure the button yourself. In this case it is mapped to the Ipod MENU button.
+
+### Editing radiostations
+
+Navigate on your phone/computer to the IP address mentioned above. You must be connected to the same WIFI access point.
+Then go to edit stations and wait until you see the categories dropdown populated. If not after a while, refresh the page.
+Edit the stations and press "Save" to upload it to the WIFI Radio.
+
 ### Changing categories and radio stations
 
 This depends on the buttons you want to use of the remote.
 In this example the stations are selectable by the left-right keys. And the categories by the up-down keys.
 It only selects it after x seconds (see config.json) so you can quickly navigate through the stations (otherwise it halts untill the streaming is workding)
 You can also activate with the OK button, see next section.
+
+### Stopping the radio stream
+
+Press the STOP button on your remote. Pressing OK starts the stream again.
 
 ### Activating the station
 
@@ -161,12 +160,6 @@ After selecting the station, press the OK button on your remote to select it.
 ### Saving a radio station
 
 You can configure the button yourself. In this case it is mapped to the Auto Preset button.
-
-### Showing the FTP address
-
-Shows the screen with details how you can access the SD card via FTP. This way you do not need to have physically access to the SD card when you want
-to change the stations which are available. (stations.csv)
-You can configure the button yourself. In this case it is mapped to the Ipod MENU button.
 
 ## Donor radio
 

@@ -2,8 +2,8 @@
 
 let data;
 let currentCategory;
-let apiUrl = "http://192.168.11.63";
-apiUrl = "";
+let apiUrl = "http://192.168.11.65";
+//apiUrl = "";
 
 async function getData() {
   let stations = [
@@ -149,7 +149,9 @@ function addCategory() {
 // Call the function to populate the dropdown on page load
 
 function exportStations() {
-  alert(JSON.stringify(data, null, 2));
+  //alert(JSON.stringify(data, null, 2));
+  navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+  alert("Copied to clipboard");
 }
 function importStations() {
   let newdata = window.prompt("Paste json", "");
