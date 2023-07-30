@@ -13,8 +13,8 @@ int autoSwitchSec = 3;
 
 File stationsFile;
 
-String _sspw = "ho03840384";
-String _ssid = "Pixel_5047";
+String _sspw = "";
+String _ssid = "";
 
 String ftp_username = "ftp";
 String ftp_pw = "ftp";
@@ -158,7 +158,6 @@ void loadStations()
   }
   nrOfCategories = ccnt;
   Serial.println("<< END Loading stations");
-  loadSavedStation();
 }
 
 void nextStation()
@@ -398,34 +397,11 @@ void loadSettings()
   // todo:
   // screenTimoutSec
   // autoSwitchSec
-
-  delay(1500);
-  File file = SD.open("/wifiradio/settings.json", "r", false);
-  delay(1500);
-  if (!file)
-  {
-    Serial.println("problem opening: /wifiradio/settings.json");
-    printError("problem opening: /wifiradio/settings.json");
-  }
-  String jO = file.readString();
-  file.close();
 }
 
 void saveSettings()
 {
 }
-String processor(const String &var)
-{
-  Serial.println(var);
-  String ledState;
-  if (var == "STATE")
-  {
-    ledState = "test";
-    return ledState;
-  }
-  return String();
-}
-
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 {
   AwsFrameInfo *info = (AwsFrameInfo *)arg;
@@ -572,21 +548,18 @@ void startWebServer()
         {
           stationsFile.close();
           Serial.println("closing file");
+          loadStations();
         }
 
         request->send(200);
       });
 
-  // Route to load style.css file
   server.serveStatic("/", SPIFFS, "/");
 
 #ifdef CORS_DEBUG
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "*");
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "*");
-  // DefaultHeaders::Instance().addHeader("Connection", "keep-alive");
-  // DefaultHeaders::Instance().addHeader("Keep-Alive", "timeout=5, max=100");
-
 #endif
   server.begin();
 }
@@ -624,50 +597,51 @@ void setup()
   }
   loadSettings();
   loadStations();
+  loadSavedStation();
 
   connectToWIFI();
   startWebServer();
-  // displayStation();
-  // audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
-  // audio.setVolume(12);
-  // ftpSrv.begin(SD, ftp_username, ftp_pw); // username, password for ftp.
+  displayStation();
+  audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
+  audio.setVolume(12);
+  ftpSrv.begin(SD, ftp_username, ftp_pw); // username, password for ftp.
 
-  // irrecv.enableIRIn();
+  irrecv.enableIRIn();
 }
 
 void loop()
 {
-  // if (irrecv.decode(&results))
-  // {
-  //   handleRemotePress(results.value);
-  //   irrecv.resume(); // Receive the next value
-  // }
-  // if (!radioIsOn)
-  // {
-  //   return;
-  // }
-  // if ((autoSwitchSec > -1) && (radioSwitchMillis > 0) && (millis() - radioSwitchMillis > autoSwitchSec * 1000))
-  // {
-  //   radioSwitchMillis = 0;
-  //   Serial.println("auto switching??");
-  //   if (radioStation != previousRadioStation)
-  //   {
-  //     previousRadioStation = radioStation;
-  //     startRadioStream();
-  //     Serial.println("auto switching!!");
-  //   }
-  // }
-  // if ((screenTimeoutSec > 1) && (previousMillis > 0) && (millis() - previousMillis > screenTimeoutSec * 1000))
-  // {
-  //   previousMillis = 0;
-  //   setTFTbrightness(0);
-  // }
-  // if (!audio.isRunning())
-  // {
-  //   startRadioStream();
-  // }
-  // audio.loop();
-  // ftpSrv.handleFTP();
+  if (irrecv.decode(&results))
+  {
+    handleRemotePress(results.value);
+    irrecv.resume(); // Receive the next value
+  }
+  if (!radioIsOn)
+  {
+    return;
+  }
+  if ((autoSwitchSec > -1) && (radioSwitchMillis > 0) && (millis() - radioSwitchMillis > autoSwitchSec * 1000))
+  {
+    radioSwitchMillis = 0;
+    Serial.println("auto switching??");
+    if (radioStation != previousRadioStation)
+    {
+      previousRadioStation = radioStation;
+      startRadioStream();
+      Serial.println("auto switching!!");
+    }
+  }
+  if ((screenTimeoutSec > 1) && (previousMillis > 0) && (millis() - previousMillis > screenTimeoutSec * 1000))
+  {
+    previousMillis = 0;
+    setTFTbrightness(0);
+  }
+  if (!audio.isRunning())
+  {
+    startRadioStream();
+  }
+  audio.loop();
+  ftpSrv.handleFTP();
 }
 void printError(const char *error)
 {
@@ -680,7 +654,6 @@ void connectToWIFI()
 {
   // manager.resetSettings();
   bool success = manager.autoConnect("WIFI_RADIO");
-
   if (!success)
   {
     Serial.println("Failed to connect");
@@ -689,37 +662,4 @@ void connectToWIFI()
   {
     Serial.println("Connected");
   }
-}
-void connectToWIFI1()
-{
-  WiFi.mode(WIFI_MODE_STA);
-  setTFTbrightness(100);
-  drawImage("/wifiradio/img/start.jpg", 0, 0);
-  int n = WiFi.scanNetworks();
-  for (int i = 0; i < n; i++)
-  {
-    Serial.println(WiFi.SSID(i));
-  }
-  Serial.println("Connecting to ssd:" + _ssid + ", pw:" + _sspw);
-  WiFi.disconnect();
-  delay(500);
-  WiFi.begin(_ssid, _sspw);
-
-  int tries = 0;
-
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    tries++;
-    delay(500);
-    Serial.print(".");
-    if (tries > 20)
-    {
-      WiFi.disconnect();
-      delay(500);
-      WiFi.begin(_ssid, _sspw);
-      tries = 0;
-      Serial.println("Retrying");
-    }
-  }
-  Serial.println("WiFi connected");
 }
