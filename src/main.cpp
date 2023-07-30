@@ -9,7 +9,7 @@ long radioSwitchMillis = 0;
 int radioStation = 0;
 int previousRadioStation = 0;
 int screenTimeoutSec = 60;
-int autoSwitchSec = 5;
+int autoSwitchSec = 3;
 
 File stationsFile;
 
@@ -38,14 +38,13 @@ AsyncWebServer server(80);
 /***********************************************************************************************************************
  *                                                 I M A G E                                                           *
  ***********************************************************************************************************************/
-const unsigned short *_fonts[7] = {
-    Times_New_Roman15x14,
-    Times_New_Roman21x17,
-    Times_New_Roman27x21,
-    Times_New_Roman34x27,
+const unsigned short *_fonts[1] = {
+    // Times_New_Roman15x14,
+    // Times_New_Roman21x17,
+    // Times_New_Roman27x21,
+    // Times_New_Roman34x27,
     Times_New_Roman38x31,
-    Times_New_Roman43x35,
-    Big_Numbers133x156 // ASCII 32...64 only
+    // Times_New_Roman43x35,
 };
 
 bool endsWith(const char *base, const char *searchString)
@@ -125,10 +124,8 @@ int findStringIndex(String arr[], int size, String target)
 void loadStations()
 {
   Serial.println("START Loading stations>>");
-  String configurations = getStationData();
-
   DynamicJsonDocument schedulesjson(20000);
-  DeserializationError err = deserializeJson(schedulesjson, configurations);
+  schedulesjson = getStationData();
 
   JsonArray array = schedulesjson["stations"].as<JsonArray>();
   int cnt = 0;
@@ -323,14 +320,6 @@ void handleRemotePress(int64_t remotecode)
     tft.print("IP:");
     tft.setCursor(25, 110);
     tft.print(WiFi.localIP().toString());
-    tft.setCursor(25, 140);
-    tft.print("ID:");
-    tft.setCursor(100, 140);
-    // tft.print(ftp_username);
-    tft.setCursor(25, 170);
-    tft.print("PW:");
-    tft.setCursor(100, 170);
-    // tft.print(ftp_pw);
   }
 
   if (remotecode == 70386010088896) // auto preset
@@ -463,60 +452,41 @@ void saveSettings()
 //   // server.addHandler(&ws);
 // }
 
-String getStationData()
+DynamicJsonDocument getStationData()
 {
-  String result;
-  result = "";
-
-  File configurations1 = SPIFFS.open("/stations.json", "r"); // Enter the file name
-  Serial.println("station.json >>>");
+  // print content of stations data file to see what is in it
+  File configurations1 = SPIFFS.open("/stations.json", "r");
+  Serial.println("stations.json >>>");
   while (configurations1.available())
   {
     Serial.write(configurations1.read());
   }
   Serial.println("<<<<");
   configurations1.close();
-  File configurations = SPIFFS.open("/stations.json", "r"); // Enter the file name
 
-  if (!configurations || !configurations.size())
+  File configurations = SPIFFS.open("/stations.json", "r");
+  DynamicJsonDocument stationsjson(20000);
+
+  DeserializationError err = deserializeJson(stationsjson, configurations);
+  Serial.println(err.c_str());
+  if (err)
   {
-    Serial.println("json stations not found");
-    DynamicJsonDocument data(2048);
-    JsonArray categories = data.createNestedArray("categories");
-    categories.add("Pop");
-    categories.add("Chill");
-    categories.add("Retro");
-    categories.add("Jazz");
+    Serial.print(F("deserializeJson() failed with code, restarting "));
+    Serial.println(err.c_str());
+    delay(5000);
+    printError("Memory problem, will restart");
 
-    JsonArray stations = data.createNestedArray("stations");
-    JsonArray station1 = stations.createNestedArray();
-    station1.add("Veronica");
-    station1.add("https://playerservices.streamtheworld.com/api/livestream-redirect/VERONICA.mp3");
-    station1.add("Pop");
-
-    serializeJson(data, result);
+    ESP.restart(); // try to free up memory
   }
   else
   {
-    DynamicJsonDocument schedulesjson(20000);
-    DeserializationError err = deserializeJson(schedulesjson, configurations);
-    Serial.println(err.c_str());
-    if (err)
-    {
-      Serial.print(F("deserializeJson() failed with code "));
-      Serial.println(err.c_str());
-    }
-    else
-    {
-      serializeJson(schedulesjson, result);
-    }
-
-    Serial.println("Found!");
-    Serial.println(result);
   }
+
+  Serial.println("Found!");
+
   configurations.close();
 
-  return result;
+  return stationsjson;
 }
 
 void startWebServer()
@@ -526,8 +496,10 @@ void startWebServer()
   //  Route for root / web page https://raphaelpralat.medium.com/example-of-json-rest-api-for-esp32-4a5f64774a05
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/index.html", "text/html"); });
+  // server.on("/get-data1", HTTP_GET, [](AsyncWebServerRequest *request)
+  //           { request->send(200, "application/json", getStationData()); });
   server.on("/get-data", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(200, "application/json", getStationData()); });
+            { request->send(SPIFFS, "/stations.json", "application/json"); });
 
   server.on(
       "/post",
@@ -581,7 +553,7 @@ void setup()
   tft.setRotation(TFT_ROTATION);
   Serial.println("----Start1");
 
-  tft.setFont(_fonts[5]);
+  tft.setFont(_fonts[0]);
   clearTFTAllBlack();
   tft.setTextColor(TFT_YELLOW);
   tft.setCursor(25, 80);
@@ -590,13 +562,20 @@ void setup()
   Serial.println("----Start2");
   if (!SD.begin(5))
   {
-    Serial.println("SD Card Mount Failed");
+    Serial.println("SD Card Mount Failed. It is not mandatory, program will continue.");
   }
   if (!SPIFFS.begin(true))
   {
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
   }
+
+  // this is the file where the stations are stored
+  if (!SPIFFS.exists("/stations.json"))
+  {
+    SPIFFS.rename("/stations_input.json", "/stations.json");
+  }
+
   loadSettings();
   loadStations();
   loadSavedStation();

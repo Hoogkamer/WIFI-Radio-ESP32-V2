@@ -90,4 +90,4 @@ void findStationCat();
 void printError(const char *error);
 void loadSavedStation();
 void saveTheStation();
-String getStationData();
+DynamicJsonDocument getStationData();

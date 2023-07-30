@@ -148,10 +148,14 @@ function addCategory() {
 }
 // Call the function to populate the dropdown on page load
 
+function hideExportStations() {
+  exportdiv.style.display = "none";
+}
 function exportStations() {
-  //alert(JSON.stringify(data, null, 2));
-  navigator.clipboard.writeText(JSON.stringify(data, null, 2));
-  alert("Copied to clipboard");
+  const exportdiv = document.getElementById("exportdiv");
+  exportdiv.style.display = "block";
+  const pastetextdiv = document.getElementById("pastetextdiv");
+  pastetextdiv.textContent = JSON.stringify(data);
 }
 function importStations() {
   let newdata = window.prompt("Paste json", "");

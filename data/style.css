@@ -96,3 +96,11 @@ a {
   padding: 0px;
   margin-bottom: 10px;
 }
+#exportdiv {
+  color: red;
+  display: none;
+}
+
+#pastetextdiv {
+  color: grey;
+}

@@ -19,7 +19,7 @@ using namespace std;
 //#include "fonts/Monotype_Corsiva.h"     // CP1252
 //#include "fonts/Old_English_Text_MT.h"  // CP1252
 //#include "fonts/Script_MT_Bold.h"       // CP1252
-#include "fonts/misc.h"                 // optional
+//#include "fonts/misc.h"                 // optional
 #include "fonts/Times_New_Roman.h"      // latin, greek, cyrillic with all extensions
 
 

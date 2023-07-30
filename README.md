@@ -140,7 +140,7 @@ You can configure the button yourself. In this case it is mapped to the Ipod MEN
 
 Navigate on your phone/computer to the IP address mentioned above. You must be connected to the same WIFI access point.
 Then go to edit stations and wait until you see the categories dropdown populated. If not after a while, refresh the page.
-Edit the stations and press "Save" to upload it to the WIFI Radio.
+Edit the stations and press "Save" to upload it to the WIFI Radio. Use HTTP, not HTTPS links to the streams!
 
 ### Changing categories and radio stations
 
