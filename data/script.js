@@ -2,8 +2,8 @@
 
 let data;
 let currentCategory;
-let apiUrl = "http://192.168.244.189";
-//apiUrl = "";
+let apiUrl = "http://192.168.11.63";
+apiUrl = "";
 
 async function getData() {
   let stations = [
@@ -13,11 +13,17 @@ async function getData() {
   ];
   let categories = ["Jazz", "Chill", "Pop", "News", "Local"];
   data = { stations: stations, categories: categories };
-
+  let result;
   const response = fetch(apiUrl + "/get-data");
-  const result = await (await response).json();
-
-  return result;
+  try {
+    result = await (await response).json();
+  } catch (e) {
+    console.log(e);
+    result = "";
+  }
+  console.log(result);
+  if (result) return result;
+  else return data;
 }
 // Function to create input fields for each row in the array
 function renderStationFields(selectedCategory) {
@@ -108,14 +114,14 @@ function Save() {
   console.log(data);
   let jsontext = JSON.stringify(data);
   console.log(jsontext);
-  fetch(apiUrl + "/post-message", {
+  fetch(apiUrl + "/post", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: jsontext,
   })
-    .then((response) => response.json())
+    .then((response) => response.text())
     .then((data) => {
       console.log("Response from API:", data);
     })

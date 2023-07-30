@@ -11,6 +11,8 @@ int previousRadioStation = 0;
 int screenTimeoutSec = 10;
 int autoSwitchSec = 3;
 
+File stationsFile;
+
 String _sspw = "ho03840384";
 String _ssid = "Pixel_5047";
 
@@ -488,7 +490,16 @@ String getStationData()
   String result;
   result = "";
 
+  File configurations1 = SPIFFS.open("/stations.json", "r"); // Enter the file name
+  Serial.println("station.json >>>");
+  while (configurations1.available())
+  {
+    Serial.write(configurations1.read());
+  }
+  Serial.println("<<<<");
+  configurations1.close();
   File configurations = SPIFFS.open("/stations.json", "r"); // Enter the file name
+
   if (!configurations || !configurations.size())
   {
     Serial.println("json stations not found");
@@ -529,6 +540,7 @@ String getStationData()
 
   return result;
 }
+
 void startWebServer()
 {
 
@@ -538,42 +550,42 @@ void startWebServer()
             { request->send(SPIFFS, "/index.html", "text/html"); });
   server.on("/get-data", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(200, "application/json", getStationData()); });
-  server.on("/post", HTTP_POST, [](AsyncWebServerRequest *request)
-            { request->send(200, "text/plain", "Post route"); });
-  AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler("/post-message", [](AsyncWebServerRequest *request, JsonVariant &json)
-                                                                         {
-      Serial.println("post start");
-      DynamicJsonDocument data(20000);
-      if (json.is<JsonArray>())
-      {
-        data = json.as<JsonArray>();
-      }
-      else if (json.is<JsonObject>())
-      {
-        data = json.as<JsonObject>();
-      }
-      String response;
-      serializeJson(data, response);
-      request->send(200, "application/json", response);
-      Serial.println(response); 
-  File configurations = SPIFFS.open("/stations.json", "w");
 
-  if(configurations.print(response)) {
-    Serial.println("config written");
-  } else {
-    Serial.println("config NOT written");
-  } });
-  server.addHandler(handler);
+  server.on(
+      "/post",
+      HTTP_POST,
+      [](AsyncWebServerRequest *request) {},
+      NULL,
+      [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+      {
+        if (index == 0)
+        {
+          stationsFile = SPIFFS.open("/stations.json", "w");
+          Serial.println("opening file");
+        }
+        for (size_t i = 0; i < len; i++)
+        {
+          Serial.write(data[i]);
+          stationsFile.write(data[i]);
+        }
+        if ((len + index) == total)
+        {
+          stationsFile.close();
+          Serial.println("closing file");
+        }
+
+        request->send(200);
+      });
 
   // Route to load style.css file
   server.serveStatic("/", SPIFFS, "/");
 
 #ifdef CORS_DEBUG
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
-  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
-  DefaultHeaders::Instance().addHeader("Connection", "keep-alive");
-  DefaultHeaders::Instance().addHeader("Keep-Alive", "timeout=5, max=100");
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "*");
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "*");
+  // DefaultHeaders::Instance().addHeader("Connection", "keep-alive");
+  // DefaultHeaders::Instance().addHeader("Keep-Alive", "timeout=5, max=100");
 
 #endif
   server.begin();
