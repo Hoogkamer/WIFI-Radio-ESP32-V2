@@ -39,11 +39,12 @@ AsyncWebServer server(80);
  *                                                 I M A G E                                                           *
  ***********************************************************************************************************************/
 const unsigned short *_fonts[1] = {
+    Courier_New16x30
     // Times_New_Roman15x14,
     // Times_New_Roman21x17,
     // Times_New_Roman27x21,
     // Times_New_Roman34x27,
-    Times_New_Roman38x31,
+    // Times_New_Roman38x31,
     // Times_New_Roman43x35,
 };
 
@@ -630,9 +631,14 @@ void printError(const char *error)
   tft.setCursor(25, 80);
   tft.print(error);
 }
+void warnNotConnected(WiFiManager *myWiFiManager)
+{
+  printError("Could not connect. Connect your computer/phone to 'WIFI_RADIO' to configure wifi.");
+}
 void connectToWIFI()
 {
   // manager.resetSettings();
+  manager.setAPCallback(warnNotConnected);
   bool success = manager.autoConnect("WIFI_RADIO");
   if (!success)
   {

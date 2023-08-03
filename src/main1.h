@@ -14,8 +14,7 @@
 #include <Wire.h>
 #include <EEPROM.h>
 #include <SD.h>
-// #include "tft.h"
-#include <Arduino_GFX_Library.h>
+#include "tft.h"
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRutils.h>
