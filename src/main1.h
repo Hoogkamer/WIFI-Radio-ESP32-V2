@@ -15,9 +15,7 @@
 #include <EEPROM.h>
 #include <SD.h>
 #include "tft.h"
-#include <IRremoteESP8266.h>
-#include <IRrecv.h>
-#include <IRutils.h>
+
 #include <WiFiManager.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -26,7 +24,18 @@
 
 #include "SPIFFS.h"
 
+#include "radStat.h"
+
+// enable if you have a remote
+#define HAS_REMOTE
+
 #define CORS_DEBUG true
+
+#ifdef HAS_REMOTE
+#include <IRremoteESP8266.h>
+#include <IRrecv.h>
+#include <IRutils.h>
+#endif
 
 // Digital I/O used
 #define SD_CS 5

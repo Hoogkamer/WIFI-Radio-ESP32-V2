@@ -2,7 +2,7 @@
 
 let data;
 let currentCategory;
-let apiUrl = "http://192.168.11.65";
+let apiUrl = "http://192.168.11.63";
 //apiUrl = "";
 
 async function getData() {
