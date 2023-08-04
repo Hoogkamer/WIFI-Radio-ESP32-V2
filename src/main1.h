@@ -3,7 +3,6 @@
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
 
-// #include "Arduino_JSON.h"
 #include "Arduino.h"
 #include <FS.h>
 #include "Audio.h"
@@ -15,19 +14,15 @@
 #include <EEPROM.h>
 #include <SD.h>
 #include "tft.h"
-
 #include <WiFiManager.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include "AsyncJson.h"
-#include "ArduinoJson.h"
-
 #include "SPIFFS.h"
 
 #include "radStat.h"
 
 // enable if you have a remote
-#define HAS_REMOTE
+// #define HAS_REMOTE
 
 #define CORS_DEBUG
 
@@ -64,41 +59,9 @@
 
 const uint16_t kRecvPin = 15; // IR receiver
 
-class RadioStation
-{
-public:
-    String Name;
-    String Category;
-    String URL;
-
-    RadioStation() {}
-
-    RadioStation(String c, String n, String u)
-    {
-        Name = n;
-        Name.trim();
-        Category = c;
-        Category.trim();
-        URL = u;
-        URL.trim();
-    }
-
-    void printDetails()
-    {
-        Serial.print("name:");
-        Serial.print(Name.c_str());
-        Serial.print(", category:");
-        Serial.print(Category.c_str());
-        Serial.print(", url:");
-        Serial.print(URL.c_str());
-    }
-};
-
 void connectToWIFI();
 void setTFTbrightness(uint8_t duty);
 boolean drawImage(const char *path, uint16_t posX, uint16_t posY, uint16_t maxWidth = 0, uint16_t maxHeigth = 0);
-void findStationCat();
 void printError(const char *error);
 void loadSavedStation();
 void saveTheStation();
-DynamicJsonDocument getStationData();
