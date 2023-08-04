@@ -1,0 +1,106 @@
+.stationDiv {
+  padding: 5px 0px;
+}
+h2 {
+  padding: 0px;
+  margin: 0px;
+  text-align: center;
+}
+.container {
+  max-width: 600px;
+  margin: auto;
+
+  padding: 10px;
+  box-sizing: border-box;
+}
+.inpname {
+  width: 15ch;
+}
+.inpurl {
+  width: 40ch;
+  font-size: 16px;
+}
+.catdiv {
+  padding: 10px 0px;
+}
+* {
+  font-size: 18px;
+}
+html,
+body {
+  font-family: Roboto, Arial, sans-serif;
+  height: 100%;
+  margin: 0px;
+}
+a {
+  all: unset;
+  text-decoration: none !important;
+}
+
+/* CSS */
+.button-9 {
+  appearance: button;
+  backface-visibility: hidden;
+  background-color: #405cf5;
+  border-radius: 6px;
+  border-width: 0;
+  box-shadow: rgba(50, 50, 93, 0.1) 0 0 0 1px inset,
+    rgba(50, 50, 93, 0.1) 0 2px 5px 0, rgba(0, 0, 0, 0.07) 0 1px 1px 0;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  font-family: -apple-system, system-ui, "Segoe UI", Roboto, "Helvetica Neue",
+    Ubuntu, sans-serif;
+  font-size: 100%;
+  height: 44px;
+  line-height: 1.15;
+  margin: 12px 0 0;
+  outline: none;
+  overflow: hidden;
+  padding: 0 25px;
+  position: relative;
+  text-align: center;
+  text-transform: none;
+  transform: translateZ(0);
+  transition: all 0.2s, box-shadow 0.08s ease-in;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  width: 180px;
+}
+
+.button-9:disabled {
+  cursor: default;
+}
+
+.button-9:focus {
+  box-shadow: rgba(50, 50, 93, 0.1) 0 0 0 1px inset,
+    rgba(50, 50, 93, 0.2) 0 6px 15px 0, rgba(0, 0, 0, 0.1) 0 2px 2px 0,
+    rgba(50, 151, 211, 0.3) 0 0 0 4px;
+}
+.widthmax {
+  width: 100%;
+}
+.widthsmall {
+  width: 110px;
+  height: 34px;
+}
+.heightsmall {
+}
+.right {
+  float: right;
+  margin: 0px 10px;
+}
+.linetitle {
+  border-bottom: 3px solid grey;
+  padding: 0px;
+  margin-bottom: 10px;
+}
+#exportdiv {
+  color: red;
+  display: none;
+}
+
+#pastetextdiv {
+  color: grey;
+}

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit stations</title>
+    <link rel="stylesheet" type="text/css" href="./style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h2>Edit Stations</h2>
+
+      <div class="catdiv">
+        <div class="linetitle">Category</div>
+        <select id="categoryDropdown" onchange="selectCategory()"></select>
+
+        <button
+          class="button-9 widthsmall"
+          role="button"
+          onclick="deleteCategory()"
+        >
+          Delete
+        </button>
+        <button
+          class="button-9 widthsmall"
+          role="button"
+          onclick="addCategory()"
+        >
+          Add
+        </button>
+      </div>
+      <div class="linetitle">Stations</div>
+
+      <div id="stationsContainer"></div>
+
+      <button class="button-9" role="button" onclick="addStation()">
+        Add Station
+      </button>
+      <button class="button-9" role="button" onclick="exportStations()">
+        Export all
+      </button>
+      <button class="button-9" role="button" onclick="importStations()">
+        Import all
+      </button>
+      <hr />
+      <button class="button-9" role="button" onclick="Save()">Save</button>
+
+      <button class="button-9" role="link">
+        <a href="./index.html"> Back</a>
+      </button>
+
+      <div id="exportdiv">
+        <br />
+        Copy text below (click 2 times, then CTRL-C)
+        <button role="button" onclick="hideExportStations()">Hide text</button>
+        <hr />
+        <div id="pastetextdiv"></div>
+      </div>
+    </div>
+    <script src="./script.js"></script>
+  </body>
+</html>

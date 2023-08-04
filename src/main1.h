@@ -3,7 +3,9 @@
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
 
-#include "Arduino_JSON.h"
+// #include "Arduino_JSON.h"
+#include "Arduino.h"
+#include <FS.h>
 #include "Audio.h"
 #include "SPI.h"
 #include <WiFi.h>
@@ -12,12 +14,30 @@
 #include <Wire.h>
 #include <EEPROM.h>
 #include <SD.h>
-#include <FS.h>
 #include "tft.h"
+
+#include <WiFiManager.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include "AsyncJson.h"
+#include "ArduinoJson.h"
+
+#include "SPIFFS.h"
+
+#include "radStat.h"
+
+// enable if you have a remote
+#define HAS_REMOTE
+
+#define CORS_DEBUG
+
+#define LOG_DEFAULT_LEVEL_INFO
+
+#ifdef HAS_REMOTE
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRutils.h>
-#include "ESP32FtpServer.h"
+#endif
 
 // Digital I/O used
 #define SD_CS 5
@@ -81,3 +101,4 @@ void findStationCat();
 void printError(const char *error);
 void loadSavedStation();
 void saveTheStation();
+DynamicJsonDocument getStationData();
