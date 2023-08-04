@@ -24,6 +24,9 @@
 // enable if you have a remote
 // #define HAS_REMOTE
 
+// enable if you have rotary knobs
+#define HAS_ROTARIES
+
 #define CORS_DEBUG
 
 #define LOG_DEFAULT_LEVEL_INFO
@@ -32,6 +35,23 @@
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRutils.h>
+#endif
+
+#ifdef HAS_ROTARIES
+#include "AiEsp32RotaryEncoder.h"
+
+#define ROTARY_ENCODER_A_PIN 13
+#define ROTARY_ENCODER_B_PIN 12
+#define ROTARY_ENCODER_BUTTON_PIN 2
+#define ROTARY_ENCODER_STEPS 4
+AiEsp32RotaryEncoder rotaryVolume = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_BUTTON_PIN, -1, ROTARY_ENCODER_STEPS);
+
+#define ROTARY_ENCODER2_A_PIN 14
+#define ROTARY_ENCODER2_B_PIN 34
+#define ROTARY_ENCODER2_BUTTON_PIN 33
+#define ROTARY_ENCODER2_STEPS 4
+AiEsp32RotaryEncoder rotaryTuner = AiEsp32RotaryEncoder(ROTARY_ENCODER2_A_PIN, ROTARY_ENCODER2_B_PIN, ROTARY_ENCODER2_BUTTON_PIN, -1, ROTARY_ENCODER2_STEPS);
+
 #endif
 
 // Digital I/O used

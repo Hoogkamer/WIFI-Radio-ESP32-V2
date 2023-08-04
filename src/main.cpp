@@ -300,6 +300,14 @@ void startWebServer()
   server.begin();
 }
 
+#ifdef HAS_ROTARIES
+void IRAM_ATTR readEncoderISR()
+{
+  rotaryTuner.readEncoder_ISR();
+  rotaryVolume.readEncoder_ISR();
+}
+#endif
+
 void setup()
 {
 
@@ -308,6 +316,29 @@ void setup()
   Serial.begin(115200);
   delay(500);
   log_i("Starting");
+
+#ifdef HAS_ROTARIES
+  pinMode(ROTARY_ENCODER_A_PIN, INPUT_PULLUP);
+  pinMode(ROTARY_ENCODER_B_PIN, INPUT_PULLUP);
+
+  pinMode(ROTARY_ENCODER2_A_PIN, INPUT_PULLUP);
+  pinMode(ROTARY_ENCODER2_B_PIN, INPUT_PULLUP);
+
+  Serial.begin(115200);
+  rotaryTuner.begin();
+  rotaryTuner.disableAcceleration();
+  rotaryTuner.setup(readEncoderISR);
+  rotaryTuner.setEncoderValue(0);
+  rotaryTuner.setBoundaries(0, 100, true); // minValue, maxValue, circleValues true|false (when max go to min and vice versa)
+  rotaryTuner.setAcceleration(250);
+
+  rotaryVolume.begin();
+  rotaryVolume.disableAcceleration();
+  rotaryVolume.setup(readEncoderISR);
+  rotaryVolume.setBoundaries(0, 100, false); // minValue, maxValue, circleValues true|false (when max go to min and vice versa)
+  rotaryVolume.setEncoderValue(50);
+  rotaryVolume.setAcceleration(250);
+#endif
 
   tft.begin(TFT_CS, TFT_DC, VSPI, TFT_MOSI, TFT_MISO, TFT_SCK);
   setTFTbrightness(100);
@@ -349,6 +380,30 @@ void setup()
 
   startWebServer();
 }
+#ifdef HAS_ROTARIES
+void loopRotaryTuner()
+{
+  if (rotaryTuner.encoderChanged())
+  {
+    Serial.println(rotaryTuner.readEncoder());
+  }
+  if (rotaryTuner.isEncoderButtonClicked())
+  {
+    Serial.println("TUNER button pressed");
+  }
+}
+void loopRotaryVolume()
+{
+  if (rotaryVolume.encoderChanged())
+  {
+    Serial.println(rotaryVolume.readEncoder());
+  }
+  if (rotaryVolume.isEncoderButtonClicked())
+  {
+    Serial.println("VOL button pressed");
+  }
+}
+#endif
 
 void loop()
 {
@@ -359,6 +414,11 @@ void loop()
     handleRemotePress(results.value);
     irrecv.resume(); // Receive the next value
   }
+
+#endif
+#ifdef HAS_ROTARIES
+  loopRotaryTuner();
+  loopRotaryVolume();
 #endif
   if (!radioIsOn)
   {

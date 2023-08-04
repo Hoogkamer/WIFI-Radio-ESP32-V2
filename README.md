@@ -77,7 +77,7 @@ KY-040 360 Graden Rotary Encoder Module
 | 35    |             |                 | 1- SIGNAL |         |             |         |         |
 | 13    |             |                 |           |         |             | 1-CLK A |         |
 | 15    |             |                 |           |         |             | 2-DT B  |         |
-| 32    |             |                 |           |         |             | 3-SW    |         |
+| 2     |             |                 |           |         |             | 3-SW    |         |
 | v3    |             |                 |           |         |             | 4-+     | 4-+     |
 | GND   |             |                 |           |         |             | 5-GND   | 5-GND   |
 | 14    |             |                 |           |         |             | 1-CLK   | 1-CLK A |
