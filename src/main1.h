@@ -29,7 +29,9 @@
 // enable if you have a remote
 #define HAS_REMOTE
 
-#define CORS_DEBUG true
+#define CORS_DEBUG
+
+#define LOG_DEFAULT_LEVEL_INFO
 
 #ifdef HAS_REMOTE
 #include <IRremoteESP8266.h>

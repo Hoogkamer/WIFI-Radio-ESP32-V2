@@ -130,12 +130,7 @@ namespace radStat
         }
         activeRadioStation = radioStations[i];
         previousRadioStation = radioStations[i];
-        Serial.println("nrofstation, stationname, i");
-        Serial.print(nrOfStations);
-        Serial.print(stationName);
-        Serial.println(i);
-        Serial.println("Selected station:");
-        activeRadioStation.printDetails();
+        // activeRadioStation.printDetails();
     }
     void nextStation()
     {
@@ -214,9 +209,6 @@ namespace radStat
         std::vector<std::string> result = stringToArray(station);
 
         radioStations[nrOfStations] = RadioStation(result[2], result[0], result[1]);
-
-        Serial.print("Station>>>>:");
-        radioStations[nrOfStations].printDetails();
         nrOfStations++;
     }
     void handleCategory(std::string category)
@@ -225,14 +217,26 @@ namespace radStat
         for (const std::string &str : result)
         {
             radioCategories[nrOfCategories] = String(str.c_str());
-            Serial.print("Categorie:");
-            Serial.println(radioCategories[nrOfCategories]);
             nrOfCategories++;
         }
     }
     void processJSON(File configurations1)
     {
-        // File configurations1 = SPIFFS.open("/stations.json", "r");
+        // This should be the file structure:
+        //       {
+        //   "categories": ["NL", "Jazz", "Local", "Retro", "Chill", "News"],
+        //   "stations": [
+        //     ["Veronica", "http://22343.live.streamtheworld.com/VERONICA.mp3", "NL"],
+        //     [
+        //       "SmoothJazz247",
+        //       "http://www.smoothjazz247.com/smoothjazz24-7.m3up",
+        //       "Jazz"
+        //     ],
+        //     [
+        //       "Radio10",
+        //       "http://playerservices.streamtheworld.com/api/livestream-redirect/RADIO10.mp3",
+        //       "NL"
+        //     ]]}
 
         std::string station;
         std::string category;
@@ -269,7 +273,6 @@ namespace radStat
             prevch = ch;
             if (categories)
             {
-
                 category += ch;
                 if (ch == ']')
                 {

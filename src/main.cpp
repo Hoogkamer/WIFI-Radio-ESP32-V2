@@ -32,14 +32,7 @@ AsyncWebServer server(80);
  *                                                 I M A G E                                                           *
  ***********************************************************************************************************************/
 const unsigned short *_fonts[1] = {
-    Courier_New16x30
-    // Times_New_Roman15x14,
-    // Times_New_Roman21x17,
-    // Times_New_Roman27x21,
-    // Times_New_Roman34x27,
-    // Times_New_Roman38x31,
-    // Times_New_Roman43x35,
-};
+    Courier_New16x30};
 bool startsWith(const char *base, const char *searchString)
 {
   char c;
@@ -110,7 +103,7 @@ void showStationImage(string name, string type, int position)
     maxHeight = 240;
   }
 
-  Serial.println(imgAdr);
+  log_i("Getting image from SD:%s", imgAdr);
   if (SD.exists(imgAdr))
   {
     drawImage(imgAdr, 0, position, 240, maxHeight);
@@ -118,6 +111,7 @@ void showStationImage(string name, string type, int position)
   else
   {
     tft.setCursor(25, position);
+    tft.setTextColor(TFT_BLACK);
     tft.print(name.c_str());
   }
 }
@@ -125,7 +119,7 @@ void startRadioStream()
 {
   String url4 = radStat::activeRadioStation.URL;
   const char *url1 = url4.c_str();
-  Serial.println("trying url:>>>" + String(url1) + "<<<");
+  log_i("trying url:>>>%s<<<", url1);
   audio.connecttohost(url1);
 }
 void displayStation()
@@ -222,7 +216,7 @@ void handleRemotePress(int64_t remotecode)
     radioIsOn = false;
     setTFTbrightness(100);
     printError("Powering off");
-    Serial.print("Powering off");
+    log_i("Powering off");
     drawImage("/wifiradio/img/shutdown.jpg", 0, 0);
     delay(5000);
     setTFTbrightness(0);
@@ -282,17 +276,14 @@ void startWebServer()
         if (index == 0)
         {
           stationsFile = SPIFFS.open("/stations.json", "w");
-          Serial.println("opening file");
         }
         for (size_t i = 0; i < len; i++)
         {
-          Serial.write(data[i]);
           stationsFile.write(data[i]);
         }
         if ((len + index) == total)
         {
           stationsFile.close();
-          Serial.println("closing file");
           loadStations();
         }
 
@@ -316,28 +307,26 @@ void setup()
   SPI.setFrequency(1000000);
   Serial.begin(115200);
   delay(500);
-  Serial.println("----Start");
+  log_i("Starting");
 
   tft.begin(TFT_CS, TFT_DC, VSPI, TFT_MOSI, TFT_MISO, TFT_SCK);
   setTFTbrightness(100);
   tft.setFrequency(TFT_FREQUENCY);
   tft.setRotation(TFT_ROTATION);
-  Serial.println("----Start1");
 
   tft.setFont(_fonts[0]);
   clearTFTAllBlack();
   tft.setTextColor(TFT_YELLOW);
   tft.setCursor(25, 80);
   tft.print("Starting...");
-  tft.setTextColor(TFT_BLACK);
-  Serial.println("----Start2");
+
   if (!SD.begin(5))
   {
-    Serial.println("SD Card Mount Failed. It is not mandatory, program will continue.");
+    log_w("SD Card Mount Failed. It is not mandatory, program will continue.");
   }
   if (!SPIFFS.begin(true))
   {
-    Serial.println("An Error has occurred while mounting SPIFFS");
+    log_e("An Error has occurred while mounting SPIFFS");
     return;
   }
 
@@ -348,15 +337,10 @@ void setup()
   }
 
   loadSettings();
-  Serial.println("Step1");
   loadStations();
-  Serial.println("Step2");
   loadSavedStation();
-  Serial.println("Step3");
   connectToWIFI();
-  Serial.println("Step4");
   displayStation();
-  Serial.println("Step5");
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
   audio.setVolume(12);
 #ifdef HAS_REMOTE
@@ -383,12 +367,10 @@ void loop()
   if ((autoSwitchSec > -1) && (radioSwitchMillis > 0) && (millis() - radioSwitchMillis > autoSwitchSec * 1000))
   {
     radioSwitchMillis = 0;
-    Serial.println("auto switching??");
     if (radStat::activeRadioStation.Name != radStat::previousRadioStation.Name)
     {
       radStat::resetPreviousRadioStation();
       startRadioStream();
-      Serial.println("auto switching!!");
     }
   }
   if ((screenTimeoutSec > 1) && (previousMillis > 0) && (millis() - previousMillis > screenTimeoutSec * 1000))
@@ -415,6 +397,7 @@ void printError(const char *error)
 void warnNotConnected(WiFiManager *myWiFiManager)
 {
   printError("Could not connect. Connect your computer/phone to 'WIFI_RADIO' to configure wifi.");
+  log_i("Could not connect. Connect your computer/phone to 'WIFI_RADIO' to configure wifi.");
 }
 void connectToWIFI()
 {
@@ -423,10 +406,10 @@ void connectToWIFI()
   bool success = manager.autoConnect("WIFI_RADIO");
   if (!success)
   {
-    Serial.println("Failed to connect");
+    log_w("Failed to connect");
   }
   else
   {
-    Serial.println("Connected");
+    log_i("Connected");
   }
 }
