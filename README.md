@@ -38,7 +38,7 @@ Ili9341 240\*320 2.8 inch touch
 
 I2S PCM5102A Dac Decoder
 
-### IR Receiver:
+### IR Receiver (optional):
 
 10Pcs Universele Ir Infrarood Ontvanger TL1838 VS1838B 1838 38Khz
 
@@ -49,6 +49,13 @@ I2S PCM5102A Dac Decoder
 AZDelivery 3 x SPI Reader Micro Memory SD TF Module Card
 
 [SD Amazon](https://www.amazon.nl/dp/B077MCQS9P?psc=1&ref=ppx_yo2ov_dt_b_product_details)
+
+### Two Rotary Encoder (optional):
+
+Used for volume and tuning the radio station. Instead you can use the remote/IR receiver option
+
+KY-040 360 Graden Rotary Encoder Module
+[Rotry Encoder Aliexpress](https://nl.aliexpress.com/item/4000332297021.html?spm=a2g0o.order_list.order_list_main.35.235979d2rPFAs1&gatewayAdapt=glo2nld_)
 
 ## Used pinouts
 
