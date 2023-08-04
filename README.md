@@ -52,22 +52,30 @@ AZDelivery 3 x SPI Reader Micro Memory SD TF Module Card
 
 ## Used pinouts
 
-| ESP32 | LCD         | PCM             | IR        | SD      | wire colors |
-| ----- | ----------- | --------------- | --------- | ------- | ----------- |
-| v5    | 1- VCC      | 6- VIN          | 3- VCC    | 5- VCC  | red         |
-| GND   | 2- GND      | 5- GND + 1- SCK | 2- GND    | 6- GND  | black       |
-| 22    | 3- CS       |                 |           |         | blue        |
-| EN    | 4- RESET    |                 |           |         | yellow      |
-| 21    | 5- DC       |                 |           |         | green       |
-| 23    | 6- SDI/MOSI |                 |           | 3- MOSI | brown       |
-| 18    | 7-SCK       |                 |           | 2- SCK  | grey        |
-| 32    | 8-LED       |                 |           |         | purple      |
-| 19    | 9-SDO/MISO  |                 |           | 4- MISO | white       |
-| 5     |             |                 |           | 1- CS   | orange      |
-| 26    |             | 4- LCK          |           |         |             |
-| 25    |             | 3- DIN          |           |         |             |
-| 27    |             | 2- BCK          |           |         |             |
-| 35    |             |                 | 1- SIGNAL |         |             |
+| ESP32 | LCD         | PCM             | IR        | SD      | wire colors | Rotary1 | Rotary2 |
+| ----- | ----------- | --------------- | --------- | ------- | ----------- | ------- | ------- |
+| v5    | 1- VCC      | 6- VIN          | 3- VCC    | 5- VCC  | red         |         |         |
+| GND   | 2- GND      | 5- GND + 1- SCK | 2- GND    | 6- GND  | black       |         |         |
+| 22    | 3- CS       |                 |           |         | blue        |         |         |
+| EN    | 4- RESET    |                 |           |         | yellow      |         |         |
+| 21    | 5- DC       |                 |           |         | green       |         |         |
+| 23    | 6- SDI/MOSI |                 |           | 3- MOSI | brown       |         |         |
+| 18    | 7-SCK       |                 |           | 2- SCK  | grey        |         |         |
+| 32    | 8-LED       |                 |           |         | purple      |         |         |
+| 19    | 9-SDO/MISO  |                 |           | 4- MISO | white       |         |         |
+| 5     |             |                 |           | 1- CS   | orange      |         |         |
+| 26    |             | 4- LCK          |           |         |             |         |         |
+| 25    |             | 3- DIN          |           |         |             |         |         |
+| 27    |             | 2- BCK          |           |         |             |         |         |
+| 35    |             |                 | 1- SIGNAL |         |             |         |         |
+| 13    |             |                 |           |         |             | 1-CLK A |         |
+| 15    |             |                 |           |         |             | 2-DT B  |         |
+| 32    |             |                 |           |         |             | 3-SW    |         |
+| v3    |             |                 |           |         |             | 4-+     | 4-+     |
+| GND   |             |                 |           |         |             | 5-GND   | 5-GND   |
+| 14    |             |                 |           |         |             | 1-CLK   | 1-CLK A |
+| 34    |             |                 |           |         |             | 1-CLK   | 2-DT B  |
+| 33    |             |                 |           |         |             | 1-CLK   | 3-SW    |
 
 (wire colors you can use as desired)
 
