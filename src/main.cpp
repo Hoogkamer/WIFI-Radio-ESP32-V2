@@ -139,19 +139,6 @@ void setScreenOff()
   tftIsOn = false;
   previousMillis = 0;
 }
-void displayStation()
-{
-  radStat::activeRadioStation.printDetails();
-  radioSwitchMillis = millis();
-  setScreenOn();
-  clearTFTAllWhite();
-  showStationImage(radStat::activeRadioStation.Category.c_str(), "category", 0);
-  showStationImage(radStat::activeRadioStation.Name.c_str(), "radio", 80);
-#ifdef HAS_ROTARIES
-  displayTunerMode();
-#endif
-}
-
 void displayTunerMode()
 {
   if (rotaryTuneMode == TUNE_STATION)
@@ -178,6 +165,19 @@ void displayTunerMode()
   tft.setCursor(125, 200);
   tft.print("CATEGORY");
 }
+void displayStation()
+{
+  radStat::activeRadioStation.printDetails();
+  radioSwitchMillis = millis();
+  setScreenOn();
+  clearTFTAllWhite();
+  showStationImage(radStat::activeRadioStation.Category.c_str(), "category", 0);
+  showStationImage(radStat::activeRadioStation.Name.c_str(), "radio", 80);
+#ifdef HAS_ROTARIES
+  displayTunerMode();
+#endif
+}
+
 void setStation()
 {
   displayStation();
@@ -502,7 +502,8 @@ void loopRotaryTuner()
         rotaryTuneMode = TUNE_STATION;
       }
     }
-    displayStation();
+    setScreenOn();
+    displayTunerMode();
   }
 }
 void loopRotaryVolume()
