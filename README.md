@@ -76,13 +76,15 @@ KY-040 360 Graden Rotary Encoder Module
 | 27    |             | 2- BCK          |           |         |             |         |         |
 | 35    |             |                 | 1- SIGNAL |         |             |         |         |
 | 13    |             |                 |           |         |             | 1-CLK A |         |
-| 15    |             |                 |           |         |             | 2-DT B  |         |
-| 2     |             |                 |           |         |             | 3-SW    |         |
+| 17    |             |                 |           |         |             | 2-DT B  |         |
+| 35     |             |                 |           |         |             | 3-SW    |         |
 | v3    |             |                 |           |         |             | 4-+     | 4-+     |
 | GND   |             |                 |           |         |             | 5-GND   | 5-GND   |
 | 14    |             |                 |           |         |             | 1-CLK   | 1-CLK A |
 | 34    |             |                 |           |         |             | 1-CLK   | 2-DT B  |
 | 33    |             |                 |           |         |             | 1-CLK   | 3-SW    |
+
+dont use 0,2,12,15
 
 (wire colors you can use as desired)
 

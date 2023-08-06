@@ -166,26 +166,35 @@ namespace radStat
             setActiveRadioStation(radioStation);
         }
     }
-    void findStationCat()
+    bool findStationCat()
     {
+        bool found = false;
         for (int i = 0; i < nrOfStations; i++)
         {
             if (radioStations[i].Category == radioCategories[activeCategory])
             {
                 radioStation = i;
+                found = true;
                 break;
             }
         }
-        setActiveRadioStation(radioStation);
+        if (found)
+        {
+            setActiveRadioStation(radioStation);
+        }
+        return found;
     }
     void nextCategory()
     {
         activeCategory++;
-        if (activeCategory > nrOfCategories - 1)
+        if (activeCategory > nrOfCategories)
         {
             activeCategory = 0;
         }
-        findStationCat();
+        if (!findStationCat())
+        {
+            nextCategory();
+        }
     }
     void prevCategory()
     {
@@ -194,7 +203,10 @@ namespace radStat
         {
             activeCategory = nrOfCategories - 1;
         }
-        findStationCat();
+        if (!findStationCat())
+        {
+            prevCategory();
+        }
     }
     void handleStation(std::string station)
     {

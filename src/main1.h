@@ -21,11 +21,21 @@
 
 #include "radStat.h"
 
+// USER CHANGEABLE -------------
+
 // enable if you have a remote
 // #define HAS_REMOTE
 
 // enable if you have rotary knobs
 #define HAS_ROTARIES
+
+// #define TFT_ROTATION 0 // 1 or 3 (landscape)
+#define TFT_ROTATION 1 // 1 or 3 (landscape)
+
+// enable if you need mono output on both channels (when you have 1 speaker)
+#define MONO_OUTPUT
+
+// -----------------------
 
 #define CORS_DEBUG
 
@@ -41,8 +51,8 @@
 #include "AiEsp32RotaryEncoder.h"
 
 #define ROTARY_ENCODER_A_PIN 13
-#define ROTARY_ENCODER_B_PIN 12
-#define ROTARY_ENCODER_BUTTON_PIN 2
+#define ROTARY_ENCODER_B_PIN 17
+#define ROTARY_ENCODER_BUTTON_PIN 35
 #define ROTARY_ENCODER_STEPS 4
 AiEsp32RotaryEncoder rotaryVolume = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_BUTTON_PIN, -1, ROTARY_ENCODER_STEPS);
 
@@ -55,7 +65,7 @@ AiEsp32RotaryEncoder rotaryTuner = AiEsp32RotaryEncoder(ROTARY_ENCODER2_A_PIN, R
 #endif
 
 // Digital I/O used
-#define SD_CS 5
+#define SD_CS 5xx
 #define SPI_MOSI 23
 #define SPI_MISO 19
 #define SPI_SCK 18
@@ -73,7 +83,8 @@ AiEsp32RotaryEncoder rotaryTuner = AiEsp32RotaryEncoder(ROTARY_ENCODER2_A_PIN, R
 
 #define IR_RECEIVE_PIN 15
 
-#define TFT_ROTATION 0         // 1 or 3 (landscape)
+// #define TFT_ROTATION 0 // 1 or 3 (landscape)
+
 #define DISPLAY_INVERSION 0    // (0) off (1) on
 #define TFT_FREQUENCY 40000000 // 27000000, 40000000, 80000000
 

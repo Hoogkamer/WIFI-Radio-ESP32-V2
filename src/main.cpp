@@ -1,6 +1,3 @@
-#define VOLUME 100 // volume level 0-100
-#define EEPROM_SIZE 2
-
 #include "main1.h"
 
 long previousMillis = 0;
@@ -24,7 +21,15 @@ decode_results results;
 #endif
 
 bool radioIsOn = true;
+bool tftIsOn = true;
 bool playRadio = true;
+
+#define TUNE_CATEGORY 1
+#define TUNE_STATION 2
+#define MAX_VOL 15
+
+int rotaryTuneMode = TUNE_STATION;
+int prevRotaryTunerCode = 500;
 
 AsyncWebServer server(80);
 
@@ -122,19 +127,72 @@ void startRadioStream()
   log_i("trying url:>>>%s<<<", url1);
   audio.connecttohost(url1);
 }
+void setScreenOn()
+{
+  setTFTbrightness(100);
+  tftIsOn = true;
+  previousMillis = millis();
+}
+void setScreenOff()
+{
+  setTFTbrightness(0);
+  tftIsOn = false;
+  previousMillis = 0;
+}
 void displayStation()
 {
   radStat::activeRadioStation.printDetails();
-  previousMillis = millis();
   radioSwitchMillis = millis();
-  setTFTbrightness(100);
+  setScreenOn();
   clearTFTAllWhite();
   showStationImage(radStat::activeRadioStation.Category.c_str(), "category", 0);
   showStationImage(radStat::activeRadioStation.Name.c_str(), "radio", 80);
+#ifdef HAS_ROTARIES
+  displayTunerMode();
+#endif
+}
+
+void displayTunerMode()
+{
+  if (rotaryTuneMode == TUNE_STATION)
+  {
+    tft.setTextColor(TFT_BLUE);
+    Serial.println("Tunermode:TUNER");
+    log_i("Tunermode:TUNER");
+  }
+  else
+  {
+    tft.setTextColor(TFT_WHITE);
+  }
+  tft.setCursor(25, 200);
+  tft.print("STATION");
+  if (rotaryTuneMode == TUNE_CATEGORY)
+  {
+    tft.setTextColor(TFT_BLUE);
+    Serial.println("Tunermode:CATEGORY");
+  }
+  else
+  {
+    tft.setTextColor(TFT_WHITE);
+  }
+  tft.setCursor(125, 200);
+  tft.print("CATEGORY");
 }
 void setStation()
 {
   displayStation();
+}
+void displayDetails()
+{
+  setScreenOn();
+  clearTFTAllWhite();
+  tft.setTextColor(TFT_BLACK);
+  tft.setCursor(2, 20);
+  tft.print("IP:");
+  tft.setCursor(2, 50);
+  tft.print(WiFi.localIP().toString());
+  tft.setCursor(2, 100);
+  tft.print("Connect with your pc/phone to this IP address to configure the stations.");
 }
 void handleRemotePress(int64_t remotecode)
 {
@@ -190,20 +248,13 @@ void handleRemotePress(int64_t remotecode)
   }
   if (remotecode == 70386011657704) // Ipod menu: Show details
   {
-    previousMillis = millis();
-    setTFTbrightness(100);
-    clearTFTAllWhite();
-    tft.setTextColor(TFT_BLACK);
-    tft.setCursor(25, 80);
-    tft.print("IP:");
-    tft.setCursor(25, 110);
-    tft.print(WiFi.localIP().toString());
+
+    displayDetails();
   }
 
   if (remotecode == 70386010088896) // auto preset
   {
-    previousMillis = millis();
-    setTFTbrightness(100);
+    setScreenOn();
     if (SD.exists("/wifiradio/mp3/command/StationSaved.mp3"))
     {
       audio.connecttoFS(SD, "/wifiradio/mp3/command/StationSaved.mp3");
@@ -214,12 +265,12 @@ void handleRemotePress(int64_t remotecode)
   if (remotecode == 70386011651201 || remotecode == 70386013196293 || remotecode == 70386010039552) // power off: OFF/CD/FM buttons
   {
     radioIsOn = false;
-    setTFTbrightness(100);
+    setScreenOn();
     printError("Powering off");
     log_i("Powering off");
     drawImage("/wifiradio/img/shutdown.jpg", 0, 0);
     delay(5000);
-    setTFTbrightness(0);
+    setScreenOff();
     // esp_deep_sleep_start();
     WiFi.disconnect();
     WiFi.mode(WIFI_OFF);
@@ -328,20 +379,21 @@ void setup()
   rotaryTuner.begin();
   rotaryTuner.disableAcceleration();
   rotaryTuner.setup(readEncoderISR);
-  rotaryTuner.setEncoderValue(0);
-  rotaryTuner.setBoundaries(0, 100, true); // minValue, maxValue, circleValues true|false (when max go to min and vice versa)
-  rotaryTuner.setAcceleration(250);
+  rotaryTuner.setBoundaries(0, 1000, true); // minValue, maxValue, circleValues true|false (when max go to min and vice versa)
+  rotaryTuner.setEncoderValue(500);
+  prevRotaryTunerCode = 500;
+  // rotaryTuner.setAcceleration(250);
 
   rotaryVolume.begin();
   rotaryVolume.disableAcceleration();
   rotaryVolume.setup(readEncoderISR);
-  rotaryVolume.setBoundaries(0, 100, false); // minValue, maxValue, circleValues true|false (when max go to min and vice versa)
-  rotaryVolume.setEncoderValue(50);
-  rotaryVolume.setAcceleration(250);
+  rotaryVolume.setBoundaries(0, MAX_VOL, false); // minValue, maxValue, circleValues true|false (when max go to min and vice versa)
+  rotaryVolume.setEncoderValue(MAX_VOL - 3);
+  // rotaryVolume.setAcceleration(250);
 #endif
 
   tft.begin(TFT_CS, TFT_DC, VSPI, TFT_MOSI, TFT_MISO, TFT_SCK);
-  setTFTbrightness(100);
+  setScreenOn();
   tft.setFrequency(TFT_FREQUENCY);
   tft.setRotation(TFT_ROTATION);
 
@@ -373,7 +425,11 @@ void setup()
   connectToWIFI();
   displayStation();
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
-  audio.setVolume(12);
+  audio.setVolumeSteps(100);
+  audio.setVolume(MAX_VOL - rotaryVolume.readEncoder());
+#ifdef MONO_OUTPUT
+  audio.forceMono(true);
+#endif
 #ifdef HAS_REMOTE
   irrecv.enableIRIn();
 #endif
@@ -385,11 +441,68 @@ void loopRotaryTuner()
 {
   if (rotaryTuner.encoderChanged())
   {
+    int currentRotaryTunerCode = rotaryTuner.readEncoder();
     Serial.println(rotaryTuner.readEncoder());
+    if (currentRotaryTunerCode > prevRotaryTunerCode)
+    {
+      if (rotaryTuneMode == TUNE_STATION)
+      {
+        radStat::nextStation();
+      }
+      else
+      { // TUNE_CATEGORY
+        radStat::nextCategory();
+      }
+      setStation();
+
+      if (currentRotaryTunerCode > 900)
+      {
+        currentRotaryTunerCode = 500;
+        prevRotaryTunerCode = 499;
+      }
+      else
+      {
+        prevRotaryTunerCode = currentRotaryTunerCode;
+      }
+    }
+    else if (currentRotaryTunerCode < prevRotaryTunerCode)
+    {
+      if (rotaryTuneMode == TUNE_STATION)
+      {
+        radStat::prevStation();
+      }
+      else
+      { // TUNE_CATEGORY
+        radStat::prevCategory();
+      }
+      setStation();
+
+      if (currentRotaryTunerCode < 100)
+      {
+        currentRotaryTunerCode = 500;
+        prevRotaryTunerCode = 501;
+      }
+      else
+      {
+        prevRotaryTunerCode = currentRotaryTunerCode;
+      }
+    }
   }
+
   if (rotaryTuner.isEncoderButtonClicked())
   {
-    Serial.println("TUNER button pressed");
+    if (tftIsOn)
+    {
+      if (rotaryTuneMode == TUNE_STATION)
+      {
+        rotaryTuneMode = TUNE_CATEGORY;
+      }
+      else
+      {
+        rotaryTuneMode = TUNE_STATION;
+      }
+    }
+    displayStation();
   }
 }
 void loopRotaryVolume()
@@ -397,10 +510,12 @@ void loopRotaryVolume()
   if (rotaryVolume.encoderChanged())
   {
     Serial.println(rotaryVolume.readEncoder());
+    audio.setVolume(MAX_VOL - rotaryVolume.readEncoder());
   }
   if (rotaryVolume.isEncoderButtonClicked())
   {
     Serial.println("VOL button pressed");
+    displayDetails();
   }
 }
 #endif
@@ -435,8 +550,7 @@ void loop()
   }
   if ((screenTimeoutSec > 1) && (previousMillis > 0) && (millis() - previousMillis > screenTimeoutSec * 1000))
   {
-    previousMillis = 0;
-    setTFTbrightness(0);
+    setScreenOff();
   }
   if (playRadio)
   {
