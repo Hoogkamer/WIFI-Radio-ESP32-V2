@@ -42,7 +42,7 @@
       "Chill"
     ],
     ["BoxUK", "http://boxstream.danceradiouk.com/stream", "Chill"],
-    ["DanceUK", "http://dancestream.danceradiouk.com/stream", "Chill"],
+    ["1FMDeepHouse", "http://strm112.1.fm/deeptech_mobile_mp3", "Chill"],
     ["DeepIn", "http://95.211.3.65:8525/listen.pls", "Chill"],
     ["ONChill", "http://0n-2000s.radionetz.de/0n-chillout.mp3", "Chill"],
     ["BNR", "http://stream.bnr.nl/bnr_mp3_128_20", "News"],
@@ -56,6 +56,9 @@
       "BBCWorld",
       "http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_world_service.m3u8",
       "News"
-    ]
+    ],
+    ["1FMJAZZ", "http://strm112.1.fm/smoothjazz_mobile_mp3", "Jazz"],
+    ["NBC_NEWS", "http://stream.revma.ihrhls.com/zc6043", "News"],
+    ["WNYC", "http://www.wnyc.org/stream/wnyc-fm939/mp3.pls", "News"]
   ]
 }

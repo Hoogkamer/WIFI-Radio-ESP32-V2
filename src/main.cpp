@@ -1,6 +1,6 @@
 #include "main1.h"
 
-long previousMillis = 0;
+long screenSwitchOnMillis = 0;
 long radioSwitchMillis = 0;
 
 int screenTimeoutSec = 60;
@@ -24,11 +24,11 @@ bool radioIsOn = true;
 bool tftIsOn = true;
 bool playRadio = true;
 
-#define TUNE_CATEGORY 1
-#define TUNE_STATION 2
-#define MAX_VOL 15
+unsigned long shortPressAfterMiliseconds = 50;  // how long short press shoud be. Do not set too low to avoid bouncing (false press events).
+unsigned long longPressAfterMiliseconds = 1000; // how long čong press shoud be.
 
-int rotaryTuneMode = TUNE_STATION;
+#define MAX_VOL 20
+
 int prevRotaryTunerCode = 500;
 
 AsyncWebServer server(80);
@@ -131,40 +131,15 @@ void setScreenOn()
 {
   setTFTbrightness(100);
   tftIsOn = true;
-  previousMillis = millis();
+  screenSwitchOnMillis = millis();
 }
 void setScreenOff()
 {
   setTFTbrightness(0);
   tftIsOn = false;
-  previousMillis = 0;
+  screenSwitchOnMillis = 0;
 }
-void displayTunerMode()
-{
-  if (rotaryTuneMode == TUNE_STATION)
-  {
-    tft.setTextColor(TFT_BLUE);
-    Serial.println("Tunermode:TUNER");
-    log_i("Tunermode:TUNER");
-  }
-  else
-  {
-    tft.setTextColor(TFT_WHITE);
-  }
-  tft.setCursor(25, 200);
-  tft.print("STATION");
-  if (rotaryTuneMode == TUNE_CATEGORY)
-  {
-    tft.setTextColor(TFT_BLUE);
-    Serial.println("Tunermode:CATEGORY");
-  }
-  else
-  {
-    tft.setTextColor(TFT_WHITE);
-  }
-  tft.setCursor(125, 200);
-  tft.print("CATEGORY");
-}
+
 void displayStation()
 {
   radStat::activeRadioStation.printDetails();
@@ -173,9 +148,6 @@ void displayStation()
   clearTFTAllWhite();
   showStationImage(radStat::activeRadioStation.Category.c_str(), "category", 0);
   showStationImage(radStat::activeRadioStation.Name.c_str(), "radio", 80);
-#ifdef HAS_ROTARIES
-  displayTunerMode();
-#endif
 }
 
 void setStation()
@@ -194,6 +166,25 @@ void displayDetails()
   tft.setCursor(2, 100);
   tft.print("Connect with your pc/phone to this IP address to configure the stations.");
 }
+void switchRadioOn()
+{
+  connectToWIFI();
+  displayStation();
+  radioIsOn = true;
+}
+void switchRadioOff()
+{
+  radioIsOn = false;
+  setScreenOn();
+  printError("Powering off");
+  log_i("Powering off");
+  drawImage("/wifiradio/img/shutdown.jpg", 0, 0);
+  delay(5000);
+  setScreenOff();
+  // esp_deep_sleep_start();
+  WiFi.disconnect();
+  WiFi.mode(WIFI_OFF);
+}
 void handleRemotePress(int64_t remotecode)
 {
 
@@ -205,9 +196,7 @@ void handleRemotePress(int64_t remotecode)
   {
     if (remotecode == 70386007955804) // AUX: switch on again
     {
-      connectToWIFI();
-      displayStation();
-      radioIsOn = true;
+      switchRadioOn();
     }
     return;
   }
@@ -264,17 +253,17 @@ void handleRemotePress(int64_t remotecode)
 
   if (remotecode == 70386011651201 || remotecode == 70386013196293 || remotecode == 70386010039552) // power off: OFF/CD/FM buttons
   {
-    radioIsOn = false;
-    setScreenOn();
-    printError("Powering off");
-    log_i("Powering off");
-    drawImage("/wifiradio/img/shutdown.jpg", 0, 0);
-    delay(5000);
-    setScreenOff();
-    // esp_deep_sleep_start();
-    WiFi.disconnect();
-    WiFi.mode(WIFI_OFF);
+    switchRadioOff();
   }
+}
+void saveTheVolume()
+{
+  File file1 = SPIFFS.open("/savedVolume.txt", "w", true);
+  if (file1)
+  {
+    file1.print(rotaryVolume.readEncoder());
+  }
+  file1.close();
 }
 
 void saveTheStation()
@@ -286,13 +275,26 @@ void saveTheStation()
   }
   file1.close();
 }
+void loadSavedVolume()
+{
+  File file1 = SPIFFS.open("/savedVolume.txt", "r", false);
+  if (file1)
+  {
+    String volume = file1.readString();
+    log_i("volume = %s", volume);
+    rotaryVolume.setEncoderValue(volume.toInt());
+  }
+
+  file1.close();
+}
+
 void loadSavedStation()
 {
   File file1 = SPIFFS.open("/savedStation.txt", "r", false);
   if (file1)
   {
     String stationName = file1.readString();
-    radStat::setActiveRadioStation(stationName);
+    radStat::setActiveRadioStationName(stationName);
   }
 
   file1.close();
@@ -422,6 +424,7 @@ void setup()
   loadSettings();
   loadStations();
   loadSavedStation();
+  loadSavedVolume();
   connectToWIFI();
   displayStation();
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
@@ -437,6 +440,89 @@ void setup()
   startWebServer();
 }
 #ifdef HAS_ROTARIES
+void onTunerShortClick()
+{
+  if (tftIsOn)
+  {
+    radStat::nextCategory();
+    setStation();
+  }
+  setScreenOn();
+}
+void onTunerLongClick()
+{
+  setScreenOn();
+  saveTheStation();
+  saveTheVolume();
+  tft.setTextColor(TFT_BLUE);
+  tft.setCursor(5, 160);
+  tft.print("Station Saved");
+}
+void handleTunerButton()
+{
+  static unsigned long lastTimeButtonDown = 0;
+  static bool wasButtonDown = false;
+  bool isEncoderButtonDown = rotaryTuner.isEncoderButtonDown();
+  if (isEncoderButtonDown)
+  {
+    if (!wasButtonDown)
+    {
+      lastTimeButtonDown = millis();
+    }
+    wasButtonDown = true;
+    return;
+  }
+
+  if (wasButtonDown)
+  {
+    if (millis() - lastTimeButtonDown >= longPressAfterMiliseconds)
+    {
+      onTunerLongClick();
+    }
+    else if (millis() - lastTimeButtonDown >= shortPressAfterMiliseconds)
+    {
+      onTunerShortClick();
+    }
+  }
+  wasButtonDown = false;
+}
+void onVolumeShortClick()
+{
+  displayDetails();
+}
+void onVolumeLongClick()
+{
+  switchRadioOff();
+}
+void handleVolumeButton()
+{
+  static unsigned long lastTimeButtonDown = 0;
+  static bool wasButtonDown = false;
+  bool isEncoderButtonDown = rotaryVolume.isEncoderButtonDown();
+  if (isEncoderButtonDown)
+  {
+    if (!wasButtonDown)
+    {
+      lastTimeButtonDown = millis();
+    }
+    wasButtonDown = true;
+    return;
+  }
+
+  if (wasButtonDown)
+  {
+    if (millis() - lastTimeButtonDown >= longPressAfterMiliseconds)
+    {
+      onVolumeLongClick();
+    }
+    else if (millis() - lastTimeButtonDown >= shortPressAfterMiliseconds)
+    {
+      onVolumeShortClick();
+    }
+  }
+  wasButtonDown = false;
+}
+
 void loopRotaryTuner()
 {
   if (rotaryTuner.encoderChanged())
@@ -445,16 +531,8 @@ void loopRotaryTuner()
     Serial.println(rotaryTuner.readEncoder());
     if (currentRotaryTunerCode > prevRotaryTunerCode)
     {
-      if (rotaryTuneMode == TUNE_STATION)
-      {
-        radStat::nextStation();
-      }
-      else
-      { // TUNE_CATEGORY
-        radStat::nextCategory();
-      }
+      radStat::prevStation();
       setStation();
-
       if (currentRotaryTunerCode > 900)
       {
         currentRotaryTunerCode = 500;
@@ -467,14 +545,9 @@ void loopRotaryTuner()
     }
     else if (currentRotaryTunerCode < prevRotaryTunerCode)
     {
-      if (rotaryTuneMode == TUNE_STATION)
-      {
-        radStat::prevStation();
-      }
-      else
-      { // TUNE_CATEGORY
-        radStat::prevCategory();
-      }
+
+      radStat::nextStation();
+
       setStation();
 
       if (currentRotaryTunerCode < 100)
@@ -489,22 +562,7 @@ void loopRotaryTuner()
     }
   }
 
-  if (rotaryTuner.isEncoderButtonClicked())
-  {
-    if (tftIsOn)
-    {
-      if (rotaryTuneMode == TUNE_STATION)
-      {
-        rotaryTuneMode = TUNE_CATEGORY;
-      }
-      else
-      {
-        rotaryTuneMode = TUNE_STATION;
-      }
-    }
-    setScreenOn();
-    displayTunerMode();
-  }
+  handleTunerButton();
 }
 void loopRotaryVolume()
 {
@@ -513,11 +571,7 @@ void loopRotaryVolume()
     Serial.println(rotaryVolume.readEncoder());
     audio.setVolume(MAX_VOL - rotaryVolume.readEncoder());
   }
-  if (rotaryVolume.isEncoderButtonClicked())
-  {
-    Serial.println("VOL button pressed");
-    displayDetails();
-  }
+  handleVolumeButton();
 }
 #endif
 
@@ -532,14 +586,21 @@ void loop()
   }
 
 #endif
+
+  if (!radioIsOn)
+  {
+#ifdef HAS_ROTARIES
+    if (rotaryVolume.isEncoderButtonClicked())
+    {
+      switchRadioOn();
+    }
+#endif
+    return;
+  }
 #ifdef HAS_ROTARIES
   loopRotaryTuner();
   loopRotaryVolume();
 #endif
-  if (!radioIsOn)
-  {
-    return;
-  }
   if ((autoSwitchSec > -1) && (radioSwitchMillis > 0) && (millis() - radioSwitchMillis > autoSwitchSec * 1000))
   {
     radioSwitchMillis = 0;
@@ -549,7 +610,7 @@ void loop()
       startRadioStream();
     }
   }
-  if ((screenTimeoutSec > 1) && (previousMillis > 0) && (millis() - previousMillis > screenTimeoutSec * 1000))
+  if ((screenTimeoutSec > 1) && (screenSwitchOnMillis > 0) && (millis() - screenSwitchOnMillis > screenTimeoutSec * 1000))
   {
     setScreenOff();
   }

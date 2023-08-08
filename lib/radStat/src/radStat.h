@@ -111,7 +111,7 @@ namespace radStat
     {
         previousRadioStation = activeRadioStation;
     }
-    void setActiveRadioStation(String stationName)
+    void setActiveRadioStationName(String stationName)
     {
         int i = 0;
         bool found = false;
@@ -128,8 +128,8 @@ namespace radStat
         {
             i = 0;
         }
-        activeRadioStation = radioStations[i];
-        previousRadioStation = radioStations[i];
+        setActiveRadioStation(i);
+        previousRadioStation = activeRadioStation;
         // activeRadioStation.printDetails();
     }
     void nextStation()
