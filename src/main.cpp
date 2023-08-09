@@ -32,12 +32,15 @@ unsigned long longPressAfterMiliseconds = 1000; // how long čong press shoud be
 int prevRotaryTunerCode = 500;
 
 AsyncWebServer server(80);
+#define FONT_INFO 0
+#define FONT_CATEGORY 1
+#define FONT_STATION 2
 
 /***********************************************************************************************************************
  *                                                 I M A G E                                                           *
  ***********************************************************************************************************************/
-const unsigned short *_fonts[1] = {
-    Courier_New16x30};
+const unsigned short *_fonts[3] = {
+    Courier_New16x30, Courier_New19x36, Courier_New22x39};
 bool startsWith(const char *base, const char *searchString)
 {
   char c;
@@ -115,7 +118,7 @@ void showStationImage(string name, string type, int position)
   }
   else
   {
-    tft.setCursor(25, position);
+    tft.setCursor(25, position + 20);
     tft.setTextColor(TFT_BLACK);
     tft.print(name.c_str());
   }
@@ -146,8 +149,23 @@ void displayStation()
   radioSwitchMillis = millis();
   setScreenOn();
   clearTFTAllWhite();
+#ifdef SHOW_IMAGES
   showStationImage(radStat::activeRadioStation.Category.c_str(), "category", 0);
   showStationImage(radStat::activeRadioStation.Name.c_str(), "radio", 80);
+#else
+
+  clearTFTAllWhite();
+  tft.setTextColor(TFT_BLUE);
+  tft.setFont(_fonts[FONT_CATEGORY]);
+  tft.setCursor(25, 30);
+  tft.print(radStat::activeRadioStation.Category.c_str());
+  tft.setTextColor(TFT_BLACK);
+  tft.setFont(_fonts[FONT_STATION]);
+  tft.setCursor(25, 70);
+  tft.print(radStat::activeRadioStation.Name.c_str());
+  tft.setFont(_fonts[FONT_INFO]);
+
+#endif
 }
 
 void setStation()
@@ -176,7 +194,7 @@ void switchRadioOff()
 {
   radioIsOn = false;
   setScreenOn();
-  printError("Powering off");
+  printError("Going in standby");
   log_i("Powering off");
   drawImage("/wifiradio/img/shutdown.jpg", 0, 0);
   delay(5000);
@@ -399,7 +417,7 @@ void setup()
   tft.setFrequency(TFT_FREQUENCY);
   tft.setRotation(TFT_ROTATION);
 
-  tft.setFont(_fonts[0]);
+  tft.setFont(_fonts[FONT_INFO]);
   clearTFTAllBlack();
   tft.setTextColor(TFT_YELLOW);
   tft.setCursor(25, 80);
@@ -460,6 +478,34 @@ void onTunerLongClick()
 }
 void handleTunerButton()
 {
+  static unsigned long buttonPressedTime = 0;
+  static bool isLongpress = false;
+  bool isEncoderButtonDown = rotaryTuner.isEncoderButtonDown();
+  if (isEncoderButtonDown)
+  {
+    if (!buttonPressedTime)
+    {
+      buttonPressedTime = millis();
+    }
+
+    if (!isLongpress && (millis() - buttonPressedTime >= longPressAfterMiliseconds))
+    {
+      onTunerLongClick();
+      isLongpress = true;
+    }
+  }
+  else
+  {
+    if (buttonPressedTime && !isLongpress)
+    {
+      onTunerShortClick();
+    }
+    buttonPressedTime = 0;
+    isLongpress = false;
+  }
+}
+void handleTunerButton()
+{
   static unsigned long lastTimeButtonDown = 0;
   static bool wasButtonDown = false;
   bool isEncoderButtonDown = rotaryTuner.isEncoderButtonDown();
@@ -494,33 +540,34 @@ void onVolumeLongClick()
 {
   switchRadioOff();
 }
+
 void handleVolumeButton()
 {
-  static unsigned long lastTimeButtonDown = 0;
-  static bool wasButtonDown = false;
+  static unsigned long buttonPressedTime = 0;
+  static bool isLongpress = false;
   bool isEncoderButtonDown = rotaryVolume.isEncoderButtonDown();
   if (isEncoderButtonDown)
   {
-    if (!wasButtonDown)
+    if (!buttonPressedTime)
     {
-      lastTimeButtonDown = millis();
+      buttonPressedTime = millis();
     }
-    wasButtonDown = true;
-    return;
-  }
 
-  if (wasButtonDown)
-  {
-    if (millis() - lastTimeButtonDown >= longPressAfterMiliseconds)
+    if (!isLongpress && (millis() - buttonPressedTime >= longPressAfterMiliseconds))
     {
       onVolumeLongClick();
+      isLongpress = true;
     }
-    else if (millis() - lastTimeButtonDown >= shortPressAfterMiliseconds)
+  }
+  else
+  {
+    if (buttonPressedTime && !isLongpress)
     {
       onVolumeShortClick();
     }
+    buttonPressedTime = 0;
+    isLongpress = false;
   }
-  wasButtonDown = false;
 }
 
 void loopRotaryTuner()

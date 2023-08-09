@@ -40,6 +40,9 @@
 
 #define LOG_DEFAULT_LEVEL_INFO
 
+//uncomment if you want to show images for the stations: you need to have an SD card, and also a horizontal tft layout
+//#define SHOW_IMAGES
+
 #ifdef HAS_REMOTE
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
@@ -48,6 +51,7 @@
 
 #ifdef HAS_ROTARIES
 #include "AiEsp32RotaryEncoder.h"
+
 
 #define ROTARY_ENCODER_A_PIN 13
 #define ROTARY_ENCODER_B_PIN 17
