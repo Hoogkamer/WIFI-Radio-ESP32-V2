@@ -27,8 +27,6 @@ bool playRadio = true;
 unsigned long shortPressAfterMiliseconds = 50;  // how long short press shoud be. Do not set too low to avoid bouncing (false press events).
 unsigned long longPressAfterMiliseconds = 1000; // how long čong press shoud be.
 
-#define MAX_VOL 20
-
 int prevRotaryTunerCode = 500;
 
 AsyncWebServer server(80);
@@ -64,19 +62,19 @@ bool endsWith(const char *base, const char *searchString)
 
 boolean drawImage(const char *scImg, uint16_t posX, uint16_t posY, uint16_t maxWidth, uint16_t maxHeigth)
 {
-
+#ifdef HAS_SDCARD
   if (endsWith(scImg, "bmp"))
   {
-    // log_i("drawImage %s, x=%i, y=%i, mayWidth=%i, maxHeight=%i", scImg, posX, posY, maxWidth, maxHeigth);
     return tft.drawBmpFile(SD, scImg, posX, posY, maxWidth, maxHeigth);
   }
   if (endsWith(scImg, "jpg"))
   {
     return tft.drawJpgFile(SD, scImg, posX, posY, maxWidth, maxHeigth);
   }
-
+#endif
   return false; // neither jpg nor bmp
 }
+
 void setTFTbrightness(uint8_t duty)
 { // duty 0...100 (min...max)
   if (TFT_BL == -1)
@@ -100,7 +98,7 @@ void loadStations()
   radStat::processJSON(configurations1);
   configurations1.close();
 }
-
+#ifdef HAS_SDCARD
 void showStationImage(string name, string type, int position)
 {
   string imgAdr0 = "/wifiradio/img/" + type + "/" + name + ".jpg";
@@ -123,6 +121,7 @@ void showStationImage(string name, string type, int position)
     tft.print(name.c_str());
   }
 }
+#endif
 void startRadioStream()
 {
   String url4 = radStat::activeRadioStation.URL;
@@ -261,12 +260,14 @@ void handleRemotePress(int64_t remotecode)
 
   if (remotecode == 70386010088896) // auto preset
   {
-    setScreenOn();
+
+    saveTheStation();
+#ifdef HAS_SDCARD
     if (SD.exists("/wifiradio/mp3/command/StationSaved.mp3"))
     {
       audio.connecttoFS(SD, "/wifiradio/mp3/command/StationSaved.mp3");
     }
-    saveTheStation();
+#endif
   }
 
   if (remotecode == 70386011651201 || remotecode == 70386013196293 || remotecode == 70386010039552) // power off: OFF/CD/FM buttons
@@ -292,6 +293,12 @@ void saveTheStation()
     file1.print(radStat::activeRadioStation.Name);
   }
   file1.close();
+  setScreenOn();
+  saveTheVolume();
+
+  tft.setTextColor(TFT_BLUE);
+  tft.setCursor(5, 160);
+  tft.print("Station Saved");
 }
 void loadSavedVolume()
 {
@@ -407,8 +414,8 @@ void setup()
   rotaryVolume.begin();
   rotaryVolume.disableAcceleration();
   rotaryVolume.setup(readEncoderISR);
-  rotaryVolume.setBoundaries(0, MAX_VOL, false); // minValue, maxValue, circleValues true|false (when max go to min and vice versa)
-  rotaryVolume.setEncoderValue(MAX_VOL - 3);
+  rotaryVolume.setBoundaries(0, VOLUME_MAX, false); // minValue, maxValue, circleValues true|false (when max go to min and vice versa)
+  rotaryVolume.setEncoderValue(VOLUME_MAX - VOLUME_DEFAULT);
   // rotaryVolume.setAcceleration(250);
 #endif
 
@@ -423,10 +430,12 @@ void setup()
   tft.setCursor(25, 80);
   tft.print("Starting...");
 
+#ifdef HAS_SDCARD
   if (!SD.begin(5))
   {
     log_w("SD Card Mount Failed. It is not mandatory, program will continue.");
   }
+#endif
   if (!SPIFFS.begin(true))
   {
     log_e("An Error has occurred while mounting SPIFFS");
@@ -447,7 +456,7 @@ void setup()
   displayStation();
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
   audio.setVolumeSteps(100);
-  audio.setVolume(MAX_VOL - rotaryVolume.readEncoder());
+  audio.setVolume(VOLUME_MAX - rotaryVolume.readEncoder());
 #ifdef MONO_OUTPUT
   audio.forceMono(true);
 #endif
@@ -469,12 +478,7 @@ void onTunerShortClick()
 }
 void onTunerLongClick()
 {
-  setScreenOn();
   saveTheStation();
-  saveTheVolume();
-  tft.setTextColor(TFT_BLUE);
-  tft.setCursor(5, 160);
-  tft.print("Station Saved");
 }
 void handleTunerButton()
 {
@@ -504,34 +508,7 @@ void handleTunerButton()
     isLongpress = false;
   }
 }
-void handleTunerButton()
-{
-  static unsigned long lastTimeButtonDown = 0;
-  static bool wasButtonDown = false;
-  bool isEncoderButtonDown = rotaryTuner.isEncoderButtonDown();
-  if (isEncoderButtonDown)
-  {
-    if (!wasButtonDown)
-    {
-      lastTimeButtonDown = millis();
-    }
-    wasButtonDown = true;
-    return;
-  }
 
-  if (wasButtonDown)
-  {
-    if (millis() - lastTimeButtonDown >= longPressAfterMiliseconds)
-    {
-      onTunerLongClick();
-    }
-    else if (millis() - lastTimeButtonDown >= shortPressAfterMiliseconds)
-    {
-      onTunerShortClick();
-    }
-  }
-  wasButtonDown = false;
-}
 void onVolumeShortClick()
 {
   displayDetails();
@@ -616,7 +593,7 @@ void loopRotaryVolume()
   if (rotaryVolume.encoderChanged())
   {
     Serial.println(rotaryVolume.readEncoder());
-    audio.setVolume(MAX_VOL - rotaryVolume.readEncoder());
+    audio.setVolume(VOLUME_MAX - rotaryVolume.readEncoder());
   }
   handleVolumeButton();
 }

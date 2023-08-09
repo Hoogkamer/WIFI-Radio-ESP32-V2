@@ -1,4 +1,30 @@
+// USER CHANGEABLE -------------
 
+// enable if you have a remote
+// #define HAS_REMOTE
+
+// enable if you have rotary knobs
+#define HAS_ROTARIES
+// #define TFT_ROTATION 0 // 1 or 3 (landscape)
+#define TFT_ROTATION 1 // 1 or 3 (landscape)
+
+// enable if you need mono output (when you have 1 speaker you can use eighter L or R channel only)
+#define MONO_OUTPUT
+
+// set the max volume level and the total steps. In this example it can only get 1/3 of the total volume
+#define VOLUME_MAX 20
+// volume to use at start up
+#define VOLUME_DEFAULT 3
+// volume steps (set lower if you want to use bigger steps)
+#define VOLUME_STEPS 64
+
+// uncomment if you have an SD card connected (where you put the images and sounds)
+// #define HAS_SDCARD
+
+// uncomment if you want to show images for the stations: you need to have an SD card, and also a vertical tft layout
+// #define SHOW_IMAGES
+
+// -----------------------
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -12,47 +38,29 @@
 #include <esp_wifi.h>
 #include <Wire.h>
 #include <EEPROM.h>
+#ifdef HAS_SDCARD
 #include <SD.h>
+#endif
+
 #include "tft.h"
 #include <WiFiManager.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include "SPIFFS.h"
 #include "radStat.h"
-
-// USER CHANGEABLE -------------
-
-// enable if you have a remote
-// #define HAS_REMOTE
-
-// enable if you have rotary knobs
-#define HAS_ROTARIES
-
-// #define TFT_ROTATION 0 // 1 or 3 (landscape)
-#define TFT_ROTATION 1 // 1 or 3 (landscape)
-
-// enable if you need mono output on both channels (when you have 1 speaker)
-#define MONO_OUTPUT
-
-// -----------------------
-
-#define CORS_DEBUG
-
-#define LOG_DEFAULT_LEVEL_INFO
-
-//uncomment if you want to show images for the stations: you need to have an SD card, and also a horizontal tft layout
-//#define SHOW_IMAGES
-
 #ifdef HAS_REMOTE
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRutils.h>
 #endif
-
 #ifdef HAS_ROTARIES
 #include "AiEsp32RotaryEncoder.h"
+#endif
 
+#define CORS_DEBUG
+#define LOG_DEFAULT_LEVEL_INFO
 
+#ifdef HAS_ROTARIES
 #define ROTARY_ENCODER_A_PIN 13
 #define ROTARY_ENCODER_B_PIN 17
 #define ROTARY_ENCODER_BUTTON_PIN 35
@@ -64,7 +72,6 @@ AiEsp32RotaryEncoder rotaryVolume = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, R
 #define ROTARY_ENCODER2_BUTTON_PIN 33
 #define ROTARY_ENCODER2_STEPS 4
 AiEsp32RotaryEncoder rotaryTuner = AiEsp32RotaryEncoder(ROTARY_ENCODER2_A_PIN, ROTARY_ENCODER2_B_PIN, ROTARY_ENCODER2_BUTTON_PIN, -1, ROTARY_ENCODER2_STEPS);
-
 #endif
 
 // Digital I/O used
