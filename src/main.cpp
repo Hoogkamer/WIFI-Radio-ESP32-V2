@@ -131,12 +131,14 @@ void startRadioStream()
 }
 void setScreenOn()
 {
+  clearTFTAllWhite();
   setTFTbrightness(100);
   tftIsOn = true;
   screenSwitchOnMillis = millis();
 }
 void setScreenOff()
 {
+  clearTFTAllWhite();
   setTFTbrightness(0);
   tftIsOn = false;
   screenSwitchOnMillis = 0;
@@ -147,13 +149,10 @@ void displayStation()
   radStat::activeRadioStation.printDetails();
   radioSwitchMillis = millis();
   setScreenOn();
-  clearTFTAllWhite();
 #ifdef SHOW_IMAGES
   showStationImage(radStat::activeRadioStation.Category.c_str(), "category", 0);
   showStationImage(radStat::activeRadioStation.Name.c_str(), "radio", 80);
 #else
-
-  clearTFTAllWhite();
   tft.setTextColor(TFT_BLUE);
   tft.setFont(_fonts[FONT_CATEGORY]);
   tft.setCursor(25, 30);
@@ -174,7 +173,6 @@ void setStation()
 void displayDetails()
 {
   setScreenOn();
-  clearTFTAllWhite();
   tft.setTextColor(TFT_BLACK);
   tft.setCursor(2, 20);
   tft.print("IP:");
@@ -224,22 +222,22 @@ void handleRemotePress(int64_t remotecode)
   if (remotecode == 70386011640495) // left: previous station
   {
     radStat::prevStation();
-    setStation();
+    displayStation();
   }
   if (remotecode == 70386011624047) // right: next station
   {
     radStat::nextStation();
-    setStation();
+    displayStation();
   }
   if (remotecode == 70386013224938) // down: next category
   {
     radStat::nextCategory();
-    setStation();
+    displayStation();
   }
   if (remotecode == 70386013192042) // up: previous category
   {
     radStat::prevCategory();
-    setStation();
+    displayStation();
   }
   if (remotecode == 70386011660258) // ok: Wakeup screen and show station and set active station
   {
@@ -254,13 +252,11 @@ void handleRemotePress(int64_t remotecode)
   }
   if (remotecode == 70386011657704) // Ipod menu: Show details
   {
-
     displayDetails();
   }
 
   if (remotecode == 70386010088896) // auto preset
   {
-
     saveTheStation();
 #ifdef HAS_SDCARD
     if (SD.exists("/wifiradio/mp3/command/StationSaved.mp3"))
@@ -293,7 +289,7 @@ void saveTheStation()
     file1.print(radStat::activeRadioStation.Name);
   }
   file1.close();
-  setScreenOn();
+  displayStation();
   saveTheVolume();
 
   tft.setTextColor(TFT_BLUE);
@@ -423,10 +419,8 @@ void setup()
   setScreenOn();
   tft.setFrequency(TFT_FREQUENCY);
   tft.setRotation(TFT_ROTATION);
-
   tft.setFont(_fonts[FONT_INFO]);
-  clearTFTAllBlack();
-  tft.setTextColor(TFT_YELLOW);
+  tft.setTextColor(TFT_BLACK);
   tft.setCursor(25, 80);
   tft.print("Starting...");
 
@@ -473,8 +467,11 @@ void onTunerShortClick()
   {
     radStat::nextCategory();
     setStation();
+  } else {
+    displayStation();
+
   }
-  setScreenOn();
+  
 }
 void onTunerLongClick()
 {
