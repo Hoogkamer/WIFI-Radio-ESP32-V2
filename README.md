@@ -9,14 +9,20 @@ If you want a version with more functionalities (and a lot of more code, that is
 
 Features:
 
-- Use a remote to operate
-- Radio stations specified in a CSV file you put on the SD card
+- Use a remote to operate and/or rotary buttons
+- Radio stations configurable with website
 - Each station can have a category. You can switch +/- a radio station within the category
 - You can switch +/- between categories
 - You can save 1 station which is then selected when you switch on the device
-- You can specify images for the categories and the radio stations
+- You can specify images for the categories and the radio stations (via the optional SD card)
+
+### Radio1: Drop-in for an IPOD with remote
 
 ![RadioRemote](/readme_info/images/radioandremote.jpg)
+
+### Radio2: Portable radio with rotary buttons
+
+![RadioRotaries](/readme_info/images/radiorotaries.jpg)
 
 ## Hardware and pinouts
 
@@ -36,38 +42,61 @@ Ili9341 240\*320 2.8 inch touch
 
 ### DAC:
 
-I2S PCM5102A Dac Decoder
+[I2S PCM5102A Dac Decoder](https://nl.aliexpress.com/item/1005002898278583.html?spm=a2g0o.order_list.order_list_main.17.21ef79d2UT6dOU&gatewayAdapt=glo2nld)
 
-### IR Receiver:
+### IR Receiver (optional):
 
 10Pcs Universele Ir Infrarood Ontvanger TL1838 VS1838B 1838 38Khz
 
 [IRR Aliexpress](https://nl.aliexpress.com/item/1005003194864725.html?spm=a2g0o.order_list.order_list_main.23.2b0c79d2hiKNqB&gatewayAdapt=glo2nld)
 
-### SD Card Reader:
+### SD Card Reader (optional):
 
 AZDelivery 3 x SPI Reader Micro Memory SD TF Module Card
 
 [SD Amazon](https://www.amazon.nl/dp/B077MCQS9P?psc=1&ref=ppx_yo2ov_dt_b_product_details)
 
+### Two Rotary Encoder (optional):
+
+Used for volume and tuning the radio station. Instead you can use the remote/IR receiver option
+
+KY-040 360 Graden Rotary Encoder Module
+[Rotry Encoder Aliexpress](https://nl.aliexpress.com/item/4000332297021.html?spm=a2g0o.order_list.order_list_main.35.235979d2rPFAs1&gatewayAdapt=glo2nld_)
+
+### Amplifier (for portable radio)
+
+All original electronics of the portable radio is removed, so it does not have an amplifier anymore. You should connect an amplifier to the DAC (and speaker)
+
+[5128 Amplifier board](https://nl.aliexpress.com/item/1005004428568482.html?spm=a2g0o.order_list.order_list_main.23.21ef79d2UT6dOU&gatewayAdapt=glo2nld)
+
 ## Used pinouts
 
-| ESP32 | LCD         | PCM             | IR        | SD      | wire colors |
-| ----- | ----------- | --------------- | --------- | ------- | ----------- |
-| v5    | 1- VCC      | 6- VIN          | 3- VCC    | 5- VCC  | red         |
-| GND   | 2- GND      | 5- GND + 1- SCK | 2- GND    | 6- GND  | black       |
-| 22    | 3- CS       |                 |           |         | blue        |
-| EN    | 4- RESET    |                 |           |         | yellow      |
-| 21    | 5- DC       |                 |           |         | green       |
-| 23    | 6- SDI/MOSI |                 |           | 3- MOSI | brown       |
-| 18    | 7-SCK       |                 |           | 2- SCK  | grey        |
-| 32    | 8-LED       |                 |           |         | purple      |
-| 19    | 9-SDO/MISO  |                 |           | 4- MISO | white       |
-| 5     |             |                 |           | 1- CS   | orange      |
-| 26    |             | 4- LCK          |           |         |             |
-| 25    |             | 3- DIN          |           |         |             |
-| 27    |             | 2- BCK          |           |         |             |
-| 35    |             |                 | 1- SIGNAL |         |             |
+| ESP32 | LCD         | PCM             | IR        | SD      | wire colors | Rotary1 | Rotary2 |
+| ----- | ----------- | --------------- | --------- | ------- | ----------- | ------- | ------- |
+| v5    | 1- VCC      | 6- VIN          | 3- VCC    | 5- VCC  | red         |         |         |
+| GND   | 2- GND      | 5- GND + 1- SCK | 2- GND    | 6- GND  | black       |         |         |
+| 22    | 3- CS       |                 |           |         | blue        |         |         |
+| EN    | 4- RESET    |                 |           |         | yellow      |         |         |
+| 21    | 5- DC       |                 |           |         | green       |         |         |
+| 23    | 6- SDI/MOSI |                 |           | 3- MOSI | brown       |         |         |
+| 18    | 7-SCK       |                 |           | 2- SCK  | grey        |         |         |
+| 32    | 8-LED       |                 |           |         | purple      |         |         |
+| 19    | 9-SDO/MISO  |                 |           | 4- MISO | white       |         |         |
+| 5     |             |                 |           | 1- CS   | orange      |         |         |
+| 26    |             | 4- LCK          |           |         |             |         |         |
+| 25    |             | 3- DIN          |           |         |             |         |         |
+| 27    |             | 2- BCK          |           |         |             |         |         |
+| 35    |             |                 | 1- SIGNAL |         |             |         |         |
+| 13    |             |                 |           |         |             | 1-CLK A |         |
+| 17    |             |                 |           |         |             | 2-DT B  |         |
+| 35    |             |                 |           |         |             | 3-SW    |         |
+| v3    |             |                 |           |         |             | 4-+     | 4-+     |
+| GND   |             |                 |           |         |             | 5-GND   | 5-GND   |
+| 14    |             |                 |           |         |             | 1-CLK   | 1-CLK A |
+| 34    |             |                 |           |         |             | 1-CLK   | 2-DT B  |
+| 33    |             |                 |           |         |             | 1-CLK   | 3-SW    |
+
+dont use 0,2,12,15
 
 (wire colors you can use as desired)
 
@@ -92,49 +121,34 @@ In a terminal window:
 
 ## Changing the code
 
+### changing the header file
+
+You can specify the options for the radio in the header file.
+For both radios an example header file is provided (and you should include one of them in the main1.h file)
+
+- ipodradio.h: this is the first radio example with remote
+- portableradio.h: this is the second radio example with rotary buttons
+
 ### Settings for the remote
 
 If you want to use a different remote you can replace the remote codes.
 The platformio will display the remote control code of the button you are pressing in the Serial Monitor.
-Search for "remote codes" in the main.cpp file and change the codes as desired.
+Provide it in the header file (for example ipodradio.h)
+
+### Uploading the Filesystem image
+
+This contains the website.
+In VSCODE:
+PlatformIO > ESP32 > Platform > Build Filesystem Image, and then Upload Filesystem Image
+
+This will uploade everything in the "data" folder
+[More] (https://randomnerdtutorials.com/esp32-vs-code-platformio-spiffs/)
 
 ### Preparing the SD Card
 
-See the folder "SD", copy this to the SD card. Root folder copied should be " wifiradio".
+The SD card is optional, you do not have to use this.
 
-#### config.json
-
-> {  
-> "screenTimoutSec": 5,  
-> "ssid": "TheNet",  
-> "sspw": "",  
-> "ftpid": "ftp01",  
-> "ftppw": "ftp01"  
-> }
-
-ssid: fill in the name of your wifi access point  
-sspw: fill in the password
-screenTimOutSec: screen off after last button press x second (specify 0 for allways on)
-autoSwitchSec: after selecting a new station, tune to it after x seconds (specify -1 for never). You want to set this to a few seconds to be able to quickly navigate through the stations, otherwise you have to wait until the station is tuned before you can navigate to the next station.
-
-#### stations.csv
-
-Find URLs here:
-
-- http://fmstream.org/index.php?s=0n
-- https://www.webradiostreams.nl/index.html
-
-Edit the wifiradio\stations.csv
-
-> *Tab separated!  
-> *Category StationName StreamURL
->
-> Retro ON70s http://0n-80s.radionetz.de:8000/0n-70s.mp3  
-> Retro ON80s http://0n-80s.radionetz.de:8000/0n-80s.mp3  
-> Retro ON90s http://0n-90s.radionetz.de:8000/0n-90s.mp3
-
-Lines starting with \* are ignored  
-So there are 3 columns, each separated by a TAB
+See the folder "SD", copy this to the SD card. Root folder copied should be "wifiradio".
 
 #### Using images for station categories and station names
 
@@ -147,28 +161,75 @@ You can copy your own images and scale them to 240px.
 
 ## Operating the Internet radio
 
+### Connecting to a new WIFI access point
+
+When the Radio cannot connect to a wifi access point, it will startup an access point "WIFI_RADIO"
+Connect with your Phone/Computer to that access point and navigate to 192.168.1.4
+
+[More](https://github.com/tzapu/WiFiManager#using)
+
+### Showing the IP address
+
+Shows the screen with IP address how you can access the webpage.
+
+#### Using Remote
+
+You can configure the button yourself. In this case it is mapped to the Ipod MENU button.
+
+#### Using Rotary button
+
+Or Volume Rotary button press.
+
+### Editing radiostations
+
+Navigate on your phone/computer to the IP address mentioned above. You must be connected to the same WIFI access point.
+Then go to edit stations and wait until you see the categories dropdown populated. If not after a while, refresh the page.
+Edit the stations and press "Save" to upload it to the WIFI Radio. Use HTTP, not HTTPS links to the streams!
+
 ### Changing categories and radio stations
+
+#### Using Remote
 
 This depends on the buttons you want to use of the remote.
 In this example the stations are selectable by the left-right keys. And the categories by the up-down keys.
-It only selects it after x seconds (see config.json) so you can quickly navigate through the stations (otherwise it halts untill the streaming is workding)
+It only selects it after 3 seconds so you can quickly navigate through the stations (otherwise it halts untill the streaming is workding)
 You can also activate with the OK button, see next section.
+
+#### Using Rotary
+
+Click the Station Rotary button to change the Category. Turn the Station Rotary button to change the station.
+
+### Stopping the radio stream
+
+#### Using Remote
+
+Press the STOP button on your remote. Pressing OK starts the stream again.
+
+#### Using Rotary
+
+Press and hold Volume Rotary
 
 ### Activating the station
 
-After selecting the station, press the OK button on your remote to select it.
+#### Using Remote
+
+After selecting the station, It will automatically connect after 3 seconds. Or press the OK button on your remote to select it.
+
+#### Using Rotary
+
+It will automatically connect after 3 seconds
 
 ### Saving a radio station
 
+#### Using Remote
+
 You can configure the button yourself. In this case it is mapped to the Auto Preset button.
 
-### Showing the FTP address
+#### Using Rotary
 
-Shows the screen with details how you can access the SD card via FTP. This way you do not need to have physically access to the SD card when you want
-to change the stations which are available. (stations.csv)
-You can configure the button yourself. In this case it is mapped to the Ipod MENU button.
+Press and hold the Station Rotary Button.
 
-## Donor radio
+## Donor radio 1 (IPOD)
 
 Panasonic SC-HC3
 It sounds great. It has a radio, CD player and a room for an IPOD behind a sliding door.
@@ -222,3 +283,14 @@ Then drill a hole large enough for the audio cable and the usb cable from the fr
 
 - Power the ESP32 via the IPOD docking connector wires. This can be risky as the available power is only 0.5A, and I am not sure how much the ESP with screen etc is drawing.
 - Connect to the AUX port internally instead of using a cable running outside the case.
+
+## Donor radio 2 (Portable)
+
+A Grundig music boy
+
+### Removing old stuff
+
+Remove screws at the bottom. Also the 2 knobs and screws at the top and lift the whole top. Then buy a piece of plexiglass, and make it the fit the top properly, cut 3 holes (1 for antenna, 2 for the rotary knobs). Paint the backside of the plexiglass black or any other color, leaving the room free for the LCD screen.
+Then solder everything etc.
+
+![Rotaries open](/readme_info/images/RotariesOpen.jpg)

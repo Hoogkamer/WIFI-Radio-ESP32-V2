@@ -2,8 +2,9 @@
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
+#include "ipodradio.h"
+// #include "portableradio.h"
 
-#include "Arduino_JSON.h"
 #include "Arduino.h"
 #include <FS.h>
 #include "Audio.h"
@@ -13,20 +14,44 @@
 #include <esp_wifi.h>
 #include <Wire.h>
 #include <EEPROM.h>
+#ifdef HAS_SDCARD
 #include <SD.h>
-#include "tft.h"
-#include <IRremoteESP8266.h>
-#include <IRrecv.h>
-#include <IRutils.h>
-#include "ESP32FtpServer.h"
-#include <WiFiManager.h>
+#endif
 
+#include "tft.h"
+#include <WiFiManager.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include "SPIFFS.h"
+#include "radStat.h"
+#ifdef HAS_REMOTE
+#include <IRremoteESP8266.h>
+#include <IRrecv.h>
+#include <IRutils.h>
+#endif
+#ifdef HAS_ROTARIES
+#include "AiEsp32RotaryEncoder.h"
+#endif
+
+#define CORS_DEBUG
+#define LOG_DEFAULT_LEVEL_INFO
+
+#ifdef HAS_ROTARIES
+#define ROTARY_ENCODER_A_PIN 13
+#define ROTARY_ENCODER_B_PIN 17
+#define ROTARY_ENCODER_BUTTON_PIN 35
+#define ROTARY_ENCODER_STEPS 4
+AiEsp32RotaryEncoder rotaryVolume = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_BUTTON_PIN, -1, ROTARY_ENCODER_STEPS);
+
+#define ROTARY_ENCODER2_A_PIN 14
+#define ROTARY_ENCODER2_B_PIN 34
+#define ROTARY_ENCODER2_BUTTON_PIN 33
+#define ROTARY_ENCODER2_STEPS 4
+AiEsp32RotaryEncoder rotaryTuner = AiEsp32RotaryEncoder(ROTARY_ENCODER2_A_PIN, ROTARY_ENCODER2_B_PIN, ROTARY_ENCODER2_BUTTON_PIN, -1, ROTARY_ENCODER2_STEPS);
+#endif
 
 // Digital I/O used
-#define SD_CS 5
+#define SD_CS 5xx
 #define SPI_MOSI 23
 #define SPI_MISO 19
 #define SPI_SCK 18
@@ -44,46 +69,16 @@
 
 #define IR_RECEIVE_PIN 15
 
-#define TFT_ROTATION 0         // 1 or 3 (landscape)
+// #define TFT_ROTATION 0 // 1 or 3 (landscape)
+
 #define DISPLAY_INVERSION 0    // (0) off (1) on
 #define TFT_FREQUENCY 40000000 // 27000000, 40000000, 80000000
 
 const uint16_t kRecvPin = 15; // IR receiver
 
-class RadioStation
-{
-public:
-    String Name;
-    String Category;
-    String URL;
-
-    RadioStation() {}
-
-    RadioStation(String c, String n, String u)
-    {
-        Name = n;
-        Name.trim();
-        Category = c;
-        Category.trim();
-        URL = u;
-        URL.trim();
-    }
-
-    void printDetails()
-    {
-        Serial.print("name:");
-        Serial.print(Name.c_str());
-        Serial.print(", category:");
-        Serial.print(Category.c_str());
-        Serial.print(", url:");
-        Serial.print(URL.c_str());
-    }
-};
-
 void connectToWIFI();
 void setTFTbrightness(uint8_t duty);
 boolean drawImage(const char *path, uint16_t posX, uint16_t posY, uint16_t maxWidth = 0, uint16_t maxHeigth = 0);
-void findStationCat();
 void printError(const char *error);
 void loadSavedStation();
 void saveTheStation();

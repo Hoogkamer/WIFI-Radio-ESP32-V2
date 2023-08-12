@@ -1,0 +1,6 @@
+         // JsonArray categories = doc.createNestedArray("categories");
+              // categories.add("Jazz");
+              // categories.add("Pop");
+              // categories.add("Local");
+              // categories.add("Retro");
+              // serializeJson(doc, Serial);

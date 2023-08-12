@@ -1,53 +1,52 @@
-#define VOLUME 100 // volume level 0-100
-#define EEPROM_SIZE 2
-
 #include "main1.h"
 
-long previousMillis = 0;
+long screenSwitchOnMillis = 0;
 long radioSwitchMillis = 0;
 
-int radioStation = 0;
-int previousRadioStation = 0;
-int screenTimeoutSec = 10;
+int screenTimeoutSec = 60;
 int autoSwitchSec = 3;
 
-String _sspw = "ho03840384";
-String _ssid = "Pixel_5047";
+File stationsFile;
 
-String ftp_username = "";
-String ftp_pw = "";
-
-RadioStation radioStations[99];
-String radioCategories[99];
-int nrOfCategories = 0;
-int nrOfStations = 0;
-int activeCategory = 0;
+String _sspw = "";
+String _ssid = "";
 
 TFT tft(0, 0);
 WiFiManager manager;
 
-FtpServer ftpSrv;
 Audio audio;
+#ifdef HAS_REMOTE
 IRrecv irrecv(kRecvPin);
 decode_results results;
+#endif
 
 bool radioIsOn = true;
+bool tftIsOn = true;
+bool playRadio = true;
+
+unsigned long shortPressAfterMiliseconds = 50;  // how long short press shoud be. Do not set too low to avoid bouncing (false press events).
+unsigned long longPressAfterMiliseconds = 1000; // how long čong press shoud be.
+
+int prevRotaryTunerCode = 500;
 
 AsyncWebServer server(80);
-AsyncWebSocket ws("/ws");
+#define FONT_INFO 0
+#define FONT_CATEGORY 1
+#define FONT_STATION 2
 
 /***********************************************************************************************************************
  *                                                 I M A G E                                                           *
  ***********************************************************************************************************************/
-const unsigned short *_fonts[7] = {
-    Times_New_Roman15x14,
-    Times_New_Roman21x17,
-    Times_New_Roman27x21,
-    Times_New_Roman34x27,
-    Times_New_Roman38x31,
-    Times_New_Roman43x35,
-    Big_Numbers133x156 // ASCII 32...64 only
-};
+const unsigned short *_fonts[3] = {
+    Courier_New16x30, Courier_New19x36, Courier_New22x39};
+bool startsWith(const char *base, const char *searchString)
+{
+  char c;
+  while ((c = *searchString++) != '\0')
+    if (c != *base++)
+      return false;
+  return true;
+}
 
 bool endsWith(const char *base, const char *searchString)
 {
@@ -63,19 +62,19 @@ bool endsWith(const char *base, const char *searchString)
 
 boolean drawImage(const char *scImg, uint16_t posX, uint16_t posY, uint16_t maxWidth, uint16_t maxHeigth)
 {
-
+#ifdef HAS_SDCARD
   if (endsWith(scImg, "bmp"))
   {
-    // log_i("drawImage %s, x=%i, y=%i, mayWidth=%i, maxHeight=%i", scImg, posX, posY, maxWidth, maxHeigth);
     return tft.drawBmpFile(SD, scImg, posX, posY, maxWidth, maxHeigth);
   }
   if (endsWith(scImg, "jpg"))
   {
     return tft.drawJpgFile(SD, scImg, posX, posY, maxWidth, maxHeigth);
   }
-
+#endif
   return false; // neither jpg nor bmp
 }
+
 void setTFTbrightness(uint8_t duty)
 { // duty 0...100 (min...max)
   if (TFT_BL == -1)
@@ -90,181 +89,16 @@ inline void clearTFTAllBlack() { tft.fillScreen(TFT_BLACK); } // y   0...239
 inline void clearTFTAllWhite() { tft.fillScreen(TFT_WHITE); } // y   0...239
 
 /***********************************************************************************************************************
- *                                                  A U D I O                                                          *
- ***********************************************************************************************************************/
-
-/***********************************************************************************************************************
- *                                                  C O M M O N                                                         *
- ***********************************************************************************************************************/
-
-bool startsWith(const char *base, const char *searchString)
-{
-  char c;
-  while ((c = *searchString++) != '\0')
-    if (c != *base++)
-      return false;
-  return true;
-}
-
-int findStringIndex(String arr[], int size, String target)
-{
-  for (int i = 0; i < size; ++i)
-  {
-    if (arr[i] == target)
-    {
-      return i; // Return the index when a match is found
-    }
-  }
-
-  return -1; // Return -1 if the string is not found
-}
-
-/***********************************************************************************************************************
  *                                                  P R O G R A M                                                      *
  ***********************************************************************************************************************/
 
-boolean loadStationsCSV()
+void loadStations()
 {
-  String Category = "", Name = "", URL = "";
-  String currentLine = "", tmp = "";
-
-  uint16_t cnt = 0;
-  // StationList
-  if (!SD.exists("/wifiradio/stations.csv"))
-  {
-    Serial.println("stations not found");
-    return false;
-  }
-
-  File file = SD.open("/wifiradio/stations.csv");
-
-  if (!file)
-  {
-    Serial.println("cannot open stations");
-    return false;
-  }
-
-  while (file.available())
-  {
-    currentLine = file.readStringUntil('\n');
-    int rfound = currentLine.indexOf('\r');
-    Serial.println(">>" + currentLine + "<<");
-    if (rfound != -1)
-    {
-      currentLine.remove(rfound);
-    }
-    Serial.println("!>>" + currentLine + "<<");
-    uint p = 0, q = 0;
-    Category = "";
-    Name = "";
-    URL = "";
-    for (int i = 0; i < currentLine.length() + 1; i++)
-    {
-      if (currentLine[i] == '\t' || i == currentLine.length())
-      {
-        if (p == 0)
-          Category = currentLine.substring(q, i);
-        if (p == 1)
-          Name = currentLine.substring(q, i);
-        if (p == 2)
-          URL = currentLine.substring(q, i);
-
-        p++;
-        i++;
-        q = i;
-      }
-    }
-    if (Name == "")
-      continue; // is empty
-    if (startsWith(Category.c_str(), "*"))
-      continue;
-    if (URL == "")
-      continue; // is empty
-    radioStations[cnt] = RadioStation(Category, Name, URL);
-    radioStations[cnt].printDetails();
-    cnt++;
-    // Check if the category is already present
-    bool categoryExists = false;
-    for (int i = 0; i < nrOfCategories; ++i)
-    {
-      if (radioCategories[i] == Category)
-      {
-        categoryExists = true;
-        break;
-      }
-    }
-    if (!categoryExists)
-    {
-      radioCategories[nrOfCategories] = Category;
-      nrOfCategories++;
-    }
-  }
-  nrOfStations = cnt;
-  file.close();
-  Serial.println("stationlist internally loaded");
-  Serial.println("number of stations: " + String(nrOfStations));
-
-  Serial.println("number of categories: " + String(nrOfCategories));
-  loadSavedStation();
-
-  return true;
+  File configurations1 = SPIFFS.open("/stations.json", "r");
+  radStat::processJSON(configurations1);
+  configurations1.close();
 }
-void nextStation()
-{
-  radioStation++;
-  if (radioStation > nrOfStations)
-  {
-    radioStation = 0;
-  }
-  RadioStation thisStation = radioStations[radioStation];
-  if (thisStation.Category != radioCategories[activeCategory])
-  {
-    nextStation();
-  }
-}
-void prevStation()
-{
-  radioStation--;
-  if (radioStation < 0)
-  {
-    radioStation = nrOfStations - 1;
-  }
-  RadioStation thisStation = radioStations[radioStation];
-  if (thisStation.Category != radioCategories[activeCategory])
-  {
-    prevStation();
-  }
-}
-void findStationCat()
-{
-  for (int i = 0; i < nrOfStations; i++)
-  {
-    if (radioStations[i].Category == radioCategories[activeCategory])
-    {
-      radioStation = i;
-      break;
-    }
-  }
-}
-void nextCategory()
-{
-  activeCategory++;
-  if (activeCategory > nrOfCategories - 1)
-  {
-    activeCategory = 0;
-  }
-  findStationCat();
-}
-void prevCategory()
-{
-  activeCategory--;
-  if (activeCategory < 0)
-  {
-    activeCategory = nrOfCategories - 1;
-  }
-  findStationCat();
-}
-
+#ifdef HAS_SDCARD
 void showStationImage(string name, string type, int position)
 {
   string imgAdr0 = "/wifiradio/img/" + type + "/" + name + ".jpg";
@@ -275,44 +109,96 @@ void showStationImage(string name, string type, int position)
     maxHeight = 240;
   }
 
-  Serial.println(imgAdr);
+  log_i("Getting image from SD:%s", imgAdr);
   if (SD.exists(imgAdr))
   {
     drawImage(imgAdr, 0, position, 240, maxHeight);
   }
   else
   {
-    tft.setCursor(25, position);
+    tft.setCursor(25, position + 20);
+    tft.setTextColor(TFT_BLACK);
     tft.print(name.c_str());
   }
 }
+#endif
 void startRadioStream()
 {
-  RadioStation thisStation = radioStations[radioStation];
-  String url4 = thisStation.URL;
+  String url4 = radStat::activeRadioStation.URL;
   const char *url1 = url4.c_str();
-  Serial.println("trying url:>>>" + String(url1) + "<<<");
+  log_i("trying url:>>>%s<<<", url1);
   audio.connecttohost(url1);
-  activeCategory = findStringIndex(radioCategories, nrOfCategories, thisStation.Category);
-  if (activeCategory < 0)
-  {
-    activeCategory = 0;
-  }
 }
+void setScreenOn()
+{
+  clearTFTAllWhite();
+  setTFTbrightness(100);
+  tftIsOn = true;
+  screenSwitchOnMillis = millis();
+}
+void setScreenOff()
+{
+  clearTFTAllWhite();
+  setTFTbrightness(0);
+  tftIsOn = false;
+  screenSwitchOnMillis = 0;
+}
+
 void displayStation()
 {
-  RadioStation thisStation = radioStations[radioStation];
-  thisStation.printDetails();
-  previousMillis = millis();
+  radStat::activeRadioStation.printDetails();
   radioSwitchMillis = millis();
-  setTFTbrightness(100);
-  clearTFTAllWhite();
-  showStationImage(thisStation.Category.c_str(), "category", 0);
-  showStationImage(thisStation.Name.c_str(), "radio", 80);
+  setScreenOn();
+#ifdef SHOW_IMAGES
+  showStationImage(radStat::activeRadioStation.Category.c_str(), "category", 0);
+  showStationImage(radStat::activeRadioStation.Name.c_str(), "radio", 80);
+#else
+  tft.setTextColor(TFT_BLUE);
+  tft.setFont(_fonts[FONT_CATEGORY]);
+  tft.setCursor(25, 30);
+  tft.print(radStat::activeRadioStation.Category.c_str());
+  tft.setTextColor(TFT_BLACK);
+  tft.setFont(_fonts[FONT_STATION]);
+  tft.setCursor(25, 70);
+  tft.print(radStat::activeRadioStation.Name.c_str());
+  tft.setFont(_fonts[FONT_INFO]);
+
+#endif
 }
+
 void setStation()
 {
   displayStation();
+}
+void displayDetails()
+{
+  setScreenOn();
+  tft.setTextColor(TFT_BLACK);
+  tft.setCursor(2, 20);
+  tft.print("IP:");
+  tft.setCursor(2, 50);
+  tft.print(WiFi.localIP().toString());
+  tft.setCursor(2, 100);
+  tft.print("Connect with your pc/phone to this IP address to configure the stations.");
+}
+void switchRadioOn()
+{
+  connectToWIFI();
+  displayStation();
+  radioIsOn = true;
+}
+void switchRadioOff()
+{
+  radioIsOn = false;
+  setScreenOn();
+  printError("Going in standby");
+  log_i("Powering off");
+  drawImage("/wifiradio/img/shutdown.jpg", 0, 0);
+  delay(5000);
+  setScreenOff();
+  // esp_deep_sleep_start();
+  WiFi.disconnect();
+  WiFi.mode(WIFI_OFF);
 }
 void handleRemotePress(int64_t remotecode)
 {
@@ -323,247 +209,182 @@ void handleRemotePress(int64_t remotecode)
 
   if (!radioIsOn)
   {
-    if (remotecode == 70386007955804) // AUX: switch on again
+    if (remotecode == RC_RADIO_ON)
     {
-      connectToWIFI();
-      displayStation();
-      radioIsOn = true;
+      switchRadioOn();
     }
     return;
   }
-  if (remotecode == 70386011640495) // left: previous station
+  if (remotecode == RC_STANDBY)
   {
-    prevStation();
-    setStation();
+    playRadio = false;
   }
-  if (remotecode == 70386011624047) // right: next station
+  if (remotecode == RC_PREVIOUS_STATION)
   {
-    nextStation();
-    setStation();
-  }
-  if (remotecode == 70386013224938) // down: next category
-  {
-    nextCategory();
-    setStation();
-  }
-  if (remotecode == 70386013192042) // up: previous category
-  {
-    prevCategory();
-    setStation();
-  }
-  if (remotecode == 70386011660258) // ok: Wakeup screen and show station and set active station
-  {
+    radStat::prevStation();
     displayStation();
-    if (radioStation != previousRadioStation)
+  }
+  if (remotecode == RC_NEXT_STATION)
+  {
+    radStat::nextStation();
+    displayStation();
+  }
+  if (remotecode == RC_NEXT_CATEGORY)
+  {
+    radStat::nextCategory();
+    displayStation();
+  }
+  if (remotecode == RC_PREVIOUS_CATEGORY)
+  {
+    radStat::prevCategory();
+    displayStation();
+  }
+  if (remotecode == RC_TURN_ON_SCREEN)
+  {
+    playRadio = true;
+    displayStation();
+    if (radStat::activeRadioStation.Name != radStat::previousRadioStation.Name)
     {
-      previousRadioStation = radioStation;
+      radStat::resetPreviousRadioStation();
+
       startRadioStream();
     }
   }
-  if (remotecode == 70386011657704) // Ipod menu: Show details
+  if (remotecode == RC_SHOW_DETAILS)
   {
-    previousMillis = millis();
-    setTFTbrightness(100);
-    clearTFTAllWhite();
-    tft.setTextColor(TFT_BLACK);
-    tft.setCursor(25, 80);
-    tft.print("IP:");
-    tft.setCursor(25, 110);
-    tft.print(WiFi.localIP().toString());
-    tft.setCursor(25, 140);
-    tft.print("ID:");
-    tft.setCursor(100, 140);
-    tft.print(ftp_username);
-    tft.setCursor(25, 170);
-    tft.print("PW:");
-    tft.setCursor(100, 170);
-    tft.print(ftp_pw);
+    displayDetails();
   }
 
-  if (remotecode == 70386010088896) // auto preset
+  if (remotecode == RC_SAVE_STATION)
   {
-    previousMillis = millis();
-    setTFTbrightness(100);
+    saveTheStation();
+#ifdef HAS_SDCARD
     if (SD.exists("/wifiradio/mp3/command/StationSaved.mp3"))
     {
       audio.connecttoFS(SD, "/wifiradio/mp3/command/StationSaved.mp3");
     }
-    saveTheStation();
+#endif
   }
 
-  if (remotecode == 70386011651201 || remotecode == 70386013196293 || remotecode == 70386010039552) // power off: OFF/CD/FM buttons
+  if (remotecode == RC_RADIO_OFF1 || remotecode == RC_RADIO_OFF2 || remotecode == RC_RADIO_OFF3)
   {
-    radioIsOn = false;
-    setTFTbrightness(100);
-    printError("Powering off");
-    Serial.print("Powering off");
-    drawImage("/wifiradio/img/shutdown.jpg", 0, 0);
-    delay(5000);
-    setTFTbrightness(0);
-    // esp_deep_sleep_start();
-    WiFi.disconnect();
-    WiFi.mode(WIFI_OFF);
+    switchRadioOff();
   }
-
-  Serial.print("radio number is:");
-  Serial.println(radioStation);
-  Serial.print("Category is:");
-  Serial.println(radioCategories[activeCategory]);
+}
+void saveTheVolume()
+{
+  File file1 = SPIFFS.open("/savedVolume.txt", "w", true);
+  if (file1)
+  {
+#ifdef HAS_ROTARIES
+    file1.print(rotaryVolume.readEncoder());
+#endif
+  }
+  file1.close();
 }
 
 void saveTheStation()
 {
-  File file1 = SD.open("/wifiradio/savedStation.txt", "w", true);
+  File file1 = SPIFFS.open("/savedStation.txt", "w", true);
   if (file1)
   {
-    file1.print(radioStation);
+    file1.print(radStat::activeRadioStation.Name);
   }
+  file1.close();
+  displayStation();
+  saveTheVolume();
+
+  tft.setTextColor(TFT_BLUE);
+  tft.setCursor(5, 160);
+  tft.print("Station Saved");
 }
-void loadSavedStation()
+void loadSavedVolume()
 {
-  File file1 = SD.open("/wifiradio/savedStation.txt", "r", false);
+  File file1 = SPIFFS.open("/savedVolume.txt", "r", false);
   if (file1)
   {
-    String line = file1.readString();
-    radioStation = stoi(line.c_str());
-    Serial.print("1.1 Radiostation read:");
-    Serial.println(line);
-    Serial.println(radioStation);
+    String volume = file1.readString();
+    log_i("volume = %s", volume);
+#ifdef HAS_ROTARIES
+    rotaryVolume.setEncoderValue(volume.toInt());
+#endif
   }
-  Serial.println("2");
-  if (radioStation < 0)
-  {
-    radioStation = 0;
-  }
-  if (radioStation > nrOfStations)
-  {
-    radioStation = 0;
-  }
-  previousRadioStation = radioStation;
 
   file1.close();
+}
 
-  Serial.println("Loaded station" + String(radioStation));
+void loadSavedStation()
+{
+  File file1 = SPIFFS.open("/savedStation.txt", "r", false);
+  if (file1)
+  {
+    String stationName = file1.readString();
+    radStat::setActiveRadioStationName(stationName);
+  }
+
+  file1.close();
 }
 void loadSettings()
 {
-  if (!SD.begin(5))
-  {
-    Serial.println("SD Card Mount Failed");
-    printError("SD Card Mount Failed");
-    return;
-  }
-  delay(1500);
-  File file = SD.open("/wifiradio/settings.json", "r", false);
-  delay(1500);
-  if (!file)
-  {
-    Serial.println("problem opening: /wifiradio/settings.json");
-    printError("problem opening: /wifiradio/settings.json");
-  }
-  String jO = file.readString();
-  file.close();
-
-  JSONVar jV = JSON.parse(jO);
-  screenTimeoutSec = (uint8_t)jV["screenTimoutSec"];
-  autoSwitchSec = (uint8_t)jV["autoSwitchSec"];
-
-  _ssid = (const char *)jV["ssid"];
-  _sspw = (const char *)jV["sspw"];
-  ftp_username = (const char *)jV["ftpid"];
-  ftp_pw = (const char *)jV["ftppw"];
-  Serial.println("1");
+  // todo:
+  // screenTimoutSec
+  // autoSwitchSec
 }
 
 void saveSettings()
 {
 }
-String processor(const String &var)
-{
-  Serial.println(var);
-  String ledState;
-  if (var == "STATE")
-  {
-    ledState = "test";
-    return ledState;
-  }
-  return String();
-}
 
-void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
-{
-  AwsFrameInfo *info = (AwsFrameInfo *)arg;
-  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
-  {
-    data[len] = 0;
-    // message = (char*)data;
-    // if (message.indexOf("1s") >= 0) {
-    //   sliderValue1 = message.substring(2);
-    //   dutyCycle1 = map(sliderValue1.toInt(), 0, 100, 0, 255);
-    //   Serial.println(dutyCycle1);
-    //   Serial.print(getSliderValues());
-    //   notifyClients(getSliderValues());
-    // }
-    // if (message.indexOf("2s") >= 0) {
-    //   sliderValue2 = message.substring(2);
-    //   dutyCycle2 = map(sliderValue2.toInt(), 0, 100, 0, 255);
-    //   Serial.println(dutyCycle2);
-    //   Serial.print(getSliderValues());
-    //   notifyClients(getSliderValues());
-    // }
-    // if (message.indexOf("3s") >= 0) {
-    //   sliderValue3 = message.substring(2);
-    //   dutyCycle3 = map(sliderValue3.toInt(), 0, 100, 0, 255);
-    //   Serial.println(dutyCycle3);
-    //   Serial.print(getSliderValues());
-    //   notifyClients(getSliderValues());
-    // }
-    // if (strcmp((char*)data, "getValues") == 0) {
-    //   notifyClients(getSliderValues());
-    // }
-  }
-}
-
-void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
-{
-  switch (type)
-  {
-  case WS_EVT_CONNECT:
-    Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
-    break;
-  case WS_EVT_DISCONNECT:
-    Serial.printf("WebSocket client #%u disconnected\n", client->id());
-    break;
-  case WS_EVT_DATA:
-    handleWebSocketMessage(arg, data, len);
-    break;
-  case WS_EVT_PONG:
-  case WS_EVT_ERROR:
-    break;
-  }
-}
-
-void initWebSocket()
-{
-  ws.onEvent(onEvent);
-  server.addHandler(&ws);
-}
 void startWebServer()
 {
-  if (!SPIFFS.begin(true))
-  {
-    Serial.println("An Error has occurred while mounting SPIFFS");
-    return;
-  }
-  initWebSocket();
-  // Route for root / web page
+
+  //  Route for root / web page https://raphaelpralat.medium.com/example-of-json-rest-api-for-esp32-4a5f64774a05
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/index.html", "text/html"); });
+  server.on("/get-data", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, "/stations.json", "application/json"); });
 
-  // Route to load style.css file
+  server.on(
+      "/post",
+      HTTP_POST,
+      [](AsyncWebServerRequest *request) {},
+      NULL,
+      [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+      {
+        if (index == 0)
+        {
+          stationsFile = SPIFFS.open("/stations.json", "w");
+        }
+        for (size_t i = 0; i < len; i++)
+        {
+          stationsFile.write(data[i]);
+        }
+        if ((len + index) == total)
+        {
+          stationsFile.close();
+          loadStations();
+        }
+
+        request->send(200);
+      });
+
   server.serveStatic("/", SPIFFS, "/");
+
+#ifdef CORS_DEBUG
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "*");
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "*");
+#endif
   server.begin();
 }
+
+#ifdef HAS_ROTARIES
+void IRAM_ATTR readEncoderISR()
+{
+  rotaryTuner.readEncoder_ISR();
+  rotaryVolume.readEncoder_ISR();
+}
+#endif
 
 void setup()
 {
@@ -572,68 +393,262 @@ void setup()
   SPI.setFrequency(1000000);
   Serial.begin(115200);
   delay(500);
-  Serial.println("----Start");
+  log_i("Starting");
+
+#ifdef HAS_ROTARIES
+  pinMode(ROTARY_ENCODER_A_PIN, INPUT_PULLUP);
+  pinMode(ROTARY_ENCODER_B_PIN, INPUT_PULLUP);
+
+  pinMode(ROTARY_ENCODER2_A_PIN, INPUT_PULLUP);
+  pinMode(ROTARY_ENCODER2_B_PIN, INPUT_PULLUP);
+
+  Serial.begin(115200);
+  rotaryTuner.begin();
+  rotaryTuner.disableAcceleration();
+  rotaryTuner.setup(readEncoderISR);
+  rotaryTuner.setBoundaries(0, 1000, true); // minValue, maxValue, circleValues true|false (when max go to min and vice versa)
+  rotaryTuner.setEncoderValue(500);
+  prevRotaryTunerCode = 500;
+  // rotaryTuner.setAcceleration(250);
+
+  rotaryVolume.begin();
+  rotaryVolume.disableAcceleration();
+  rotaryVolume.setup(readEncoderISR);
+  rotaryVolume.setBoundaries(0, VOLUME_MAX, false); // minValue, maxValue, circleValues true|false (when max go to min and vice versa)
+  rotaryVolume.setEncoderValue(VOLUME_MAX - VOLUME_DEFAULT);
+  // rotaryVolume.setAcceleration(250);
+#endif
 
   tft.begin(TFT_CS, TFT_DC, VSPI, TFT_MOSI, TFT_MISO, TFT_SCK);
-  setTFTbrightness(100);
+  setScreenOn();
   tft.setFrequency(TFT_FREQUENCY);
   tft.setRotation(TFT_ROTATION);
-  Serial.println("----Start1");
-
-  tft.setFont(_fonts[5]);
-  clearTFTAllBlack();
-  tft.setTextColor(TFT_YELLOW);
+  tft.setFont(_fonts[FONT_INFO]);
+  tft.setTextColor(TFT_BLACK);
   tft.setCursor(25, 80);
   tft.print("Starting...");
-  tft.setTextColor(TFT_BLACK);
-  Serial.println("----Start2");
-  // loadSettings();
 
-  // loadStationsCSV();
+#ifdef HAS_SDCARD
+  if (!SD.begin(5))
+  {
+    log_w("SD Card Mount Failed. It is not mandatory, program will continue.");
+  }
+#endif
+  if (!SPIFFS.begin(true))
+  {
+    log_e("An Error has occurred while mounting SPIFFS");
+    return;
+  }
 
+  // this is the file where the stations are stored
+  if (!SPIFFS.exists("/stations.json"))
+  {
+    SPIFFS.rename("/stations_input.json", "/stations.json");
+  }
+
+  loadSettings();
+  loadStations();
+  loadSavedStation();
+  loadSavedVolume();
   connectToWIFI();
-  startWebServer();
-  // displayStation();
-  // audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
-  // audio.setVolume(12);
-  // ftpSrv.begin(SD, ftp_username, ftp_pw); // username, password for ftp.
+  displayStation();
+  audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
+  audio.setVolumeSteps(VOLUME_STEPS);
+#ifdef HAS_ROTARIES
+  audio.setVolume(VOLUME_MAX - rotaryVolume.readEncoder());
+#endif
+#ifdef MONO_OUTPUT
+  audio.forceMono(true);
+#endif
+#ifdef HAS_REMOTE
+  irrecv.enableIRIn();
+#endif
 
-  // irrecv.enableIRIn();
+  startWebServer();
 }
+#ifdef HAS_ROTARIES
+void onTunerShortClick()
+{
+  if (tftIsOn)
+  {
+    radStat::nextCategory();
+    setStation();
+  }
+  else
+  {
+    displayStation();
+  }
+}
+void onTunerLongClick()
+{
+  saveTheStation();
+}
+void handleTunerButton()
+{
+  static unsigned long buttonPressedTime = 0;
+  static bool isLongpress = false;
+  bool isEncoderButtonDown = rotaryTuner.isEncoderButtonDown();
+  if (isEncoderButtonDown)
+  {
+    if (!buttonPressedTime)
+    {
+      buttonPressedTime = millis();
+    }
+
+    if (!isLongpress && (millis() - buttonPressedTime >= longPressAfterMiliseconds))
+    {
+      onTunerLongClick();
+      isLongpress = true;
+    }
+  }
+  else
+  {
+    if (buttonPressedTime && !isLongpress)
+    {
+      onTunerShortClick();
+    }
+    buttonPressedTime = 0;
+    isLongpress = false;
+  }
+}
+
+void onVolumeShortClick()
+{
+  displayDetails();
+}
+void onVolumeLongClick()
+{
+  switchRadioOff();
+}
+
+void handleVolumeButton()
+{
+  static unsigned long buttonPressedTime = 0;
+  static bool isLongpress = false;
+  bool isEncoderButtonDown = rotaryVolume.isEncoderButtonDown();
+  if (isEncoderButtonDown)
+  {
+    if (!buttonPressedTime)
+    {
+      buttonPressedTime = millis();
+    }
+
+    if (!isLongpress && (millis() - buttonPressedTime >= longPressAfterMiliseconds))
+    {
+      onVolumeLongClick();
+      isLongpress = true;
+    }
+  }
+  else
+  {
+    if (buttonPressedTime && !isLongpress)
+    {
+      onVolumeShortClick();
+    }
+    buttonPressedTime = 0;
+    isLongpress = false;
+  }
+}
+
+void loopRotaryTuner()
+{
+  if (rotaryTuner.encoderChanged())
+  {
+    int currentRotaryTunerCode = rotaryTuner.readEncoder();
+    Serial.println(rotaryTuner.readEncoder());
+    if (currentRotaryTunerCode > prevRotaryTunerCode)
+    {
+      radStat::prevStation();
+      setStation();
+      if (currentRotaryTunerCode > 900)
+      {
+        currentRotaryTunerCode = 500;
+        prevRotaryTunerCode = 499;
+      }
+      else
+      {
+        prevRotaryTunerCode = currentRotaryTunerCode;
+      }
+    }
+    else if (currentRotaryTunerCode < prevRotaryTunerCode)
+    {
+
+      radStat::nextStation();
+
+      setStation();
+
+      if (currentRotaryTunerCode < 100)
+      {
+        currentRotaryTunerCode = 500;
+        prevRotaryTunerCode = 501;
+      }
+      else
+      {
+        prevRotaryTunerCode = currentRotaryTunerCode;
+      }
+    }
+  }
+
+  handleTunerButton();
+}
+void loopRotaryVolume()
+{
+  if (rotaryVolume.encoderChanged())
+  {
+    Serial.println(rotaryVolume.readEncoder());
+    audio.setVolume(VOLUME_MAX - rotaryVolume.readEncoder());
+  }
+  handleVolumeButton();
+}
+#endif
 
 void loop()
 {
-  // if (irrecv.decode(&results))
-  // {
-  //   handleRemotePress(results.value);
-  //   irrecv.resume(); // Receive the next value
-  // }
-  // if (!radioIsOn)
-  // {
-  //   return;
-  // }
-  // if ((autoSwitchSec > -1) && (radioSwitchMillis > 0) && (millis() - radioSwitchMillis > autoSwitchSec * 1000))
-  // {
-  //   radioSwitchMillis = 0;
-  //   Serial.println("auto switching??");
-  //   if (radioStation != previousRadioStation)
-  //   {
-  //     previousRadioStation = radioStation;
-  //     startRadioStream();
-  //     Serial.println("auto switching!!");
-  //   }
-  // }
-  // if ((screenTimeoutSec > 1) && (previousMillis > 0) && (millis() - previousMillis > screenTimeoutSec * 1000))
-  // {
-  //   previousMillis = 0;
-  //   setTFTbrightness(0);
-  // }
-  // if (!audio.isRunning())
-  // {
-  //   startRadioStream();
-  // }
-  // audio.loop();
-  // ftpSrv.handleFTP();
+
+#ifdef HAS_REMOTE
+  if (irrecv.decode(&results))
+  {
+    handleRemotePress(results.value);
+    irrecv.resume(); // Receive the next value
+  }
+
+#endif
+
+  if (!radioIsOn)
+  {
+#ifdef HAS_ROTARIES
+    if (rotaryVolume.isEncoderButtonClicked())
+    {
+      switchRadioOn();
+    }
+#endif
+    return;
+  }
+#ifdef HAS_ROTARIES
+  loopRotaryTuner();
+  loopRotaryVolume();
+#endif
+  if ((autoSwitchSec > -1) && (radioSwitchMillis > 0) && (millis() - radioSwitchMillis > autoSwitchSec * 1000))
+  {
+    radioSwitchMillis = 0;
+    if (radStat::activeRadioStation.Name != radStat::previousRadioStation.Name)
+    {
+      radStat::resetPreviousRadioStation();
+      startRadioStream();
+    }
+  }
+  if ((screenTimeoutSec > 1) && (screenSwitchOnMillis > 0) && (millis() - screenSwitchOnMillis > screenTimeoutSec * 1000))
+  {
+    setScreenOff();
+  }
+  if (playRadio)
+  {
+    if (!audio.isRunning())
+    {
+      startRadioStream();
+    }
+    audio.loop();
+  }
 }
 void printError(const char *error)
 {
@@ -642,50 +657,22 @@ void printError(const char *error)
   tft.setCursor(25, 80);
   tft.print(error);
 }
+void warnNotConnected(WiFiManager *myWiFiManager)
+{
+  printError("Could not connect. Connect your computer/phone to 'WIFI_RADIO' to configure wifi.");
+  log_i("Could not connect. Connect your computer/phone to 'WIFI_RADIO' to configure wifi.");
+}
 void connectToWIFI()
 {
   // manager.resetSettings();
+  manager.setAPCallback(warnNotConnected);
   bool success = manager.autoConnect("WIFI_RADIO");
-
   if (!success)
   {
-    Serial.println("Failed to connect");
+    log_w("Failed to connect");
   }
   else
   {
-    Serial.println("Connected");
+    log_i("Connected");
   }
-}
-void connectToWIFI1()
-{
-  WiFi.mode(WIFI_MODE_STA);
-  setTFTbrightness(100);
-  drawImage("/wifiradio/img/start.jpg", 0, 0);
-  int n = WiFi.scanNetworks();
-  for (int i = 0; i < n; i++)
-  {
-    Serial.println(WiFi.SSID(i));
-  }
-  Serial.println("Connecting to ssd:" + _ssid + ", pw:" + _sspw);
-  WiFi.disconnect();
-  delay(500);
-  WiFi.begin(_ssid, _sspw);
-
-  int tries = 0;
-
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    tries++;
-    delay(500);
-    Serial.print(".");
-    if (tries > 20)
-    {
-      WiFi.disconnect();
-      delay(500);
-      WiFi.begin(_ssid, _sspw);
-      tries = 0;
-      Serial.println("Retrying");
-    }
-  }
-  Serial.println("WiFi connected");
 }
