@@ -9,14 +9,20 @@ If you want a version with more functionalities (and a lot of more code, that is
 
 Features:
 
-- Use a remote to operate
+- Use a remote to operate and/or rotary buttons
 - Radio stations configurable with website
 - Each station can have a category. You can switch +/- a radio station within the category
 - You can switch +/- between categories
 - You can save 1 station which is then selected when you switch on the device
 - You can specify images for the categories and the radio stations (via the optional SD card)
 
+### Radio1: Drop-in for an IPOD with remote
+
 ![RadioRemote](/readme_info/images/radioandremote.jpg)
+
+### Radio2: Portable radio with rotary buttons
+
+![RadioRotaries](/readme_info/images/radiorotaries.jpg)
 
 ## Hardware and pinouts
 
@@ -36,9 +42,9 @@ Ili9341 240\*320 2.8 inch touch
 
 ### DAC:
 
-I2S PCM5102A Dac Decoder
+[I2S PCM5102A Dac Decoder](https://nl.aliexpress.com/item/1005002898278583.html?spm=a2g0o.order_list.order_list_main.17.21ef79d2UT6dOU&gatewayAdapt=glo2nld)
 
-### IR Receiver:
+### IR Receiver (optional):
 
 10Pcs Universele Ir Infrarood Ontvanger TL1838 VS1838B 1838 38Khz
 
@@ -49,6 +55,19 @@ I2S PCM5102A Dac Decoder
 AZDelivery 3 x SPI Reader Micro Memory SD TF Module Card
 
 [SD Amazon](https://www.amazon.nl/dp/B077MCQS9P?psc=1&ref=ppx_yo2ov_dt_b_product_details)
+
+### Two Rotary Encoder (optional):
+
+Used for volume and tuning the radio station. Instead you can use the remote/IR receiver option
+
+KY-040 360 Graden Rotary Encoder Module
+[Rotry Encoder Aliexpress](https://nl.aliexpress.com/item/4000332297021.html?spm=a2g0o.order_list.order_list_main.35.235979d2rPFAs1&gatewayAdapt=glo2nld_)
+
+### Amplifier (for portable radio)
+
+All original electronics of the portable radio is removed, so it does not have an amplifier anymore. You should connect an amplifier to the DAC (and speaker)
+
+[5128 Amplifier board](https://nl.aliexpress.com/item/1005004428568482.html?spm=a2g0o.order_list.order_list_main.23.21ef79d2UT6dOU&gatewayAdapt=glo2nld)
 
 ## Used pinouts
 
@@ -69,13 +88,15 @@ AZDelivery 3 x SPI Reader Micro Memory SD TF Module Card
 | 27    |             | 2- BCK          |           |         |             |         |         |
 | 35    |             |                 | 1- SIGNAL |         |             |         |         |
 | 13    |             |                 |           |         |             | 1-CLK A |         |
-| 15    |             |                 |           |         |             | 2-DT B  |         |
-| 32    |             |                 |           |         |             | 3-SW    |         |
+| 17    |             |                 |           |         |             | 2-DT B  |         |
+| 35    |             |                 |           |         |             | 3-SW    |         |
 | v3    |             |                 |           |         |             | 4-+     | 4-+     |
 | GND   |             |                 |           |         |             | 5-GND   | 5-GND   |
 | 14    |             |                 |           |         |             | 1-CLK   | 1-CLK A |
 | 34    |             |                 |           |         |             | 1-CLK   | 2-DT B  |
 | 33    |             |                 |           |         |             | 1-CLK   | 3-SW    |
+
+dont use 0,2,12,15
 
 (wire colors you can use as desired)
 
@@ -100,11 +121,19 @@ In a terminal window:
 
 ## Changing the code
 
+### changing the header file
+
+You can specify the options for the radio in the header file.
+For both radios an example header file is provided (and you should include one of them in the main1.h file)
+
+- ipodradio.h: this is the first radio example with remote
+- portableradio.h: this is the second radio example with rotary buttons
+
 ### Settings for the remote
 
 If you want to use a different remote you can replace the remote codes.
 The platformio will display the remote control code of the button you are pressing in the Serial Monitor.
-Search for "remote codes" in the main.cpp file and change the codes as desired.
+Provide it in the header file (for example ipodradio.h)
 
 ### Uploading the Filesystem image
 
@@ -142,7 +171,14 @@ Connect with your Phone/Computer to that access point and navigate to 192.168.1.
 ### Showing the IP address
 
 Shows the screen with IP address how you can access the webpage.
+
+#### Using Remote
+
 You can configure the button yourself. In this case it is mapped to the Ipod MENU button.
+
+#### Using Rotary button
+
+Or Volume Rotary button press.
 
 ### Editing radiostations
 
@@ -152,24 +188,48 @@ Edit the stations and press "Save" to upload it to the WIFI Radio. Use HTTP, not
 
 ### Changing categories and radio stations
 
+#### Using Remote
+
 This depends on the buttons you want to use of the remote.
 In this example the stations are selectable by the left-right keys. And the categories by the up-down keys.
-It only selects it after x seconds (see config.json) so you can quickly navigate through the stations (otherwise it halts untill the streaming is workding)
+It only selects it after 3 seconds so you can quickly navigate through the stations (otherwise it halts untill the streaming is workding)
 You can also activate with the OK button, see next section.
+
+#### Using Rotary
+
+Click the Station Rotary button to change the Category. Turn the Station Rotary button to change the station.
 
 ### Stopping the radio stream
 
+#### Using Remote
+
 Press the STOP button on your remote. Pressing OK starts the stream again.
+
+#### Using Rotary
+
+Press and hold Volume Rotary
 
 ### Activating the station
 
-After selecting the station, press the OK button on your remote to select it.
+#### Using Remote
+
+After selecting the station, It will automatically connect after 3 seconds. Or press the OK button on your remote to select it.
+
+#### Using Rotary
+
+It will automatically connect after 3 seconds
 
 ### Saving a radio station
 
+#### Using Remote
+
 You can configure the button yourself. In this case it is mapped to the Auto Preset button.
 
-## Donor radio
+#### Using Rotary
+
+Press and hold the Station Rotary Button.
+
+## Donor radio 1 (IPOD)
 
 Panasonic SC-HC3
 It sounds great. It has a radio, CD player and a room for an IPOD behind a sliding door.
@@ -223,3 +283,14 @@ Then drill a hole large enough for the audio cable and the usb cable from the fr
 
 - Power the ESP32 via the IPOD docking connector wires. This can be risky as the available power is only 0.5A, and I am not sure how much the ESP with screen etc is drawing.
 - Connect to the AUX port internally instead of using a cable running outside the case.
+
+## Donor radio 2 (Portable)
+
+A Grundig music boy
+
+### Removing old stuff
+
+Remove screws at the bottom. Also the 2 knobs and screws at the top and lift the whole top. Then buy a piece of plexiglass, and make it the fit the top properly, cut 3 holes (1 for antenna, 2 for the rotary knobs). Paint the backside of the plexiglass black or any other color, leaving the room free for the LCD screen.
+Then solder everything etc.
+
+![Rotaries open](/readme_info/images/RotariesOpen.jpg)
