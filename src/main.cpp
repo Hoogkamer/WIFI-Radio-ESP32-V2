@@ -101,18 +101,8 @@ void loadStations()
 #ifdef HAS_SDCARD
 void showStationImage(string name, string type, int position)
 {
-  std::string nameNoSpaces = "";
 
-  // Copy non-space characters to the result string
-  for (char c : name)
-  {
-    if (c != ' ')
-    {
-      nameNoSpaces += c;
-    }
-  }
-
-  string imgAdr0 = "/wifiradio/img/" + type + "/" + nameNoSpaces + ".jpg";
+  string imgAdr0 = "/wifiradio/img/" + type + "/" + name + ".jpg";
   const char *imgAdr = imgAdr0.c_str();
   int maxHeight = 80;
   if (type == "radio")
@@ -171,7 +161,12 @@ void displayStation()
   tft.setTextColor(TFT_BLACK);
   tft.setFont(_fonts[FONT_STATION]);
   tft.setCursor(25, 70);
-  tft.print(radStat::activeRadioStation.Name.c_str());
+  String nameReplaceUnderscroresBySpaces = radStat::activeRadioStation.Name;
+
+  nameReplaceUnderscroresBySpaces.replace("_", " ");
+  // Copy non-space characters to the result string
+
+  tft.print(nameReplaceUnderscroresBySpaces.c_str());
   tft.setFont(_fonts[FONT_INFO]);
 
 #endif
@@ -211,6 +206,7 @@ void switchRadioOff()
   WiFi.disconnect();
   WiFi.mode(WIFI_OFF);
 }
+#ifdef HAS_REMOTE
 void handleRemotePress(int64_t remotecode)
 {
 
@@ -282,6 +278,7 @@ void handleRemotePress(int64_t remotecode)
     switchRadioOff();
   }
 }
+#endif
 void saveTheVolume()
 {
   File file1 = SPIFFS.open("/savedVolume.txt", "w", true);
@@ -317,7 +314,10 @@ void loadSavedVolume()
     String volume = file1.readString();
     log_i("volume = %s", volume);
 #ifdef HAS_ROTARIES
-    rotaryVolume.setEncoderValue(volume.toInt());
+    if (volume.toInt())
+    {
+      rotaryVolume.setEncoderValue(volume.toInt());
+    }
 #endif
   }
 
@@ -470,6 +470,7 @@ void setup()
 #else
   audio.setVolume(VOLUME_DEFAULT);
 #endif
+
 #ifdef MONO_OUTPUT
   audio.forceMono(true);
 #endif

@@ -9,9 +9,7 @@ let maxID = 3;
 
 async function getData() {
   let stations = [
-    ["Veronica", "HTTP://veronical.nl", "Pop"],
-    ["Item 2", "Value 2", "Pop"],
-    ["Item 3", "Value 3", "Jazz"],
+    ["Veronica", "http://22343.live.streamtheworld.com/VERONICA.mp3", "Pop"],
   ];
   let categories = ["Jazz", "Chill", "Pop", "News", "Local"];
   data = { stations: stations, categories: categories };
@@ -187,14 +185,18 @@ function selectCategory() {
   renderStationFields(currentCategory);
 }
 
+function getSaveJSON() {
+  const tosave = {
+    categories: data.categories,
+    stations: data.stations.map((station) => station.slice(0, -1)),
+  };
+  let jsontext = JSON.stringify(tosave);
+  return jsontext;
+}
 function Save() {
   updateStations();
   renderStationFields(currentCategory);
-  const tosave = {
-    stations: data.stations.map((station) => station.slice(0, -1)),
-    categories: data.categories,
-  };
-  let jsontext = JSON.stringify(tosave);
+  const jsontext = getSaveJSON();
   console.log(jsontext);
   fetch(apiUrl + "/post", {
     method: "POST",
@@ -237,7 +239,7 @@ function exportStations() {
   const exportdiv = document.getElementById("exportdiv");
   exportdiv.style.display = "block";
   const pastetextdiv = document.getElementById("pastetextdiv");
-  pastetextdiv.textContent = JSON.stringify(data);
+  pastetextdiv.textContent = getSaveJSON();
 }
 function importStations() {
   let newdata = window.prompt("Paste json", "");
