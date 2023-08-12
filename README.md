@@ -34,6 +34,15 @@ Diymore ESP32 Ontwikkelingsplaat NodeMCU Module 2,4 GHz Dual Core WLAN WiFi Blue
 
 [ESP32 Amazon](https://www.amazon.nl/dp/B0BZRJ1H16?psc=1&ref=ppx_yo2ov_dt_b_product_details)
 
+### ESP32 with antenna
+
+Or you can choose with an external antenna to improve the WIFI signal receiving
+
+https://nl.aliexpress.com/item/1005003106292591.html?spm=a2g0o.order_list.order_list_main.29.7b2a79d2YE7TfF&gatewayAdapt=glo2nld
+
+https://nl.aliexpress.com/item/1005002410521023.html?spm=a2g0o.order_list.order_list_main.53.2b0279d2JmJ4ml&gatewayAdapt=glo2nld
+(choose the one with external antenna connection)
+
 ### LCD:
 
 Ili9341 240\*320 2.8 inch touch
