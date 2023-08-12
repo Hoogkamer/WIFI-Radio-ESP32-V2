@@ -362,7 +362,7 @@ void startWebServer()
         if ((len + index) == total)
         {
           stationsFile.close();
-          loadStations();
+          ESP.restart();
         }
 
         request->send(200);
@@ -456,6 +456,8 @@ void setup()
   audio.setVolumeSteps(VOLUME_STEPS);
 #ifdef HAS_ROTARIES
   audio.setVolume(VOLUME_MAX - rotaryVolume.readEncoder());
+#else
+  audio.setVolume(VOLUME_DEFAULT);
 #endif
 #ifdef MONO_OUTPUT
   audio.forceMono(true);

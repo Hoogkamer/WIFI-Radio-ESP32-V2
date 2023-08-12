@@ -2,8 +2,10 @@
 
 let data;
 let currentCategory;
-let apiUrl = "http://192.168.11.63";
-//apiUrl = "";
+let apiUrl = "http://192.168.11.65";
+apiUrl = "";
+
+let maxID = 3;
 
 async function getData() {
   let stations = [
@@ -22,48 +24,122 @@ async function getData() {
     result = "";
   }
   console.log(result);
+  result.stations = result.stations.map((r, i) => [...r, i]);
+  maxID = result.stations.length;
   if (result) return result;
   else return data;
 }
+
+function swapStation(id1, id2) {
+  const index1 = data.stations.findIndex((s) => s[3] === id1);
+  const index2 = data.stations.findIndex((s) => s[3] === id2);
+  console.log(
+    "swapping",
+    id1,
+    id2,
+    index1,
+    index2,
+    data.stations[index1],
+    data.stations[index2]
+  );
+
+  if (index1 !== -1 && index2 !== -1) {
+    [data.stations[index1], data.stations[index2]] = [
+      data.stations[index2],
+      data.stations[index1],
+    ];
+  }
+}
 // Function to create input fields for each row in the array
 function renderStationFields(selectedCategory) {
+  console.log("render", data.stations);
   const stationsContainer = document.getElementById("stationsContainer");
   stationsContainer.innerHTML = "";
-  data.stations.forEach((station, index) => {
-    if (station[2] === selectedCategory) {
-      const stationContainer = document.createElement("div");
-      stationContainer.id = index;
-      stationContainer.className = "stationDiv";
+  const stationsWithThisCategory = data.stations.filter(
+    (s) => s[2] === selectedCategory
+  );
+  if (!stationsWithThisCategory.length) return;
+  const lastId =
+    stationsWithThisCategory[stationsWithThisCategory.length - 1][3];
+  const firstId = stationsWithThisCategory[0][3];
+  stationsWithThisCategory.forEach((station, index) => {
+    const stationContainer = document.createElement("div");
+    stationContainer.id = station[3];
+    stationContainer.className = "stationDiv";
 
-      // Create the first column input field
-      const input1 = document.createElement("input");
-      input1.type = "text";
-      //   input1.name = `item-${index}`;
-      input1.name = "name";
-      input1.value = station[0];
-      input1.placeholder = "Name";
-      input1.className = "inpname";
-      stationContainer.appendChild(input1);
+    // Create the first column input field
+    const input1 = document.createElement("input");
+    input1.type = "text";
+    //   input1.name = `item-${index}`;
+    input1.name = "name";
+    input1.value = station[0];
+    input1.placeholder = "Name";
+    input1.className = "inpname";
+    stationContainer.appendChild(input1);
 
-      // Create the second column input field
-      const input2 = document.createElement("input");
-      input2.type = "text";
-      //   input2.name = `value-${index}`;
-      input2.name = "url";
-      input2.value = station[1];
-      input2.placeholder = "URL";
-      input2.className = "inpurl";
-      stationContainer.appendChild(input2);
-      stationsContainer.appendChild(stationContainer);
+    // Create the second column input field
+    const input2 = document.createElement("input");
+    input2.type = "text";
+    //   input2.name = `value-${index}`;
+    input2.name = "url";
+    input2.value = station[1];
+    input2.placeholder = "URL";
+    input2.className = "inpurl";
+    stationContainer.appendChild(input2);
+    if (stationContainer.id != firstId) {
+      const button = document.createElement("button");
+      button.className = "button-9 widthup1";
+      button.textContent = "U";
+      button.title = "Move station up";
+      button.onclick = function () {
+        updateStations();
+        swapStation(
+          stationsWithThisCategory[index][3],
+          stationsWithThisCategory[index - 1][3]
+        );
+        renderStationFields(currentCategory);
+      };
+      stationContainer.appendChild(button);
     }
+    if (stationContainer.id != lastId) {
+      const button = document.createElement("button");
+      button.className = "button-9 widthup1";
+      button.textContent = "D";
+      button.title = "Move station down";
+      button.onclick = function () {
+        updateStations();
+        swapStation(
+          stationsWithThisCategory[index][3],
+          stationsWithThisCategory[index + 1][3]
+        );
+        renderStationFields(currentCategory);
+      };
+      stationContainer.appendChild(button);
+    }
+    stationsContainer.appendChild(stationContainer);
   });
 }
 
 // Function to add a new station to the array
 function addStation() {
   updateStations();
-  data.stations.push(["", "", currentCategory]);
+  data.stations.push(["", "", currentCategory, maxID++]);
   renderStationFields(currentCategory);
+}
+function moveCategoryUp() {
+  const index = data.categories.findIndex((cat) => cat === currentCategory);
+
+  if (index >= 0) {
+    const element = data.categories[index];
+    data.categories.splice(index, 1); // Remove the element from its current position
+
+    if (index === 0) {
+      data.categories.push(element); // Move the element to the last position
+    } else {
+      data.categories.splice(index - 1, 0, element); // Insert the element before the previous element
+    }
+  }
+  populateCategories();
 }
 function updateStations() {
   const div = document.getElementById("stationsContainer");
@@ -74,10 +150,12 @@ function updateStations() {
     name = stationDiv.querySelectorAll('input[name="name"]')[0].value;
     url = stationDiv.querySelectorAll('input[name="url"]')[0].value;
     if (name && url) {
-      data.stations[stationNr][0] = name;
-      data.stations[stationNr][1] = url;
+      let theStation = data.stations.find((s) => s[3] == stationNr);
+      console.log(stationNr, theStation);
+      theStation[0] = name;
+      theStation[1] = url;
     } else {
-      data.stations.splice(stationNr, 1);
+      data.stations = data.stations.filter((s) => s[3] != stationNr);
     }
   });
 }
@@ -111,8 +189,12 @@ function selectCategory() {
 
 function Save() {
   updateStations();
-  console.log(data);
-  let jsontext = JSON.stringify(data);
+  renderStationFields(currentCategory);
+  const tosave = {
+    stations: data.stations.map((station) => station.slice(0, -1)),
+    categories: data.categories,
+  };
+  let jsontext = JSON.stringify(tosave);
   console.log(jsontext);
   fetch(apiUrl + "/post", {
     method: "POST",
@@ -123,10 +205,10 @@ function Save() {
   })
     .then((response) => response.text())
     .then((data) => {
-      console.log("Response from API:", data);
+      alert("Stations saved");
     })
     .catch((error) => {
-      console.error("Error sending data:", error);
+      alert("There is an error:" + error);
     });
 }
 function deleteCategory() {

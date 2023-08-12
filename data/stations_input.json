@@ -3,11 +3,6 @@
   "stations": [
     ["Veronica", "http://22343.live.streamtheworld.com/VERONICA.mp3", "NL"],
     [
-      "SmoothJazz247",
-      "http://www.smoothjazz247.com/smoothjazz24-7.m3up",
-      "Jazz"
-    ],
-    [
       "Radio10",
       "http://playerservices.streamtheworld.com/api/livestream-redirect/RADIO10.mp3",
       "NL"
@@ -59,6 +54,11 @@
     ],
     ["1FMJAZZ", "http://strm112.1.fm/smoothjazz_mobile_mp3", "Jazz"],
     ["NBC_NEWS", "http://stream.revma.ihrhls.com/zc6043", "News"],
-    ["WNYC", "http://www.wnyc.org/stream/wnyc-fm939/mp3.pls", "News"]
+    ["LBC UK", "http://media-ice.musicradio.com/LBCUK", "News"],
+    [
+      "Mexico 88.9",
+      "http://playerservices.streamtheworld.com/api/livestream-redirect/XHMFMAAC_SC.aac",
+      "News"
+    ]
   ]
 }
