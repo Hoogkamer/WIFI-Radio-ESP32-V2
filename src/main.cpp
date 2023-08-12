@@ -101,7 +101,18 @@ void loadStations()
 #ifdef HAS_SDCARD
 void showStationImage(string name, string type, int position)
 {
-  string imgAdr0 = "/wifiradio/img/" + type + "/" + name + ".jpg";
+  std::string nameNoSpaces = "";
+
+  // Copy non-space characters to the result string
+  for (char c : name)
+  {
+    if (c != ' ')
+    {
+      nameNoSpaces += c;
+    }
+  }
+
+  string imgAdr0 = "/wifiradio/img/" + type + "/" + nameNoSpaces + ".jpg";
   const char *imgAdr = imgAdr0.c_str();
   int maxHeight = 80;
   if (type == "radio")

@@ -1,64 +1,73 @@
 {
-  "categories": ["NL", "Jazz", "Local", "Retro", "Chill", "News"],
+  "categories": ["NL", "Retro", "Jazz", "Local", "Chill", "News"],
   "stations": [
-    ["Veronica", "http://22343.live.streamtheworld.com/VERONICA.mp3", "NL"],
-    [
-      "Radio10",
-      "http://playerservices.streamtheworld.com/api/livestream-redirect/RADIO10.mp3",
-      "NL"
-    ],
     [
       "SKY",
       "http://playerservices.streamtheworld.com/api/livestream-redirect/SKYRADIO.mp3",
-      "NL"
+      "NL",
+      2
     ],
-    ["ON70s", "http://0n-80s.radionetz.de:8000/0n-70s.mp3", "Retro"],
-    ["ON80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3", "Retro"],
-    ["ON90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3", "Retro"],
+    ["Veronica", "http://22343.live.streamtheworld.com/VERONICA.mp3", "NL", 0],
     [
-      "Radio10Gold",
+      "Radio10",
+      "http://playerservices.streamtheworld.com/api/livestream-redirect/RADIO10.mp3",
+      "NL",
+      1
+    ],
+    ["ON 70s", "http://0n-80s.radionetz.de:8000/0n-70s.mp3", "Retro", 3],
+    ["ON 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3", "Retro", 4],
+    ["ON 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3", "Retro", 5],
+    [
+      "Radio 10 Gold",
       "http://playerservices.streamtheworld.com/api/livestream-redirect/TLPSTR20.mp3",
-      "Retro"
+      "Retro",
+      6
     ],
     [
-      "Joe8090s",
+      "Joe 8090s",
       "http://streams.radio.dpgmedia.cloud/redirect/joe_80s_90s/mp3",
-      "Retro"
+      "Retro",
+      7
     ],
     [
-      "ONSmoothJazz",
+      "ON Smooth Jazz",
       "http://0n-70s.radionetz.de:8000/0n-smoothjazz.mp3",
-      "Jazz"
+      "Jazz",
+      8
     ],
-    ["1FMBossa", "http://strm112.1.fm/bossanova_mobile_mp3", "Jazz"],
+    ["1 FM Bossa", "http://strm112.1.fm/bossanova_mobile_mp3", "Jazz", 9],
     [
       "Sublime",
       "http://playerservices.streamtheworld.com/api/livestream-redirect/SUBLIME.mp3",
-      "Chill"
+      "Chill",
+      10
     ],
-    ["BoxUK", "http://boxstream.danceradiouk.com/stream", "Chill"],
-    ["1FMDeepHouse", "http://strm112.1.fm/deeptech_mobile_mp3", "Chill"],
-    ["DeepIn", "http://95.211.3.65:8525/listen.pls", "Chill"],
-    ["ONChill", "http://0n-2000s.radionetz.de/0n-chillout.mp3", "Chill"],
-    ["BNR", "http://stream.bnr.nl/bnr_mp3_128_20", "News"],
-    ["Radio1", "http://icecast.omroep.nl/radio1-bb-mp3", "News"],
+    ["BoxUK", "http://boxstream.danceradiouk.com/stream", "Chill", 11],
+    ["1 FM Deep House", "http://strm112.1.fm/deeptech_mobile_mp3", "Chill", 12],
+    ["Deep In", "http://95.211.3.65:8525/listen.pls", "Chill", 13],
+    ["ON Chill", "http://0n-2000s.radionetz.de/0n-chillout.mp3", "Chill", 14],
+    ["BNR", "http://stream.bnr.nl/bnr_mp3_128_20", "News", 15],
+    ["Radio 1", "http://icecast.omroep.nl/radio1-bb-mp3", "News", 16],
     [
       "Gelderland",
       "http://d2od87akyl46nm.cloudfront.net/icecast/omroepgelderland/radiogelderland",
-      "News"
+      "News",
+      17
     ],
     [
-      "BBCWorld",
+      "BBC World",
       "http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_world_service.m3u8",
-      "News"
+      "News",
+      18
     ],
-    ["1FMJAZZ", "http://strm112.1.fm/smoothjazz_mobile_mp3", "Jazz"],
-    ["NBC_NEWS", "http://stream.revma.ihrhls.com/zc6043", "News"],
-    ["LBC UK", "http://media-ice.musicradio.com/LBCUK", "News"],
+    ["1 FM JAZZ", "http://strm112.1.fm/smoothjazz_mobile_mp3", "Jazz", 19],
+    ["NBC NEWS", "http://stream.revma.ihrhls.com/zc6043", "News", 20],
+    ["LBC UK", "http://media-ice.musicradio.com/LBCUK", "News", 21],
     [
       "Mexico 88.9",
       "http://playerservices.streamtheworld.com/api/livestream-redirect/XHMFMAAC_SC.aac",
-      "News"
+      "News",
+      22
     ]
   ]
 }

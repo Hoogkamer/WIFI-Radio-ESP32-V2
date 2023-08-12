@@ -261,8 +261,8 @@ namespace radStat
 
         {
             ch = configurations1.read();
-
-            if (ch == ' ' || ch < 32 || ch == '\n' || ch == '\r' || ch == '\t')
+            // skip spaces, except when it is in a station name, and skip other non printable characters
+            if ((ch == ' ' && station == "") || ch < 32 || ch == '\n' || ch == '\r' || ch == '\t')
             {
                 continue;
             }
