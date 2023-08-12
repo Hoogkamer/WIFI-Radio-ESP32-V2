@@ -209,37 +209,37 @@ void handleRemotePress(int64_t remotecode)
 
   if (!radioIsOn)
   {
-    if (remotecode == 70386007955804) // AUX: switch on again
+    if (remotecode == RC_RADIO_ON)
     {
       switchRadioOn();
     }
     return;
   }
-  if (remotecode == 70386011603005) // STOP stream
+  if (remotecode == RC_STANDBY)
   {
     playRadio = false;
   }
-  if (remotecode == 70386011640495) // left: previous station
+  if (remotecode == RC_PREVIOUS_STATION)
   {
     radStat::prevStation();
     displayStation();
   }
-  if (remotecode == 70386011624047) // right: next station
+  if (remotecode == RC_NEXT_STATION)
   {
     radStat::nextStation();
     displayStation();
   }
-  if (remotecode == 70386013224938) // down: next category
+  if (remotecode == RC_NEXT_CATEGORY)
   {
     radStat::nextCategory();
     displayStation();
   }
-  if (remotecode == 70386013192042) // up: previous category
+  if (remotecode == RC_PREVIOUS_CATEGORY)
   {
     radStat::prevCategory();
     displayStation();
   }
-  if (remotecode == 70386011660258) // ok: Wakeup screen and show station and set active station
+  if (remotecode == RC_TURN_ON_SCREEN)
   {
     playRadio = true;
     displayStation();
@@ -250,12 +250,12 @@ void handleRemotePress(int64_t remotecode)
       startRadioStream();
     }
   }
-  if (remotecode == 70386011657704) // Ipod menu: Show details
+  if (remotecode == RC_SHOW_DETAILS)
   {
     displayDetails();
   }
 
-  if (remotecode == 70386010088896) // auto preset
+  if (remotecode == RC_SAVE_STATION)
   {
     saveTheStation();
 #ifdef HAS_SDCARD
@@ -266,7 +266,7 @@ void handleRemotePress(int64_t remotecode)
 #endif
   }
 
-  if (remotecode == 70386011651201 || remotecode == 70386013196293 || remotecode == 70386010039552) // power off: OFF/CD/FM buttons
+  if (remotecode == RC_RADIO_OFF1 || remotecode == RC_RADIO_OFF2 || remotecode == RC_RADIO_OFF3)
   {
     switchRadioOff();
   }
@@ -276,7 +276,9 @@ void saveTheVolume()
   File file1 = SPIFFS.open("/savedVolume.txt", "w", true);
   if (file1)
   {
+#ifdef HAS_ROTARIES
     file1.print(rotaryVolume.readEncoder());
+#endif
   }
   file1.close();
 }
@@ -303,7 +305,9 @@ void loadSavedVolume()
   {
     String volume = file1.readString();
     log_i("volume = %s", volume);
+#ifdef HAS_ROTARIES
     rotaryVolume.setEncoderValue(volume.toInt());
+#endif
   }
 
   file1.close();
@@ -449,8 +453,10 @@ void setup()
   connectToWIFI();
   displayStation();
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
-  audio.setVolumeSteps(100);
+  audio.setVolumeSteps(VOLUME_STEPS);
+#ifdef HAS_ROTARIES
   audio.setVolume(VOLUME_MAX - rotaryVolume.readEncoder());
+#endif
 #ifdef MONO_OUTPUT
   audio.forceMono(true);
 #endif
@@ -467,11 +473,11 @@ void onTunerShortClick()
   {
     radStat::nextCategory();
     setStation();
-  } else {
-    displayStation();
-
   }
-  
+  else
+  {
+    displayStation();
+  }
 }
 void onTunerLongClick()
 {

@@ -1,33 +1,9 @@
-// USER CHANGEABLE -------------
 
-// enable if you have a remote
-// #define HAS_REMOTE
-
-// enable if you have rotary knobs
-#define HAS_ROTARIES
-// #define TFT_ROTATION 0 // 1 or 3 (landscape)
-#define TFT_ROTATION 1 // 1 or 3 (landscape)
-
-// enable if you need mono output (when you have 1 speaker you can use eighter L or R channel only)
-#define MONO_OUTPUT
-
-// set the max volume level and the total steps. In this example it can only get 1/3 of the total volume
-#define VOLUME_MAX 20
-// volume to use at start up
-#define VOLUME_DEFAULT 3
-// volume steps (set lower if you want to use bigger steps)
-#define VOLUME_STEPS 64
-
-// uncomment if you have an SD card connected (where you put the images and sounds)
-// #define HAS_SDCARD
-
-// uncomment if you want to show images for the stations: you need to have an SD card, and also a vertical tft layout
-// #define SHOW_IMAGES
-
-// -----------------------
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
+#include "ipodradio.h"
+// #include "portableradio.h"
 
 #include "Arduino.h"
 #include <FS.h>
