@@ -22,7 +22,7 @@ Features:
 
 ### Radio2: Portable radio with rotary buttons
 
-![RadioRotaries](/readme_info/images/radiorotaries.jpg)
+![RadioRotaries](/readme_info/images/RadioRotaries.jpg)
 
 ## Hardware and pinouts
 
