@@ -101,9 +101,9 @@ All original electronics of the portable radio is removed, so it does not have a
 | 35    |             |                 |           |         |             | 3-SW    |         |
 | v3    |             |                 |           |         |             | 4-+     | 4-+     |
 | GND   |             |                 |           |         |             | 5-GND   | 5-GND   |
-| 14    |             |                 |           |         |             | 1-CLK   | 1-CLK A |
-| 34    |             |                 |           |         |             | 1-CLK   | 2-DT B  |
-| 33    |             |                 |           |         |             | 1-CLK   | 3-SW    |
+| 14    |             |                 |           |         |             |         | 1-CLK A |
+| 34    |             |                 |           |         |             |         | 2-DT B  |
+| 33    |             |                 |           |         |             |         | 3-SW    |
 
 dont use 0,2,12,15
 
