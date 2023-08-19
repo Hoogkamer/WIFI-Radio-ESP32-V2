@@ -528,11 +528,12 @@ void handleTunerButton()
 
 void onVolumeShortClick()
 {
-  displayDetails();
+
+  switchRadioOff();
 }
 void onVolumeLongClick()
 {
-  switchRadioOff();
+  displayDetails();
 }
 
 void handleVolumeButton()
