@@ -2,9 +2,8 @@
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
-// #include "ipodradio.h"
-#include "portableradio.h"
-#include <esp_sleep.h>
+#include "ipodradio.h"
+// #include "portableradio.h"
 
 #include "Arduino.h"
 #include <FS.h>
@@ -26,7 +25,7 @@
 #include "SPIFFS.h"
 #include "radStat.h"
 #ifdef HAS_REMOTE
-#include <IRremoteESP8266.h>
+//#include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRutils.h>
 #endif
