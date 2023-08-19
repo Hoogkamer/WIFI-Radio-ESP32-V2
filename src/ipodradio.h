@@ -44,7 +44,7 @@
 // set the max volume level and the total steps. In this example it can only get 1/3 of the total volume
 #define VOLUME_MAX 64
 // volume to use at start up
-#define VOLUME_DEFAULT 30
+#define VOLUME_DEFAULT 56
 // volume steps (set lower if you want to use bigger steps)
 #define VOLUME_STEPS 64
 
