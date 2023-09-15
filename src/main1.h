@@ -1,5 +1,3 @@
-
-
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
 #include "ipodradio.h"
@@ -25,7 +23,7 @@
 #include "SPIFFS.h"
 #include "radStat.h"
 #ifdef HAS_REMOTE
-//#include <IRremoteESP8266.h>
+// #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRutils.h>
 #endif
@@ -51,17 +49,19 @@ AiEsp32RotaryEncoder rotaryTuner = AiEsp32RotaryEncoder(ROTARY_ENCODER2_A_PIN, R
 #endif
 
 // Digital I/O used
-#define SD_CS 5xx
-#define SPI_MOSI 23
-#define SPI_MISO 19
-#define SPI_SCK 18
 #define I2S_DOUT 25
 #define I2S_BCLK 27
 #define I2S_LRC 26
 
+#define SD_CS 5
+#define SPI_SCK 18
+#define SPI_MOSI 23
+#define SPI_MISO 19
+
 #define TFT_SCK 18
 #define TFT_MOSI 23
 #define TFT_MISO 19
+
 #define TFT_CS 22
 #define TFT_DC 21
 #define TFT_RESET 17

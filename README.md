@@ -95,7 +95,7 @@ All original electronics of the portable radio is removed, so it does not have a
 | 26    |             | 4- LCK          |           |         |             |         |         |
 | 25    |             | 3- DIN          |           |         |             |         |         |
 | 27    |             | 2- BCK          |           |         |             |         |         |
-| 35    |             |                 | 1- SIGNAL |         |             |         |         |
+| 15    |             |                 | 1- SIGNAL |         |             |         |         |
 | 13    |             |                 |           |         |             | 1-CLK A |         |
 | 17    |             |                 |           |         |             | 2-DT B  |         |
 | 35    |             |                 |           |         |             | 3-SW    |         |
