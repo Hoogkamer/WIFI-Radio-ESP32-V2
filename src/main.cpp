@@ -145,27 +145,65 @@ void audio_showstreamtitle(const char *info)
     tft.print(info);
   }
 }
-
-void setScreenOn()
+void showMute()
 {
-  clearTFTAllWhite();
+  tft.fillRect(0, 0, 320, 30, TFT_WHITE);
+  if (radioIsMuted)
+  {
+    tft.setTextColor(TFT_RED);
+    tft.setFont(_fonts[FONT_INFO]);
+    tft.setCursor(0, 0);
+    tft.print("Muted");
+  }
+}
+
+void clearScreenStation()
+{
+  if (TFT_ROTATION) // reset station info
+  {
+    tft.fillRect(0, 0, 320, 150, TFT_WHITE);
+    showMute();
+  }
+  else
+  {
+    clearTFTAllWhite();
+  }
+}
+void clearScreenSong()
+{
+  if (TFT_ROTATION) // reset station info
+  {
+    tft.fillRect(0, 150, 320, 240, TFT_WHITE);
+  }
+  else
+  {
+    clearTFTAllWhite();
+  }
+}
+void setScreenOn(boolean keepSongInfo)
+{
+  clearScreenStation();
+  if (!keepSongInfo)
+  {
+    clearScreenSong();
+  }
   setTFTbrightness(100);
   tftIsOn = true;
   screenSwitchOnMillis = millis();
 }
 void setScreenOff()
 {
-  clearTFTAllWhite();
-  setTFTbrightness(0);
+  clearScreenStation();
+  setTFTbrightness(10);
   tftIsOn = false;
   screenSwitchOnMillis = 0;
 }
 
-void displayStation()
+void displayStation(boolean keepSongInfo)
 {
   radStat::activeRadioStation.printDetails();
   radioSwitchMillis = millis();
-  setScreenOn();
+  setScreenOn(keepSongInfo);
 #ifdef SHOW_IMAGES
   showStationImage(radStat::activeRadioStation.Category.c_str(), "category", 0);
   showStationImage(radStat::activeRadioStation.Name.c_str(), "radio", 80);
@@ -190,11 +228,11 @@ void displayStation()
 
 void setStation()
 {
-  displayStation();
+  displayStation(false);
 }
 void displayDetails()
 {
-  setScreenOn();
+  setScreenOn(false);
   tft.setTextColor(TFT_BLACK);
   tft.setCursor(2, 20);
   tft.print("IP:");
@@ -206,13 +244,14 @@ void displayDetails()
 void switchRadioOn()
 {
   connectToWIFI();
-  displayStation();
+  clearTFTAllWhite();
+  displayStation(false);
   radioIsOn = true;
 }
 void switchRadioOff()
 {
   radioIsOn = false;
-  setScreenOn();
+  setScreenOn(false);
   printError("Going in standby");
   log_i("Powering off");
   drawImage("/wifiradio/img/shutdown.jpg", 0, 0);
@@ -228,20 +267,12 @@ void toggleMute()
   if (radioIsMuted)
   {
     audio.setVolume(0);
-
-    tft.setTextColor(TFT_RED);
-    tft.setFont(_fonts[FONT_INFO]);
-    tft.setCursor(0, 0);
-    tft.print("Muted");
   }
   else
   {
     audio.setVolume(VOLUME_MAX - rotaryVolume.readEncoder());
-    tft.setTextColor(TFT_WHITE);
-    tft.setFont(_fonts[FONT_INFO]);
-    tft.setCursor(0, 0);
-    tft.print("Muted");
   }
+  showMute();
 }
 
 #ifdef HAS_REMOTE
@@ -338,7 +369,7 @@ void saveTheStation()
     file1.print(radStat::activeRadioStation.Name);
   }
   file1.close();
-  displayStation();
+  displayStation(false);
   saveTheVolume();
 
   tft.setTextColor(TFT_BLUE);
@@ -470,7 +501,7 @@ void setup()
 #endif
 
   tft.begin(TFT_CS, TFT_DC, VSPI, TFT_MOSI, TFT_MISO, TFT_SCK);
-  setScreenOn();
+  setScreenOn(false);
   tft.setFrequency(TFT_FREQUENCY);
   tft.setRotation(TFT_ROTATION);
   tft.setFont(_fonts[FONT_INFO]);
@@ -501,7 +532,7 @@ void setup()
   loadSavedStation();
   loadSavedVolume();
   connectToWIFI();
-  displayStation();
+  displayStation(false);
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
   audio.setVolumeSteps(VOLUME_STEPS);
 #ifdef HAS_ROTARIES
@@ -529,7 +560,7 @@ void onTunerShortClick()
   }
   else
   {
-    displayStation();
+    displayStation(true);
   }
 }
 void onTunerLongClick()
@@ -697,7 +728,7 @@ void loop()
   }
   if ((screenTimeoutSec > 1) && (screenSwitchOnMillis > 0) && (millis() - screenSwitchOnMillis > screenTimeoutSec * 1000))
   {
-    // setScreenOff();
+    setScreenOff();
   }
   if (playRadio)
   {
