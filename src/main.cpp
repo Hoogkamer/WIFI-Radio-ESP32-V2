@@ -21,6 +21,7 @@ decode_results results;
 #endif
 
 bool radioIsOn = true;
+bool radioIsMuted = false;
 bool tftIsOn = true;
 bool playRadio = true;
 
@@ -33,12 +34,13 @@ AsyncWebServer server(80);
 #define FONT_INFO 0
 #define FONT_CATEGORY 1
 #define FONT_STATION 2
+#define FONT_SONG 3
 
 /***********************************************************************************************************************
  *                                                 I M A G E                                                           *
  ***********************************************************************************************************************/
-const unsigned short *_fonts[3] = {
-    Courier_New16x30, Courier_New19x36, Courier_New22x39};
+const unsigned short *_fonts[4] = {
+    Courier_New16x30, Courier_New19x36, Courier_New22x39, Courier_New13x23};
 bool startsWith(const char *base, const char *searchString)
 {
   char c;
@@ -130,6 +132,20 @@ void startRadioStream()
   log_i("trying url:>>>%s<<<", url1);
   audio.connecttohost(url1);
 }
+
+void audio_showstreamtitle(const char *info)
+{
+  if (TFT_ROTATION) // only show song info in landscape mode
+  {
+    const int fromPos = 150;
+    tft.fillRect(0, fromPos, 320, 110, TFT_WHITE);
+    tft.setTextColor(TFT_BLUE);
+    tft.setFont(_fonts[FONT_SONG]);
+    tft.setCursor(25, fromPos);
+    tft.print(info);
+  }
+}
+
 void setScreenOn()
 {
   clearTFTAllWhite();
@@ -206,6 +222,28 @@ void switchRadioOff()
   WiFi.disconnect();
   WiFi.mode(WIFI_OFF);
 }
+void toggleMute()
+{
+  radioIsMuted = !radioIsMuted;
+  if (radioIsMuted)
+  {
+    audio.setVolume(0);
+
+    tft.setTextColor(TFT_RED);
+    tft.setFont(_fonts[FONT_INFO]);
+    tft.setCursor(0, 0);
+    tft.print("Muted");
+  }
+  else
+  {
+    audio.setVolume(VOLUME_MAX - rotaryVolume.readEncoder());
+    tft.setTextColor(TFT_WHITE);
+    tft.setFont(_fonts[FONT_INFO]);
+    tft.setCursor(0, 0);
+    tft.print("Muted");
+  }
+}
+
 #ifdef HAS_REMOTE
 void handleRemotePress(int64_t remotecode)
 {
@@ -275,7 +313,8 @@ void handleRemotePress(int64_t remotecode)
 
   if (remotecode == RC_RADIO_OFF1 || remotecode == RC_RADIO_OFF2 || remotecode == RC_RADIO_OFF3)
   {
-    switchRadioOff();
+    // switchRadioOff();
+    toggleMute();
   }
 }
 #endif
@@ -529,7 +568,8 @@ void handleTunerButton()
 void onVolumeShortClick()
 {
 
-  switchRadioOff();
+  // switchRadioOff();
+  toggleMute();
 }
 void onVolumeLongClick()
 {
@@ -610,7 +650,10 @@ void loopRotaryVolume()
 {
   if (rotaryVolume.encoderChanged())
   {
-    Serial.println(rotaryVolume.readEncoder());
+    if (radioIsMuted)
+    {
+      toggleMute();
+    }
     audio.setVolume(VOLUME_MAX - rotaryVolume.readEncoder());
   }
   handleVolumeButton();
@@ -654,7 +697,7 @@ void loop()
   }
   if ((screenTimeoutSec > 1) && (screenSwitchOnMillis > 0) && (millis() - screenSwitchOnMillis > screenTimeoutSec * 1000))
   {
-    setScreenOff();
+    // setScreenOff();
   }
   if (playRadio)
   {
