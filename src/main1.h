@@ -82,3 +82,5 @@ boolean drawImage(const char *path, uint16_t posX, uint16_t posY, uint16_t maxWi
 void printError(const char *error);
 void loadSavedStation();
 void saveTheStation();
+void displayCategory();
+void displayStation();

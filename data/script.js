@@ -50,6 +50,10 @@ function swapStation(id1, id2) {
 }
 // Function to create input fields for each row in the array
 function renderStationFields(selectedCategory) {
+  
+  data.stations.forEach((station, index) => {
+    station[3] = index;
+  });
   console.log("render", data.stations);
   const stationsContainer = document.getElementById("stationsContainer");
   stationsContainer.innerHTML = "";
@@ -169,6 +173,7 @@ function populateCategories() {
 
   // Create and add new options based on the array data
   data.categories.forEach((value) => {
+    if (!value) return;
     const option = document.createElement("option");
     option.text = value;
     categoryDropdown.add(option);

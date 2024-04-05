@@ -24,6 +24,8 @@ bool radioIsOn = true;
 bool radioIsMuted = false;
 bool tftIsOn = true;
 bool playRadio = true;
+const char *songInfo = "";
+const char *stationInfo = "";
 
 unsigned long shortPressAfterMiliseconds = 50;  // how long short press shoud be. Do not set too low to avoid bouncing (false press events).
 unsigned long longPressAfterMiliseconds = 1000; // how long čong press shoud be.
@@ -133,41 +135,23 @@ void startRadioStream()
   audio.connecttohost(url1);
 }
 
-void audio_showstreamtitle(const char *info)
-{
-  if (TFT_ROTATION) // only show song info in landscape mode
-  {
-    const int fromPos = 150;
-    tft.fillRect(0, fromPos, 320, 110, TFT_WHITE);
-    tft.setTextColor(TFT_BLUE);
-    tft.setFont(_fonts[FONT_SONG]);
-    tft.setCursor(25, fromPos);
-    tft.print(info);
-  }
-}
 void showMute()
 {
-  tft.fillRect(0, 0, 320, 30, TFT_WHITE);
+  displayCategory();
   if (radioIsMuted)
   {
-    tft.setTextColor(TFT_RED);
+    tft.fillRect(240, 0, 320, 35, TFT_RED);
+    tft.setTextColor(TFT_WHITE);
     tft.setFont(_fonts[FONT_INFO]);
-    tft.setCursor(0, 0);
-    tft.print("Muted");
+    tft.setCursor(245, 0);
+    tft.print("Mute");
   }
 }
 
 void clearScreenStation()
 {
-  if (TFT_ROTATION) // reset station info
-  {
-    tft.fillRect(0, 0, 320, 150, TFT_WHITE);
-    showMute();
-  }
-  else
-  {
-    clearTFTAllWhite();
-  }
+
+  clearTFTAllWhite();
 }
 void clearScreenSong()
 {
@@ -180,59 +164,84 @@ void clearScreenSong()
     clearTFTAllWhite();
   }
 }
-void setScreenOn(boolean keepSongInfo)
+void setScreenOn()
 {
-  clearScreenStation();
-  if (!keepSongInfo)
-  {
-    clearScreenSong();
-  }
   setTFTbrightness(100);
   tftIsOn = true;
   screenSwitchOnMillis = millis();
 }
 void setScreenOff()
 {
-  clearScreenStation();
+
   setTFTbrightness(10);
   tftIsOn = false;
   screenSwitchOnMillis = 0;
 }
+void displaySongInfo()
+{
+  const int fromPos = 120;
+  tft.fillRect(0, fromPos, 320, 120, TFT_WHITE);
+  tft.drawLine(0, fromPos, 320, fromPos, TFT_BLUE);
+  if (strcmp(songInfo, "") != 0)
+  {
 
-void displayStation(boolean keepSongInfo)
+    tft.setTextColor(TFT_BLACK);
+    tft.setFont(_fonts[FONT_SONG]);
+    tft.setCursor(25, fromPos + 10);
+    tft.print(songInfo);
+  }
+}
+void displayCategory()
+{
+  tft.fillRect(0, 0, 320, 35, TFT_BLUE);
+  tft.setTextColor(TFT_WHITE);
+  tft.setFont(_fonts[FONT_CATEGORY]);
+  tft.setCursor(25, 0);
+  tft.print(radStat::activeRadioStation.Category.c_str());
+}
+void displayStationName()
+{
+  tft.fillRect(0, 36, 320, 100, TFT_WHITE);
+  tft.setTextColor(TFT_BLACK);
+  tft.setFont(_fonts[FONT_STATION]);
+  tft.setCursor(25, 45);
+
+  if (strcmp(stationInfo, "") != 0)
+  {
+    tft.print(stationInfo);
+  }
+  else
+  {
+    String nameReplaceUnderscroresBySpaces = radStat::activeRadioStation.Name;
+    nameReplaceUnderscroresBySpaces.replace("_", " ");
+    tft.print(nameReplaceUnderscroresBySpaces.c_str());
+  }
+}
+void displayStation()
 {
   radStat::activeRadioStation.printDetails();
   radioSwitchMillis = millis();
-  setScreenOn(keepSongInfo);
+  setScreenOn();
 #ifdef SHOW_IMAGES
   showStationImage(radStat::activeRadioStation.Category.c_str(), "category", 0);
   showStationImage(radStat::activeRadioStation.Name.c_str(), "radio", 80);
 #else
-  tft.setTextColor(TFT_BLUE);
-  tft.setFont(_fonts[FONT_CATEGORY]);
-  tft.setCursor(25, 30);
-  tft.print(radStat::activeRadioStation.Category.c_str());
-  tft.setTextColor(TFT_BLACK);
-  tft.setFont(_fonts[FONT_STATION]);
-  tft.setCursor(25, 70);
-  String nameReplaceUnderscroresBySpaces = radStat::activeRadioStation.Name;
-
-  nameReplaceUnderscroresBySpaces.replace("_", " ");
-  // Copy non-space characters to the result string
-
-  tft.print(nameReplaceUnderscroresBySpaces.c_str());
-  tft.setFont(_fonts[FONT_INFO]);
+  displayCategory();
+  displayStationName();
+  displaySongInfo();
 
 #endif
 }
 
 void setStation()
 {
-  displayStation(false);
+  stationInfo = "";
+  songInfo = "";
+  displayStation();
 }
 void displayDetails()
 {
-  setScreenOn(false);
+  setScreenOn();
   tft.setTextColor(TFT_BLACK);
   tft.setCursor(2, 20);
   tft.print("IP:");
@@ -245,13 +254,13 @@ void switchRadioOn()
 {
   connectToWIFI();
   clearTFTAllWhite();
-  displayStation(false);
+  displayStation();
   radioIsOn = true;
 }
 void switchRadioOff()
 {
   radioIsOn = false;
-  setScreenOn(false);
+  setScreenOn();
   printError("Going in standby");
   log_i("Powering off");
   drawImage("/wifiradio/img/shutdown.jpg", 0, 0);
@@ -261,6 +270,22 @@ void switchRadioOff()
   WiFi.disconnect();
   WiFi.mode(WIFI_OFF);
 }
+void audio_showstreamtitle(const char *info)
+{
+  if (TFT_ROTATION) // only show song info in landscape mode
+  {
+
+    songInfo = info;
+    displaySongInfo();
+  }
+}
+
+void audio_showstation(const char *info)
+{
+  stationInfo = info;
+  displayStationName();
+}
+
 void toggleMute()
 {
   radioIsMuted = !radioIsMuted;
@@ -369,11 +394,10 @@ void saveTheStation()
     file1.print(radStat::activeRadioStation.Name);
   }
   file1.close();
-  displayStation(false);
   saveTheVolume();
-
+  tft.setFont(_fonts[FONT_INFO]);
   tft.setTextColor(TFT_BLUE);
-  tft.setCursor(5, 160);
+  tft.setCursor(5, 200);
   tft.print("Station Saved");
 }
 void loadSavedVolume()
@@ -501,7 +525,7 @@ void setup()
 #endif
 
   tft.begin(TFT_CS, TFT_DC, VSPI, TFT_MOSI, TFT_MISO, TFT_SCK);
-  setScreenOn(false);
+  setScreenOn();
   tft.setFrequency(TFT_FREQUENCY);
   tft.setRotation(TFT_ROTATION);
   tft.setFont(_fonts[FONT_INFO]);
@@ -532,7 +556,7 @@ void setup()
   loadSavedStation();
   loadSavedVolume();
   connectToWIFI();
-  displayStation(false);
+  displayStation();
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
   audio.setVolumeSteps(VOLUME_STEPS);
 #ifdef HAS_ROTARIES
@@ -560,7 +584,7 @@ void onTunerShortClick()
   }
   else
   {
-    displayStation(true);
+    setScreenOn();
   }
 }
 void onTunerLongClick()
