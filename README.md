@@ -205,8 +205,9 @@ It only selects it after 3 seconds so you can quickly navigate through the stati
 You can also activate with the OK button, see next section.
 
 #### Using Rotary
-
-Click the Station Rotary button to change the Category. Turn the Station Rotary button to change the station.
+Turn the Station Rotary button to change the station within the active category.
+If the screen is dimmed you have to click the Station Rotary button to activate the screen.
+Then click again to change to the Categorations menu. Rotate to select a category and then click to activate this category.
 
 ### Stopping the radio stream
 
@@ -216,7 +217,8 @@ Press the STOP button on your remote. Pressing OK starts the stream again.
 
 #### Using Rotary
 
-Press and hold Volume Rotary
+Press and hold Volume Rotary to mute/unmute.
+Changing the volume by rotating this rotary button also unmutes.
 
 ### Activating the station
 

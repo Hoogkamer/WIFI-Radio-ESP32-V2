@@ -24,6 +24,8 @@ bool radioIsOn = true;
 bool radioIsMuted = false;
 bool tftIsOn = true;
 bool playRadio = true;
+bool isCategorySelection = false;
+bool isRadioSelection = false;
 const char *songInfo = "";
 const char *stationInfo = "";
 
@@ -129,6 +131,10 @@ void showStationImage(string name, string type, int position)
 #endif
 void startRadioStream()
 {
+  if (isCategorySelection || isRadioSelection)
+  {
+    return;
+  }
   String url4 = radStat::activeRadioStation.URL;
   const char *url1 = url4.c_str();
   log_i("trying url:>>>%s<<<", url1);
@@ -190,7 +196,7 @@ void displayMute()
 }
 void displayStationName()
 {
-  tft.fillRect(0, 36, 320, 100, TFT_WHITE);
+  tft.fillRect(0, 35, 320, 100, TFT_WHITE);
   tft.setTextColor(TFT_BLACK);
   tft.setFont(_fonts[FONT_STATION]);
   tft.setCursor(25, 45);
@@ -208,6 +214,10 @@ void displayStationName()
 }
 void displaySongInfo()
 {
+  if (isCategorySelection || isRadioSelection)
+  {
+    return;
+  }
   const int fromPos = 120;
   tft.fillRect(0, fromPos, 320, 80, TFT_WHITE);
   tft.drawLine(0, fromPos, 320, fromPos, TFT_BLUE);
@@ -243,6 +253,8 @@ void displaySaved()
 
 void displayStation()
 {
+  isCategorySelection = false;
+  isRadioSelection = false;
   radStat::activeRadioStation.printDetails();
   radioSwitchMillis = millis();
   setScreenOn();
@@ -256,6 +268,54 @@ void displayStation()
   displayIP();
 
 #endif
+}
+void displayCategorySelection()
+{
+  isCategorySelection = true;
+  String *categories = radStat::getRadioCategories();
+  int nrOfCategories = radStat::getNrOfRadioCategories();
+  int activeCategoryNr = radStat::getActiveCategoryNr();
+  tft.setFont(_fonts[FONT_INFO]);
+  tft.fillScreen(TFT_WHITE);
+
+  for (int i = 0; i < nrOfCategories - 1; ++i)
+  {
+    tft.setTextColor(TFT_BLACK);
+    tft.setCursor(20, i * 22);
+    if (i == activeCategoryNr)
+    {
+      tft.fillRect(0, 22 * i + 3, 340, 21, TFT_BLUE);
+      tft.setTextColor(TFT_WHITE);
+    }
+
+    tft.print(categories[i]);
+  }
+}
+void displayRadioSelection()
+{
+  isCategorySelection = false;
+  isRadioSelection = true;
+  std::vector<radStat::RadioStation> radioStations = radStat::getRadioStationsOfActiveCategory();
+  int activeStationNr = radStat::getActiveRadioStation();
+  int radioCount = radStat::getRadioCountOfActiveCategory();
+  tft.setFont(_fonts[FONT_INFO]);
+  tft.fillScreen(TFT_WHITE);
+  int i = 0;
+  for (const auto &station : radioStations)
+  {
+
+    tft.setTextColor(TFT_BLACK);
+    tft.setCursor(20, i * 22);
+    if (station.ID == activeStationNr)
+    {
+      tft.fillRect(0, 22 * i + 3, 340, 21, TFT_BLUE);
+      tft.setTextColor(TFT_WHITE);
+    }
+    String nameReplaceUnderscroresBySpaces = station.Name;
+    nameReplaceUnderscroresBySpaces.replace("_", " ");
+    tft.print(nameReplaceUnderscroresBySpaces.c_str());
+    i++;
+  }
 }
 
 void setStation()
@@ -601,14 +661,32 @@ void setup()
 #ifdef HAS_ROTARIES
 void onTunerShortClick()
 {
-  if (tftIsOn)
-  {
-    radStat::nextCategory();
-    setStation();
-  }
-  else
+  if (!tftIsOn)
   {
     setScreenOn();
+    return;
+  }
+  {
+    if (!isCategorySelection && !isRadioSelection)
+    {
+      displayCategorySelection();
+    }
+    else if (isCategorySelection)
+    {
+      isCategorySelection = false;
+      isRadioSelection = true;
+      displayRadioSelection();
+    }
+    else
+    {
+      if (radStat::activeRadioStation.Name != radStat::previousRadioStation.Name)
+      {
+        radStat::resetPreviousRadioStation();
+        isRadioSelection = false;
+        startRadioStream();
+      }
+      setStation();
+    }
   }
 }
 void onTunerLongClick()
@@ -692,8 +770,16 @@ void loopRotaryTuner()
     Serial.println(rotaryTuner.readEncoder());
     if (currentRotaryTunerCode > prevRotaryTunerCode)
     {
-      radStat::prevStation();
-      setStation();
+      if (isCategorySelection)
+      {
+        radStat::prevCategory();
+        displayCategorySelection();
+      }
+      else
+      {
+        radStat::prevStation();
+        displayRadioSelection();
+      }
       if (currentRotaryTunerCode > 900)
       {
         currentRotaryTunerCode = 500;
@@ -706,11 +792,16 @@ void loopRotaryTuner()
     }
     else if (currentRotaryTunerCode < prevRotaryTunerCode)
     {
-
-      radStat::nextStation();
-
-      setStation();
-
+      if (isCategorySelection)
+      {
+        radStat::nextCategory();
+        displayCategorySelection();
+      }
+      else
+      {
+        radStat::nextStation();
+        displayRadioSelection();
+      }
       if (currentRotaryTunerCode < 100)
       {
         currentRotaryTunerCode = 500;
@@ -765,15 +856,15 @@ void loop()
   loopRotaryTuner();
   loopRotaryVolume();
 #endif
-  if ((autoSwitchSec > -1) && (radioSwitchMillis > 0) && (millis() - radioSwitchMillis > autoSwitchSec * 1000))
-  {
-    radioSwitchMillis = 0;
-    if (radStat::activeRadioStation.Name != radStat::previousRadioStation.Name)
-    {
-      radStat::resetPreviousRadioStation();
-      startRadioStream();
-    }
-  }
+  // if ((autoSwitchSec > -1) && (radioSwitchMillis > 0) && (millis() - radioSwitchMillis > autoSwitchSec * 1000))
+  // {
+  //   radioSwitchMillis = 0;
+  //   if (radStat::activeRadioStation.Name != radStat::previousRadioStation.Name)
+  //   {
+  //     radStat::resetPreviousRadioStation();
+  //     startRadioStream();
+  //   }
+  // }
   if ((screenTimeoutSec > 1) && (screenSwitchOnMillis > 0) && (millis() - screenSwitchOnMillis > screenTimeoutSec * 1000))
   {
     setScreenOff();
