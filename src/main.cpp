@@ -135,19 +135,6 @@ void startRadioStream()
   audio.connecttohost(url1);
 }
 
-void showMute()
-{
-  displayCategory();
-  if (radioIsMuted)
-  {
-    tft.fillRect(240, 0, 320, 35, TFT_RED);
-    tft.setTextColor(TFT_WHITE);
-    tft.setFont(_fonts[FONT_INFO]);
-    tft.setCursor(245, 0);
-    tft.print("Mute");
-  }
-}
-
 void clearScreenStation()
 {
 
@@ -177,20 +164,7 @@ void setScreenOff()
   tftIsOn = false;
   screenSwitchOnMillis = 0;
 }
-void displaySongInfo()
-{
-  const int fromPos = 120;
-  tft.fillRect(0, fromPos, 320, 120, TFT_WHITE);
-  tft.drawLine(0, fromPos, 320, fromPos, TFT_BLUE);
-  if (strcmp(songInfo, "") != 0)
-  {
 
-    tft.setTextColor(TFT_BLACK);
-    tft.setFont(_fonts[FONT_SONG]);
-    tft.setCursor(25, fromPos + 10);
-    tft.print(songInfo);
-  }
-}
 void displayCategory()
 {
   tft.fillRect(0, 0, 320, 35, TFT_BLUE);
@@ -198,6 +172,21 @@ void displayCategory()
   tft.setFont(_fonts[FONT_CATEGORY]);
   tft.setCursor(25, 0);
   tft.print(radStat::activeRadioStation.Category.c_str());
+}
+void displayMute()
+{
+  if (radioIsMuted)
+  {
+    tft.fillRect(240, 0, 320, 35, TFT_RED);
+    tft.setTextColor(TFT_WHITE);
+    tft.setFont(_fonts[FONT_INFO]);
+    tft.setCursor(245, 0);
+    tft.print("Mute");
+  }
+  else
+  {
+    displayCategory();
+  }
 }
 void displayStationName()
 {
@@ -217,6 +206,41 @@ void displayStationName()
     tft.print(nameReplaceUnderscroresBySpaces.c_str());
   }
 }
+void displaySongInfo()
+{
+  const int fromPos = 120;
+  tft.fillRect(0, fromPos, 320, 80, TFT_WHITE);
+  tft.drawLine(0, fromPos, 320, fromPos, TFT_BLUE);
+  if (strcmp(songInfo, "") != 0)
+  {
+
+    tft.setTextColor(TFT_BLACK);
+    tft.setFont(_fonts[FONT_SONG]);
+    tft.setCursor(25, fromPos + 10);
+    tft.print(songInfo);
+  }
+}
+void displayIP()
+{
+  tft.setTextColor(TFT_BLACK);
+  tft.setFont(_fonts[FONT_SONG]);
+  tft.fillRect(0, 200, 320, 40, TFT_WHITE);
+  tft.drawLine(0, 210, 320, 210, TFT_BLUE);
+  tft.setCursor(20, 215);
+  tft.print("IP:");
+  tft.setCursor(60, 215);
+  tft.print(WiFi.localIP().toString());
+}
+void displaySaved()
+{
+  tft.fillRect(0, 200, 320, 40, TFT_WHITE);
+  tft.drawLine(0, 210, 320, 210, TFT_BLUE);
+  tft.setFont(_fonts[FONT_SONG]);
+  tft.setTextColor(TFT_BLUE);
+  tft.setCursor(5, 215);
+  tft.print("Station Saved");
+}
+
 void displayStation()
 {
   radStat::activeRadioStation.printDetails();
@@ -229,6 +253,7 @@ void displayStation()
   displayCategory();
   displayStationName();
   displaySongInfo();
+  displayIP();
 
 #endif
 }
@@ -242,6 +267,8 @@ void setStation()
 void displayDetails()
 {
   setScreenOn();
+  tft.setFont(_fonts[FONT_INFO]);
+  tft.fillScreen(TFT_WHITE);
   tft.setTextColor(TFT_BLACK);
   tft.setCursor(2, 20);
   tft.print("IP:");
@@ -297,7 +324,7 @@ void toggleMute()
   {
     audio.setVolume(VOLUME_MAX - rotaryVolume.readEncoder());
   }
-  showMute();
+  displayMute();
 }
 
 #ifdef HAS_REMOTE
@@ -395,10 +422,7 @@ void saveTheStation()
   }
   file1.close();
   saveTheVolume();
-  tft.setFont(_fonts[FONT_INFO]);
-  tft.setTextColor(TFT_BLUE);
-  tft.setCursor(5, 200);
-  tft.print("Station Saved");
+  displaySaved();
 }
 void loadSavedVolume()
 {
