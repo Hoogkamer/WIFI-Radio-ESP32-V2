@@ -40,6 +40,7 @@ AsyncWebServer server(80);
 #define FONT_STATION 2
 #define FONT_SONG 3
 
+#define LEFT_MARGIN 5
 /***********************************************************************************************************************
  *                                                 I M A G E                                                           *
  ***********************************************************************************************************************/
@@ -176,7 +177,7 @@ void displayCategory()
   tft.fillRect(0, 0, 320, 35, TFT_BLUE);
   tft.setTextColor(TFT_WHITE);
   tft.setFont(_fonts[FONT_CATEGORY]);
-  tft.setCursor(25, 0);
+  tft.setCursor(LEFT_MARGIN, 0);
   tft.print(radStat::activeRadioStation.Category.c_str());
 }
 void displayMute()
@@ -197,9 +198,9 @@ void displayMute()
 void displayStationName()
 {
   tft.fillRect(0, 35, 320, 100, TFT_WHITE);
-  tft.setTextColor(TFT_BLACK);
+  tft.setTextColor(TFT_GRAY);
   tft.setFont(_fonts[FONT_STATION]);
-  tft.setCursor(25, 45);
+  tft.setCursor(LEFT_MARGIN, 45);
 
   if (strcmp(stationInfo, "") != 0)
   {
@@ -226,7 +227,7 @@ void displaySongInfo()
 
     tft.setTextColor(TFT_BLACK);
     tft.setFont(_fonts[FONT_SONG]);
-    tft.setCursor(25, fromPos + 10);
+    tft.setCursor(LEFT_MARGIN, fromPos + 10);
     tft.print(songInfo);
   }
 }
@@ -236,9 +237,9 @@ void displayIP()
   tft.setFont(_fonts[FONT_SONG]);
   tft.fillRect(0, 200, 320, 40, TFT_WHITE);
   tft.drawLine(0, 210, 320, 210, TFT_BLUE);
-  tft.setCursor(20, 215);
+  tft.setCursor(LEFT_MARGIN, 215);
   tft.print("IP:");
-  tft.setCursor(60, 215);
+  tft.setCursor(LEFT_MARGIN + 40, 215);
   tft.print(WiFi.localIP().toString());
 }
 void displaySaved()
@@ -271,6 +272,7 @@ void displayStation()
 }
 void displayCategorySelection()
 {
+  setScreenOn();
   isCategorySelection = true;
   String *categories = radStat::getRadioCategories();
   int nrOfCategories = radStat::getNrOfRadioCategories();
@@ -281,7 +283,7 @@ void displayCategorySelection()
   for (int i = 0; i < nrOfCategories - 1; ++i)
   {
     tft.setTextColor(TFT_BLACK);
-    tft.setCursor(20, i * 22);
+    tft.setCursor(LEFT_MARGIN, i * 22);
     if (i == activeCategoryNr)
     {
       tft.fillRect(0, 22 * i + 3, 340, 21, TFT_BLUE);
@@ -293,6 +295,7 @@ void displayCategorySelection()
 }
 void displayRadioSelection()
 {
+  setScreenOn();
   isCategorySelection = false;
   isRadioSelection = true;
   std::vector<radStat::RadioStation> radioStations = radStat::getRadioStationsOfActiveCategory();
@@ -305,7 +308,7 @@ void displayRadioSelection()
   {
 
     tft.setTextColor(TFT_BLACK);
-    tft.setCursor(20, i * 22);
+    tft.setCursor(LEFT_MARGIN, i * 22);
     if (station.ID == activeStationNr)
     {
       tft.fillRect(0, 22 * i + 3, 340, 21, TFT_BLUE);
