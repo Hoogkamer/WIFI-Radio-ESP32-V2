@@ -12,10 +12,11 @@ namespace radStat
         String Name;
         String Category;
         String URL;
+        int ID;
 
         RadioStation() {}
 
-        RadioStation(string c, string n, string u)
+        RadioStation(string c, string n, string u, int id)
         {
             Name = String(n.c_str());
             Name.trim();
@@ -23,6 +24,7 @@ namespace radStat
             Category.trim();
             URL = String(u.c_str());
             URL.trim();
+            ID = id;
         }
 
         void printDetails()
@@ -33,6 +35,8 @@ namespace radStat
             Serial.print(Category.c_str());
             Serial.print(", url:");
             Serial.print(URL.c_str());
+            Serial.print(", id:");
+            Serial.print(ID);
         }
     };
 
@@ -40,6 +44,7 @@ namespace radStat
     int nrOfCategories = 0;
     int activeCategory = 0;
     int radioStation = 0;
+    int stationsInCategoryCount = 0;
     RadioStation activeRadioStation;
     RadioStation previousRadioStation;
 
@@ -96,7 +101,45 @@ namespace radStat
 
         return dataArray;
     }
+    String *getRadioCategories()
+    {
+        return radioCategories;
+    }
+    int getNrOfRadioCategories()
+    {
+        return nrOfCategories;
+    }
+    int getActiveCategoryNr()
+    {
+        return activeCategory;
+    }
+    std::vector<RadioStation> getRadioStationsOfActiveCategory()
+    {
 
+        std::vector<RadioStation> Stations;
+
+        int i;
+        int count = 0;
+        for (i = 0; i < nrOfStations; i++)
+        {
+            const RadioStation &thisStation = radioStations[i];
+            if (thisStation.Category == radioCategories[activeCategory])
+            {
+                Stations.push_back(thisStation);
+                count++;
+            }
+        }
+        stationsInCategoryCount = count;
+        return Stations;
+    }
+    int getRadioCountOfActiveCategory()
+    {
+        return stationsInCategoryCount;
+    }
+    int getActiveRadioStation()
+    {
+        return radioStation;
+    }
     void setActiveRadioStation(int nr)
     {
 
@@ -220,7 +263,7 @@ namespace radStat
 
         std::vector<std::string> result = stringToArray(station);
 
-        radioStations[nrOfStations] = RadioStation(result[2], result[0], result[1]);
+        radioStations[nrOfStations] = RadioStation(result[2], result[0], result[1], nrOfStations);
         nrOfStations++;
     }
     void handleCategory(std::string category)
