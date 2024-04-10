@@ -171,7 +171,14 @@ void setScreenOff()
   tftIsOn = false;
   screenSwitchOnMillis = 0;
 }
-
+void displayMenuHeader(String header)
+{
+  tft.fillRect(0, 0, 320, 30, TFT_ORANGE);
+  tft.setTextColor(TFT_BLACK);
+  tft.setFont(_fonts[FONT_INFO]);
+  tft.setCursor(LEFT_MARGIN, 0);
+  tft.print(header);
+}
 void displayCategory()
 {
   tft.fillRect(0, 0, 320, 35, TFT_BLUE);
@@ -254,6 +261,7 @@ void displaySaved()
 
 void displayStation()
 {
+
   isCategorySelection = false;
   isRadioSelection = false;
   radStat::activeRadioStation.printDetails();
@@ -270,31 +278,59 @@ void displayStation()
 
 #endif
 }
-void displayCategorySelection()
+void displayCategorySelection(boolean clearScreen)
 {
-  setScreenOn();
-  isCategorySelection = true;
+  static int previousCategoryNr = 0;
   String *categories = radStat::getRadioCategories();
   int nrOfCategories = radStat::getNrOfRadioCategories();
   int activeCategoryNr = radStat::getActiveCategoryNr();
+  if (clearScreen)
+  {
+    tft.fillScreen(TFT_WHITE);
+    displayMenuHeader("Categories");
+    previousCategoryNr = activeCategoryNr;
+  }
+  setScreenOn();
+  const int MARGIN_TOP = 30;
+  isCategorySelection = true;
   tft.setFont(_fonts[FONT_INFO]);
-  tft.fillScreen(TFT_WHITE);
-
   for (int i = 0; i < nrOfCategories - 1; ++i)
   {
-    tft.setTextColor(TFT_BLACK);
-    tft.setCursor(LEFT_MARGIN, i * 22);
-    if (i == activeCategoryNr)
-    {
-      tft.fillRect(0, 22 * i + 3, 340, 21, TFT_BLUE);
-      tft.setTextColor(TFT_WHITE);
-    }
 
-    tft.print(categories[i]);
+    tft.setCursor(LEFT_MARGIN, MARGIN_TOP + i * 22);
+    if (i != activeCategoryNr && i == previousCategoryNr)
+    {
+      tft.fillRect(0, MARGIN_TOP + 22 * i + 3, 320, 21, TFT_WHITE);
+      tft.setTextColor(TFT_BLACK);
+      tft.print(categories[i]);
+    }
+    else if (i == activeCategoryNr)
+    {
+      tft.fillRect(0, MARGIN_TOP + 22 * i + 3, 320, 21, TFT_BLUE);
+      tft.setTextColor(TFT_WHITE);
+      tft.print(categories[i]);
+    }
+    else if (clearScreen)
+    {
+      tft.setTextColor(TFT_BLACK);
+      tft.print(categories[i]);
+    }
   }
+  previousCategoryNr = activeCategoryNr;
 }
-void displayRadioSelection()
+
+void printStationName(String stationName)
 {
+  String nameReplaceUnderscroresBySpaces = stationName;
+  nameReplaceUnderscroresBySpaces.replace("_", " ");
+  tft.print(nameReplaceUnderscroresBySpaces.c_str());
+}
+void displayRadioSelection(boolean clearScreen)
+{
+
+  static int previousStationNr = 0;
+  const int MARGIN_TOP = 30;
+
   setScreenOn();
   isCategorySelection = false;
   isRadioSelection = true;
@@ -302,23 +338,39 @@ void displayRadioSelection()
   int activeStationNr = radStat::getActiveRadioStation();
   int radioCount = radStat::getRadioCountOfActiveCategory();
   tft.setFont(_fonts[FONT_INFO]);
-  tft.fillScreen(TFT_WHITE);
+  if (clearScreen)
+  {
+    tft.fillScreen(TFT_WHITE);
+    displayMenuHeader("Stations");
+    previousStationNr = activeStationNr;
+  }
+
   int i = 0;
   for (const auto &station : radioStations)
   {
 
-    tft.setTextColor(TFT_BLACK);
-    tft.setCursor(LEFT_MARGIN, i * 22);
-    if (station.ID == activeStationNr)
+    tft.setCursor(LEFT_MARGIN, MARGIN_TOP + i * 22);
+    if (station.ID != activeStationNr && station.ID == previousStationNr)
     {
-      tft.fillRect(0, 22 * i + 3, 340, 21, TFT_BLUE);
-      tft.setTextColor(TFT_WHITE);
+      tft.fillRect(0, MARGIN_TOP + 22 * i + 3, 320, 21, TFT_WHITE);
+      tft.setTextColor(TFT_BLACK);
+      printStationName(station.Name);
     }
-    String nameReplaceUnderscroresBySpaces = station.Name;
-    nameReplaceUnderscroresBySpaces.replace("_", " ");
-    tft.print(nameReplaceUnderscroresBySpaces.c_str());
+    else if (station.ID == activeStationNr)
+    {
+      tft.fillRect(0, MARGIN_TOP + 22 * i + 3, 320, 21, TFT_BLUE);
+      tft.setTextColor(TFT_WHITE);
+      printStationName(station.Name);
+    }
+    else if (clearScreen)
+    {
+      tft.setTextColor(TFT_BLACK);
+      printStationName(station.Name);
+    }
+
     i++;
   }
+  previousStationNr = activeStationNr;
 }
 
 void setStation()
@@ -672,13 +724,13 @@ void onTunerShortClick()
   {
     if (!isCategorySelection && !isRadioSelection)
     {
-      displayCategorySelection();
+      displayCategorySelection(true);
     }
     else if (isCategorySelection)
     {
       isCategorySelection = false;
       isRadioSelection = true;
-      displayRadioSelection();
+      displayRadioSelection(true);
     }
     else
     {
@@ -776,12 +828,12 @@ void loopRotaryTuner()
       if (isCategorySelection)
       {
         radStat::prevCategory();
-        displayCategorySelection();
+        displayCategorySelection(false);
       }
       else
       {
         radStat::prevStation();
-        displayRadioSelection();
+        displayRadioSelection(!isRadioSelection);
       }
       if (currentRotaryTunerCode > 900)
       {
@@ -798,12 +850,12 @@ void loopRotaryTuner()
       if (isCategorySelection)
       {
         radStat::nextCategory();
-        displayCategorySelection();
+        displayCategorySelection(false);
       }
       else
       {
         radStat::nextStation();
-        displayRadioSelection();
+        displayRadioSelection(!isRadioSelection);
       }
       if (currentRotaryTunerCode < 100)
       {

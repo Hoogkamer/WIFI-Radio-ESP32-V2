@@ -23,6 +23,7 @@ Features:
 ### Radio2: Portable radio with rotary buttons
 
 ![RadioRotaries](/readme_info/images/RadioRotaries.jpg)
+![RadioRotaries2](/readme_info/images/radio2.jpg)
 
 ## Hardware and pinouts
 
@@ -206,8 +207,7 @@ You can also activate with the OK button, see next section.
 
 #### Using Rotary
 Turn the Station Rotary button to change the station within the active category.
-If the screen is dimmed you have to click the Station Rotary button to activate the screen.
-Then click again to change to the Categorations menu. Rotate to select a category and then click to activate this category.
+OR click to change to the Categorations menu. Rotate to select a category and then click to activate this category.
 
 ### Stopping the radio stream
 
@@ -228,7 +228,8 @@ After selecting the station, It will automatically connect after 3 seconds. Or p
 
 #### Using Rotary
 
-It will automatically connect after 3 seconds
+When in the radio or category selection menu's, select the item by pressing the station rotary button.
+
 
 ### Saving a radio station
 

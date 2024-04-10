@@ -43,6 +43,7 @@ namespace radStat
     int nrOfStations = 0;
     int nrOfCategories = 0;
     int activeCategory = 0;
+
     int radioStation = 0;
     int stationsInCategoryCount = 0;
     RadioStation activeRadioStation;
@@ -177,6 +178,7 @@ namespace radStat
     }
     void nextStation()
     {
+
         radioStation++;
         if (radioStation > nrOfStations)
         {
@@ -229,6 +231,7 @@ namespace radStat
     }
     void nextCategory()
     {
+
         activeCategory++;
         if (activeCategory > nrOfCategories)
         {
