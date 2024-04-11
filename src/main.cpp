@@ -228,12 +228,41 @@ void displaySongInfo()
   const int fromPos = 100;
   tft.fillRect(0, fromPos, 320, 100, TFT_WHITE);
   tft.drawLine(0, fromPos, 320, fromPos, TFT_BLUE);
-  if (strcmp(songInfo, "") != 0)
-  {
 
-    tft.setTextColor(TFT_BLACK);
-    tft.setFreeFont(FF18);
-    tft.setCursor(LEFT_MARGIN, fromPos + 30);
+  if (strcmp(songInfo, "") == 0)
+    return;
+
+  tft.setTextColor(TFT_BLACK);
+  tft.setFreeFont(FF18);
+  tft.setCursor(LEFT_MARGIN, fromPos + 30);
+  char strCopy[strlen(songInfo) + 1];
+  strcpy(strCopy, songInfo);
+  char *token = strtok(strCopy, "-");
+  if (token != NULL)
+  {
+    char *artistName = token;
+    Serial.println(artistName);
+    token = strtok(NULL, "-");
+    if (token != NULL)
+    {
+      char *songTitle = token;
+      tft.print(artistName);
+      // tft.fillRect(0, fromPos + 35, 320, 35, TFT_RED);
+      tft.setTextColor(TFT_DARKGREY);
+      tft.setCursor(LEFT_MARGIN, fromPos + 60);
+      if (strlen(songTitle) > 0)
+      {
+        songTitle++;
+      }
+      tft.print(songTitle);
+    }
+    else
+    {
+      tft.print(songInfo);
+    }
+  }
+  else
+  {
     tft.print(songInfo);
   }
 }

@@ -131,6 +131,11 @@ In a terminal window:
 
 ## Changing the code
 
+change line 27 in this file: .pio\libdeps\esp32\TFT_eSPI\User_Setup_Select.h
+to:  #include <../../../../src/User_Setup.h>
+
+
+
 ### changing the header file
 
 You can specify the options for the radio in the header file.
