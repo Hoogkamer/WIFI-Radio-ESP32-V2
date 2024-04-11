@@ -11,8 +11,8 @@ File stationsFile;
 String _sspw = "";
 String _ssid = "";
 
-TFT tft(0, 0);
 WiFiManager manager;
+TFT_eSPI tft = TFT_eSPI();
 
 Audio audio;
 #ifdef HAS_REMOTE
@@ -44,8 +44,7 @@ AsyncWebServer server(80);
 /***********************************************************************************************************************
  *                                                 I M A G E                                                           *
  ***********************************************************************************************************************/
-const unsigned short *_fonts[4] = {
-    Courier_New16x30, Courier_New19x36, Courier_New22x39, Courier_New13x23};
+
 bool startsWith(const char *base, const char *searchString)
 {
   char c;
@@ -175,16 +174,16 @@ void displayMenuHeader(String header)
 {
   tft.fillRect(0, 0, 320, 30, TFT_ORANGE);
   tft.setTextColor(TFT_BLACK);
-  tft.setFont(_fonts[FONT_INFO]);
-  tft.setCursor(LEFT_MARGIN, 0);
+  tft.setFreeFont(FF18);
+  tft.setCursor(LEFT_MARGIN, 23);
   tft.print(header);
 }
 void displayCategory()
 {
   tft.fillRect(0, 0, 320, 35, TFT_BLUE);
   tft.setTextColor(TFT_WHITE);
-  tft.setFont(_fonts[FONT_CATEGORY]);
-  tft.setCursor(LEFT_MARGIN, 0);
+  tft.setFreeFont(FF18);
+  tft.setCursor(LEFT_MARGIN, 25);
   tft.print(radStat::activeRadioStation.Category.c_str());
 }
 void displayMute()
@@ -193,8 +192,8 @@ void displayMute()
   {
     tft.fillRect(240, 0, 320, 35, TFT_RED);
     tft.setTextColor(TFT_WHITE);
-    tft.setFont(_fonts[FONT_INFO]);
-    tft.setCursor(245, 0);
+    tft.setFreeFont(FF18);
+    tft.setCursor(245, 25);
     tft.print("Mute");
   }
   else
@@ -205,9 +204,9 @@ void displayMute()
 void displayStationName()
 {
   tft.fillRect(0, 35, 320, 100, TFT_WHITE);
-  tft.setTextColor(TFT_GRAY);
-  tft.setFont(_fonts[FONT_STATION]);
-  tft.setCursor(LEFT_MARGIN, 45);
+  tft.setTextColor(TFT_BLUE);
+  tft.setFreeFont(FF22);
+  tft.setCursor(LEFT_MARGIN, 75);
 
   if (strcmp(stationInfo, "") != 0)
   {
@@ -226,36 +225,36 @@ void displaySongInfo()
   {
     return;
   }
-  const int fromPos = 120;
-  tft.fillRect(0, fromPos, 320, 80, TFT_WHITE);
+  const int fromPos = 100;
+  tft.fillRect(0, fromPos, 320, 100, TFT_WHITE);
   tft.drawLine(0, fromPos, 320, fromPos, TFT_BLUE);
   if (strcmp(songInfo, "") != 0)
   {
 
     tft.setTextColor(TFT_BLACK);
-    tft.setFont(_fonts[FONT_SONG]);
-    tft.setCursor(LEFT_MARGIN, fromPos + 10);
+    tft.setFreeFont(FF18);
+    tft.setCursor(LEFT_MARGIN, fromPos + 30);
     tft.print(songInfo);
   }
 }
 void displayIP()
 {
   tft.setTextColor(TFT_BLACK);
-  tft.setFont(_fonts[FONT_SONG]);
+  tft.setFreeFont(FF2);
   tft.fillRect(0, 200, 320, 40, TFT_WHITE);
   tft.drawLine(0, 210, 320, 210, TFT_BLUE);
-  tft.setCursor(LEFT_MARGIN, 215);
+  tft.setCursor(LEFT_MARGIN, 230);
   tft.print("IP:");
-  tft.setCursor(LEFT_MARGIN + 40, 215);
+  tft.setCursor(LEFT_MARGIN + 40, 230);
   tft.print(WiFi.localIP().toString());
 }
 void displaySaved()
 {
   tft.fillRect(0, 200, 320, 40, TFT_WHITE);
   tft.drawLine(0, 210, 320, 210, TFT_BLUE);
-  tft.setFont(_fonts[FONT_SONG]);
+  tft.setFreeFont(FF18);
   tft.setTextColor(TFT_BLUE);
-  tft.setCursor(5, 215);
+  tft.setCursor(5, 235);
   tft.print("Station Saved");
 }
 
@@ -293,11 +292,11 @@ void displayCategorySelection(boolean clearScreen)
   setScreenOn();
   const int MARGIN_TOP = 30;
   isCategorySelection = true;
-  tft.setFont(_fonts[FONT_INFO]);
+  tft.setFreeFont(FF18);
   for (int i = 0; i < nrOfCategories - 1; ++i)
   {
 
-    tft.setCursor(LEFT_MARGIN, MARGIN_TOP + i * 22);
+    tft.setCursor(LEFT_MARGIN, MARGIN_TOP + i * 22 + 20);
     if (i != activeCategoryNr && i == previousCategoryNr)
     {
       tft.fillRect(0, MARGIN_TOP + 22 * i + 3, 320, 21, TFT_WHITE);
@@ -337,7 +336,7 @@ void displayRadioSelection(boolean clearScreen)
   std::vector<radStat::RadioStation> radioStations = radStat::getRadioStationsOfActiveCategory();
   int activeStationNr = radStat::getActiveRadioStation();
   int radioCount = radStat::getRadioCountOfActiveCategory();
-  tft.setFont(_fonts[FONT_INFO]);
+  tft.setFreeFont(FF18);
   if (clearScreen)
   {
     tft.fillScreen(TFT_WHITE);
@@ -349,7 +348,7 @@ void displayRadioSelection(boolean clearScreen)
   for (const auto &station : radioStations)
   {
 
-    tft.setCursor(LEFT_MARGIN, MARGIN_TOP + i * 22);
+    tft.setCursor(LEFT_MARGIN, MARGIN_TOP + i * 22 + 20);
     if (station.ID != activeStationNr && station.ID == previousStationNr)
     {
       tft.fillRect(0, MARGIN_TOP + 22 * i + 3, 320, 21, TFT_WHITE);
@@ -382,14 +381,14 @@ void setStation()
 void displayDetails()
 {
   setScreenOn();
-  tft.setFont(_fonts[FONT_INFO]);
+  tft.setFreeFont(FF18);
   tft.fillScreen(TFT_WHITE);
   tft.setTextColor(TFT_BLACK);
-  tft.setCursor(2, 20);
+  tft.setCursor(2, 40);
   tft.print("IP:");
-  tft.setCursor(2, 50);
+  tft.setCursor(2, 70);
   tft.print(WiFi.localIP().toString());
-  tft.setCursor(2, 100);
+  tft.setCursor(2, 120);
   tft.print("Connect with your pc/phone to this IP address to configure the stations.");
 }
 void switchRadioOn()
@@ -638,6 +637,9 @@ void setup()
   Serial.begin(115200);
   delay(500);
   log_i("Starting");
+  tft.begin();
+
+  tft.setRotation(1);
 
 #ifdef HAS_ROTARIES
   pinMode(ROTARY_ENCODER_A_PIN, INPUT_PULLUP);
@@ -663,14 +665,16 @@ void setup()
   // rotaryVolume.setAcceleration(250);
 #endif
 
-  tft.begin(TFT_CS, TFT_DC, VSPI, TFT_MOSI, TFT_MISO, TFT_SCK);
+  // tft.begin(TFT_CS, TFT_DC, VSPI, TFT_MOSI, TFT_MISO, TFT_SCK);
   setScreenOn();
-  tft.setFrequency(TFT_FREQUENCY);
+  // tft.setFrequency(TFT_FREQUENCY);
   tft.setRotation(TFT_ROTATION);
-  tft.setFont(_fonts[FONT_INFO]);
+  tft.setFreeFont(FF18);
   tft.setTextColor(TFT_BLACK);
-  tft.setCursor(25, 80);
+  tft.setCursor(25, 100);
   tft.print("Starting...");
+  tft.setFreeFont(TT1);
+  tft.print("yes, yes");
 
 #ifdef HAS_SDCARD
   if (!SD.begin(5))
@@ -937,7 +941,7 @@ void printError(const char *error)
 {
   clearTFTAllWhite();
   tft.setTextColor(TFT_RED);
-  tft.setCursor(25, 80);
+  tft.setCursor(25, 100);
   tft.print(error);
 }
 void warnNotConnected(WiFiManager *myWiFiManager)
