@@ -1,4 +1,8 @@
 #include "main1.h"
+#include <vector>
+#include <string>
+
+int ROTATESCREEN = 1;
 
 long screenSwitchOnMillis = 0;
 long radioSwitchMillis = 0;
@@ -97,6 +101,22 @@ inline void clearTFTAllWhite() { tft.fillScreen(TFT_WHITE); } // y   0...239
 /***********************************************************************************************************************
  *                                                  P R O G R A M                                                      *
  ***********************************************************************************************************************/
+std::vector<std::string> splitString(const std::string &str, const std::string &delimiter)
+{
+  std::vector<std::string> tokens;
+  size_t start = 0, end = 0;
+
+  while ((end = str.find(delimiter, start)) != std::string::npos)
+  {
+    tokens.push_back(str.substr(start, end - start));
+    start = end + delimiter.length();
+  }
+
+  // Add the last token (or the only token if delimiter not found)
+  tokens.push_back(str.substr(start));
+
+  return tokens;
+}
 
 void loadStations()
 {
@@ -232,44 +252,27 @@ void displaySongInfo()
   if (strcmp(songInfo, "") == 0)
     return;
 
+  std::vector<std::string> tokens = splitString(songInfo, " - ");
+  const char *artistName = tokens[0].c_str();
   tft.setTextColor(TFT_BLACK);
   tft.setFreeFont(FF18);
   tft.setCursor(LEFT_MARGIN, fromPos + 30);
-  char strCopy[strlen(songInfo) + 1];
-  strcpy(strCopy, songInfo);
-  char *token = strtok(strCopy, "-");
-  if (token != NULL)
+  tft.print(artistName);
+
+  if (tokens.size() >= 2)
   {
-    char *artistName = token;
-    Serial.println(artistName);
-    token = strtok(NULL, "-");
-    if (token != NULL)
-    {
-      char *songTitle = token;
-      tft.print(artistName);
-      // tft.fillRect(0, fromPos + 35, 320, 35, TFT_RED);
-      tft.setTextColor(TFT_DARKGREY);
-      tft.setCursor(LEFT_MARGIN, fromPos + 60);
-      if (strlen(songTitle) > 0)
-      {
-        songTitle++;
-      }
-      tft.print(songTitle);
-    }
-    else
-    {
-      tft.print(songInfo);
-    }
-  }
-  else
-  {
-    tft.print(songInfo);
+    tft.fillRect(0, fromPos + 36, 320, 71, TFT_WHITE);
+    const char *songName = tokens[1].c_str();
+    tft.setTextColor(TFT_DARKGREY);
+    tft.setCursor(LEFT_MARGIN, fromPos + 60);
+    tft.print(songName);
   }
 }
+
 void displayIP()
 {
   tft.setTextColor(TFT_BLACK);
-  tft.setFreeFont(FF2);
+  tft.setFreeFont(FF1);
   tft.fillRect(0, 200, 320, 40, TFT_WHITE);
   tft.drawLine(0, 210, 320, 210, TFT_BLUE);
   tft.setCursor(LEFT_MARGIN, 230);
