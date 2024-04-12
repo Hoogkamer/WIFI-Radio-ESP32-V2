@@ -2,8 +2,6 @@
 #include <vector>
 #include <string>
 
-int ROTATESCREEN = 1;
-
 long screenSwitchOnMillis = 0;
 long radioSwitchMillis = 0;
 
@@ -33,6 +31,16 @@ bool isRadioSelection = false;
 const char *songInfo = "";
 const char *stationInfo = "";
 
+#if TFT_ROTATION == 1 || TFT_ROTATION == 3
+const int SCREEN_WIDTH = 320;
+const int SCREEN_HEIGHT = 240;
+const boolean SCREEN_LANDSCAPE = true;
+#else
+const int SCREEN_WIDTH = 240;
+const int SCREEN_HEIGHT = 320;
+const boolean SCREEN_LANDSCAPE = false;
+#endif
+
 unsigned long shortPressAfterMiliseconds = 50;  // how long short press shoud be. Do not set too low to avoid bouncing (false press events).
 unsigned long longPressAfterMiliseconds = 1000; // how long čong press shoud be.
 
@@ -48,42 +56,6 @@ AsyncWebServer server(80);
 /***********************************************************************************************************************
  *                                                 I M A G E                                                           *
  ***********************************************************************************************************************/
-
-bool startsWith(const char *base, const char *searchString)
-{
-  char c;
-  while ((c = *searchString++) != '\0')
-    if (c != *base++)
-      return false;
-  return true;
-}
-
-bool endsWith(const char *base, const char *searchString)
-{
-  int slen = strlen(searchString) - 1;
-  const char *p = base + strlen(base) - 1;
-  while (p > base && isspace(*p))
-    p--; // rtrim
-  p -= slen;
-  if (p < base)
-    return false;
-  return (strncmp(p, searchString, slen) == 0);
-}
-
-boolean drawImage(const char *scImg, uint16_t posX, uint16_t posY, uint16_t maxWidth, uint16_t maxHeigth)
-{
-#ifdef HAS_SDCARD
-  if (endsWith(scImg, "bmp"))
-  {
-    return tft.drawBmpFile(SD, scImg, posX, posY, maxWidth, maxHeigth);
-  }
-  if (endsWith(scImg, "jpg"))
-  {
-    return tft.drawJpgFile(SD, scImg, posX, posY, maxWidth, maxHeigth);
-  }
-#endif
-  return false; // neither jpg nor bmp
-}
 
 void setTFTbrightness(uint8_t duty)
 { // duty 0...100 (min...max)
@@ -124,31 +96,7 @@ void loadStations()
   radStat::processJSON(configurations1);
   configurations1.close();
 }
-#ifdef HAS_SDCARD
-void showStationImage(string name, string type, int position)
-{
 
-  string imgAdr0 = "/wifiradio/img/" + type + "/" + name + ".jpg";
-  const char *imgAdr = imgAdr0.c_str();
-  int maxHeight = 80;
-  if (type == "radio")
-  {
-    maxHeight = 240;
-  }
-
-  log_i("Getting image from SD:%s", imgAdr);
-  if (SD.exists(imgAdr))
-  {
-    drawImage(imgAdr, 0, position, 240, maxHeight);
-  }
-  else
-  {
-    tft.setCursor(25, position + 20);
-    tft.setTextColor(TFT_BLACK);
-    tft.print(name.c_str());
-  }
-}
-#endif
 void startRadioStream()
 {
   if (isCategorySelection || isRadioSelection)
@@ -200,7 +148,7 @@ void displayMenuHeader(String header)
 }
 void displayCategory()
 {
-  tft.fillRect(0, 0, 320, 35, TFT_BLUE);
+  tft.fillRect(0, 0, SCREEN_WIDTH, 35, TFT_BLUE);
   tft.setTextColor(TFT_WHITE);
   tft.setFreeFont(FF18);
   tft.setCursor(LEFT_MARGIN, 25);
@@ -210,10 +158,10 @@ void displayMute()
 {
   if (radioIsMuted)
   {
-    tft.fillRect(240, 0, 320, 35, TFT_RED);
+    tft.fillRect(SCREEN_WIDTH - 60, 0, 60, 35, TFT_RED);
     tft.setTextColor(TFT_WHITE);
     tft.setFreeFont(FF18);
-    tft.setCursor(245, 25);
+    tft.setCursor(SCREEN_WIDTH - 60, 25);
     tft.print("Mute");
   }
   else
@@ -223,10 +171,15 @@ void displayMute()
 }
 void displayStationName()
 {
-  tft.fillRect(0, 35, 320, 100, TFT_WHITE);
+  int sectionHeight = 40;
+  if (!SCREEN_LANDSCAPE)
+  {
+    sectionHeight = 80;
+  }
+  tft.fillRect(0, 35, SCREEN_WIDTH, sectionHeight, TFT_WHITE);
   tft.setTextColor(TFT_BLUE);
   tft.setFreeFont(FF22);
-  tft.setCursor(LEFT_MARGIN, 75);
+  tft.setCursor(LEFT_MARGIN, 65);
 
   if (strcmp(stationInfo, "") != 0)
   {
@@ -245,9 +198,17 @@ void displaySongInfo()
   {
     return;
   }
-  const int fromPos = 100;
-  tft.fillRect(0, fromPos, 320, 100, TFT_WHITE);
-  tft.drawLine(0, fromPos, 320, fromPos, TFT_BLUE);
+  int artistLines = 1;
+  int fromPos = 75;
+  int sectionHeight = 40;
+  if (!SCREEN_LANDSCAPE)
+  {
+    sectionHeight = 80;
+    fromPos = 115;
+  }
+
+  tft.fillRect(0, fromPos, SCREEN_WIDTH, sectionHeight, TFT_WHITE);
+  tft.drawLine(0, fromPos, SCREEN_WIDTH, fromPos, TFT_BLUE);
 
   if (strcmp(songInfo, "") == 0)
     return;
@@ -261,10 +222,14 @@ void displaySongInfo()
 
   if (tokens.size() >= 2)
   {
-    tft.fillRect(0, fromPos + 36, 320, 71, TFT_WHITE);
+    tft.fillRect(0, fromPos + sectionHeight, SCREEN_WIDTH, 90, TFT_WHITE);
+    if (!SCREEN_LANDSCAPE)
+    {
+      tft.drawLine(0, fromPos + sectionHeight, SCREEN_WIDTH, fromPos + sectionHeight, TFT_DARKGREY);
+    }
     const char *songName = tokens[1].c_str();
     tft.setTextColor(TFT_DARKGREY);
-    tft.setCursor(LEFT_MARGIN, fromPos + 60);
+    tft.setCursor(LEFT_MARGIN, fromPos + sectionHeight + 30);
     tft.print(songName);
   }
 }
@@ -273,41 +238,34 @@ void displayIP()
 {
   tft.setTextColor(TFT_BLACK);
   tft.setFreeFont(FF1);
-  tft.fillRect(0, 200, 320, 40, TFT_WHITE);
-  tft.drawLine(0, 210, 320, 210, TFT_BLUE);
-  tft.setCursor(LEFT_MARGIN, 230);
+  tft.fillRect(0, SCREEN_HEIGHT - 35, SCREEN_WIDTH, 35, TFT_WHITE);
+  tft.drawLine(0, SCREEN_HEIGHT - 35, SCREEN_WIDTH, SCREEN_HEIGHT - 35, TFT_BLUE);
+  tft.setCursor(LEFT_MARGIN, SCREEN_HEIGHT - 12);
   tft.print("IP:");
-  tft.setCursor(LEFT_MARGIN + 40, 230);
+  tft.setCursor(LEFT_MARGIN + 40, SCREEN_HEIGHT - 12);
   tft.print(WiFi.localIP().toString());
 }
 void displaySaved()
 {
-  tft.fillRect(0, 200, 320, 40, TFT_WHITE);
-  tft.drawLine(0, 210, 320, 210, TFT_BLUE);
+  tft.fillRect(0, SCREEN_HEIGHT - 35, SCREEN_WIDTH, 35, TFT_WHITE);
+  tft.drawLine(0, SCREEN_HEIGHT - 35, SCREEN_WIDTH, SCREEN_HEIGHT - 35, TFT_BLUE);
   tft.setFreeFont(FF18);
   tft.setTextColor(TFT_BLUE);
-  tft.setCursor(5, 235);
+  tft.setCursor(LEFT_MARGIN, SCREEN_HEIGHT - 12);
   tft.print("Station Saved");
 }
 
 void displayStation()
 {
-
   isCategorySelection = false;
   isRadioSelection = false;
   radStat::activeRadioStation.printDetails();
   radioSwitchMillis = millis();
   setScreenOn();
-#ifdef SHOW_IMAGES
-  showStationImage(radStat::activeRadioStation.Category.c_str(), "category", 0);
-  showStationImage(radStat::activeRadioStation.Name.c_str(), "radio", 80);
-#else
   displayCategory();
   displayStationName();
   displaySongInfo();
   displayIP();
-
-#endif
 }
 void displayCategorySelection(boolean clearScreen)
 {
@@ -436,7 +394,6 @@ void switchRadioOff()
   setScreenOn();
   printError("Going in standby");
   log_i("Powering off");
-  drawImage("/wifiradio/img/shutdown.jpg", 0, 0);
   delay(5000);
   setScreenOff();
   // esp_deep_sleep_start();
@@ -445,12 +402,9 @@ void switchRadioOff()
 }
 void audio_showstreamtitle(const char *info)
 {
-  if (TFT_ROTATION) // only show song info in landscape mode
-  {
 
-    songInfo = info;
-    displaySongInfo();
-  }
+  songInfo = info;
+  displaySongInfo();
 }
 
 void audio_showstation(const char *info)
@@ -468,7 +422,9 @@ void toggleMute()
   }
   else
   {
+#ifdef HAS_ROTARIES
     audio.setVolume(VOLUME_MAX - rotaryVolume.readEncoder());
+#endif
   }
   displayMute();
 }
@@ -496,33 +452,42 @@ void handleRemotePress(int64_t remotecode)
   if (remotecode == RC_PREVIOUS_STATION)
   {
     radStat::prevStation();
-    displayStation();
+    displayRadioSelection(!isRadioSelection);
   }
   if (remotecode == RC_NEXT_STATION)
   {
     radStat::nextStation();
-    displayStation();
+    displayRadioSelection(!isRadioSelection);
   }
   if (remotecode == RC_NEXT_CATEGORY)
   {
-    radStat::nextCategory();
-    displayStation();
+    if (!isRadioSelection)
+    {
+      radStat::nextCategory();
+      displayCategorySelection(!isCategorySelection);
+    }
+    else
+    {
+      radStat::nextStation();
+      displayRadioSelection(!isRadioSelection);
+    }
   }
   if (remotecode == RC_PREVIOUS_CATEGORY)
   {
-    radStat::prevCategory();
-    displayStation();
+    if (!isRadioSelection)
+    {
+      radStat::prevCategory();
+      displayCategorySelection(!isCategorySelection);
+    }
+    else
+    {
+      radStat::prevStation();
+      displayRadioSelection(!isRadioSelection);
+    }
   }
   if (remotecode == RC_TURN_ON_SCREEN)
   {
-    playRadio = true;
-    displayStation();
-    if (radStat::activeRadioStation.Name != radStat::previousRadioStation.Name)
-    {
-      radStat::resetPreviousRadioStation();
-
-      startRadioStream();
-    }
+    onTunerShortClick();
   }
   if (remotecode == RC_SHOW_DETAILS)
   {
@@ -532,12 +497,6 @@ void handleRemotePress(int64_t remotecode)
   if (remotecode == RC_SAVE_STATION)
   {
     saveTheStation();
-#ifdef HAS_SDCARD
-    if (SD.exists("/wifiradio/mp3/command/StationSaved.mp3"))
-    {
-      audio.connecttoFS(SD, "/wifiradio/mp3/command/StationSaved.mp3");
-    }
-#endif
   }
 
   if (remotecode == RC_RADIO_OFF1 || remotecode == RC_RADIO_OFF2 || remotecode == RC_RADIO_OFF3)
@@ -671,7 +630,7 @@ void setup()
   log_i("Starting");
   tft.begin();
 
-  tft.setRotation(1);
+  tft.setRotation(TFT_ROTATION);
 
 #ifdef HAS_ROTARIES
   pinMode(ROTARY_ENCODER_A_PIN, INPUT_PULLUP);
@@ -700,7 +659,6 @@ void setup()
   // tft.begin(TFT_CS, TFT_DC, VSPI, TFT_MOSI, TFT_MISO, TFT_SCK);
   setScreenOn();
   // tft.setFrequency(TFT_FREQUENCY);
-  tft.setRotation(TFT_ROTATION);
   tft.setFreeFont(FF18);
   tft.setTextColor(TFT_BLACK);
   tft.setCursor(25, 100);
@@ -749,7 +707,7 @@ void setup()
 
   startWebServer();
 }
-#ifdef HAS_ROTARIES
+
 void onTunerShortClick()
 {
   if (!tftIsOn)
@@ -780,6 +738,8 @@ void onTunerShortClick()
     }
   }
 }
+
+#ifdef HAS_ROTARIES
 void onTunerLongClick()
 {
   saveTheStation();
