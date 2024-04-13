@@ -178,7 +178,8 @@ void displayStationName()
   }
   tft.fillRect(0, 35, SCREEN_WIDTH, sectionHeight, TFT_WHITE);
   tft.setTextColor(TFT_BLUE);
-  tft.setFreeFont(FF22);
+  // tft.setFreeFont(FF22);
+  tft.setFreeFont(&Orbitron_Light_24);
   tft.setCursor(LEFT_MARGIN, 65);
 
   if (strcmp(stationInfo, "") != 0)
@@ -262,6 +263,7 @@ void displayStation()
   radStat::activeRadioStation.printDetails();
   radioSwitchMillis = millis();
   setScreenOn();
+  tft.fillScreen(TFT_WHITE);
   displayCategory();
   displayStationName();
   displaySongInfo();
