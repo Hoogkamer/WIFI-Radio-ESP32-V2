@@ -1,7 +1,13 @@
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
-                           // #include "ipodradio.h"
+
+//-----------------------------------------
+// select radio config here
+
 #include "portableradio.h"
+// #include "ipodradio.h"
+
+//-----------------------------------------
 
 #include "Arduino.h"
 #include <FS.h>

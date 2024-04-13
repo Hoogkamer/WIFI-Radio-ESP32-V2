@@ -2,6 +2,8 @@
 #include <vector>
 #include <string>
 
+#include "Roboto.h"
+
 long screenSwitchOnMillis = 0;
 long radioSwitchMillis = 0;
 
@@ -142,7 +144,7 @@ void displayMenuHeader(String header)
 {
   tft.fillRect(0, 0, 320, 30, TFT_ORANGE);
   tft.setTextColor(TFT_BLACK);
-  tft.setFreeFont(FF18);
+  tft.setFreeFont(&Roboto_24);
   tft.setCursor(LEFT_MARGIN, 23);
   tft.print(header);
 }
@@ -150,7 +152,7 @@ void displayCategory()
 {
   tft.fillRect(0, 0, SCREEN_WIDTH, 35, TFT_BLUE);
   tft.setTextColor(TFT_WHITE);
-  tft.setFreeFont(FF18);
+  tft.setFreeFont(&Roboto_24);
   tft.setCursor(LEFT_MARGIN, 25);
   tft.print(radStat::activeRadioStation.Category.c_str());
 }
@@ -174,11 +176,11 @@ void displayStationName()
   int sectionHeight = 40;
   if (!SCREEN_LANDSCAPE)
   {
-    sectionHeight = 80;
+    sectionHeight = 40;
   }
   tft.fillRect(0, 35, SCREEN_WIDTH, sectionHeight, TFT_WHITE);
   tft.setTextColor(TFT_BLUE);
-  // tft.setFreeFont(FF22);
+
   tft.setFreeFont(&Orbitron_Light_24);
   tft.setCursor(LEFT_MARGIN, 65);
 
@@ -192,6 +194,7 @@ void displayStationName()
     nameReplaceUnderscroresBySpaces.replace("_", " ");
     tft.print(nameReplaceUnderscroresBySpaces.c_str());
   }
+  tft.fillRect(0, 35 + sectionHeight - 5, SCREEN_WIDTH, 30, TFT_WHITE); // remove flow over text
 }
 void displaySongInfo()
 {
@@ -205,7 +208,7 @@ void displaySongInfo()
   if (!SCREEN_LANDSCAPE)
   {
     sectionHeight = 80;
-    fromPos = 115;
+    fromPos = 75;
   }
 
   tft.fillRect(0, fromPos, SCREEN_WIDTH, sectionHeight, TFT_WHITE);
@@ -217,7 +220,7 @@ void displaySongInfo()
   std::vector<std::string> tokens = splitString(songInfo, " - ");
   const char *artistName = tokens[0].c_str();
   tft.setTextColor(TFT_BLACK);
-  tft.setFreeFont(FF18);
+  tft.setFreeFont(&Roboto_24);
   tft.setCursor(LEFT_MARGIN, fromPos + 30);
   tft.print(artistName);
 
@@ -226,11 +229,12 @@ void displaySongInfo()
     tft.fillRect(0, fromPos + sectionHeight, SCREEN_WIDTH, 90, TFT_WHITE);
     if (!SCREEN_LANDSCAPE)
     {
-      tft.drawLine(0, fromPos + sectionHeight, SCREEN_WIDTH, fromPos + sectionHeight, TFT_DARKGREY);
+      // tft.drawLine(0, fromPos + sectionHeight, SCREEN_WIDTH, fromPos + sectionHeight, TFT_LIGHTGREY);
     }
     const char *songName = tokens[1].c_str();
-    tft.setTextColor(TFT_DARKGREY);
+    tft.setTextColor(TFT_BLACK);
     tft.setCursor(LEFT_MARGIN, fromPos + sectionHeight + 30);
+    tft.setFreeFont(&Roboto_Thin_24);
     tft.print(songName);
   }
 }
@@ -250,7 +254,7 @@ void displaySaved()
 {
   tft.fillRect(0, SCREEN_HEIGHT - 35, SCREEN_WIDTH, 35, TFT_WHITE);
   tft.drawLine(0, SCREEN_HEIGHT - 35, SCREEN_WIDTH, SCREEN_HEIGHT - 35, TFT_BLUE);
-  tft.setFreeFont(FF18);
+  tft.setFreeFont(&Roboto_Thin_24);
   tft.setTextColor(TFT_BLUE);
   tft.setCursor(LEFT_MARGIN, SCREEN_HEIGHT - 12);
   tft.print("Station Saved");
@@ -284,7 +288,7 @@ void displayCategorySelection(boolean clearScreen)
   setScreenOn();
   const int MARGIN_TOP = 30;
   isCategorySelection = true;
-  tft.setFreeFont(FF18);
+  tft.setFreeFont(&Roboto_Thin_24);
   for (int i = 0; i < nrOfCategories - 1; ++i)
   {
 
@@ -328,14 +332,14 @@ void displayRadioSelection(boolean clearScreen)
   std::vector<radStat::RadioStation> radioStations = radStat::getRadioStationsOfActiveCategory();
   int activeStationNr = radStat::getActiveRadioStation();
   int radioCount = radStat::getRadioCountOfActiveCategory();
-  tft.setFreeFont(FF18);
+
   if (clearScreen)
   {
     tft.fillScreen(TFT_WHITE);
     displayMenuHeader("Stations");
     previousStationNr = activeStationNr;
   }
-
+  tft.setFreeFont(&Roboto_Thin_24);
   int i = 0;
   for (const auto &station : radioStations)
   {
@@ -373,7 +377,7 @@ void setStation()
 void displayDetails()
 {
   setScreenOn();
-  tft.setFreeFont(FF18);
+  tft.setFreeFont(&Roboto_Thin_24);
   tft.fillScreen(TFT_WHITE);
   tft.setTextColor(TFT_BLACK);
   tft.setCursor(2, 40);
@@ -661,12 +665,10 @@ void setup()
   // tft.begin(TFT_CS, TFT_DC, VSPI, TFT_MOSI, TFT_MISO, TFT_SCK);
   setScreenOn();
   // tft.setFrequency(TFT_FREQUENCY);
-  tft.setFreeFont(FF18);
+  tft.setFreeFont(&Roboto_24);
   tft.setTextColor(TFT_BLACK);
   tft.setCursor(25, 100);
   tft.print("Starting...");
-  tft.setFreeFont(TT1);
-  tft.print("yes, yes");
 
 #ifdef HAS_SDCARD
   if (!SD.begin(5))

@@ -276,7 +276,7 @@ You first need to find a case where you can contain the components in. I used a 
 
 First remove the speaker grills, they are clipped on, so just pull them off.
 
-Then move the sliding door into the CD open position by pressing CD OPEN. Then on the CD side, put your finger under the door and bend the middle of the door towards you (away from the radio) then you can slide it further to the left.
+Then move the sliding door into the CD open position by pressing CD OPEN. Then on the CD side, put your finger under the door at the right side and bend the middle of the door towards you (away from the radio) then you can slide it further to the left.
 
 OR
 
