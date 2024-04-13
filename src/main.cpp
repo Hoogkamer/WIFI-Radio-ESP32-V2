@@ -75,6 +75,27 @@ inline void clearTFTAllWhite() { tft.fillScreen(TFT_WHITE); } // y   0...239
 /***********************************************************************************************************************
  *                                                  P R O G R A M                                                      *
  ***********************************************************************************************************************/
+
+void printSplitString(String text)
+{
+  int wordStart = 0;
+  int wordEnd = 0;
+  while ((text.indexOf(' ', wordStart) >= 0) && (wordStart <= text.length()))
+  {
+    wordEnd = text.indexOf(' ', wordStart + 1);
+    uint16_t len = tft.textWidth(text.substring(wordStart, wordEnd));
+    if (tft.getCursorX() + len >= tft.width())
+    {
+      tft.println();
+      wordStart++;
+      tft.setCursor(LEFT_MARGIN, tft.getCursorY());
+    }
+    tft.print(text.substring(wordStart, wordEnd));
+    wordStart = wordEnd;
+  }
+  tft.println();
+}
+
 std::vector<std::string> splitString(const std::string &str, const std::string &delimiter)
 {
   std::vector<std::string> tokens;
@@ -186,7 +207,9 @@ void displayStationName()
 
   if (strcmp(stationInfo, "") != 0)
   {
+    tft.setTextWrap(false, false);
     tft.print(stationInfo);
+    tft.setTextWrap(true, false);
   }
   else
   {
@@ -194,7 +217,6 @@ void displayStationName()
     nameReplaceUnderscroresBySpaces.replace("_", " ");
     tft.print(nameReplaceUnderscroresBySpaces.c_str());
   }
-  tft.fillRect(0, 35 + sectionHeight - 5, SCREEN_WIDTH, 30, TFT_WHITE); // remove flow over text
 }
 void displaySongInfo()
 {
@@ -208,34 +230,29 @@ void displaySongInfo()
   if (!SCREEN_LANDSCAPE)
   {
     sectionHeight = 80;
-    fromPos = 75;
   }
 
-  tft.fillRect(0, fromPos, SCREEN_WIDTH, sectionHeight, TFT_WHITE);
+  tft.fillRect(0, fromPos, SCREEN_WIDTH, sectionHeight + 90, TFT_WHITE);
   tft.drawLine(0, fromPos, SCREEN_WIDTH, fromPos, TFT_BLUE);
 
   if (strcmp(songInfo, "") == 0)
     return;
 
   std::vector<std::string> tokens = splitString(songInfo, " - ");
-  const char *artistName = tokens[0].c_str();
+  String artistName = tokens[0].c_str();
   tft.setTextColor(TFT_BLACK);
   tft.setFreeFont(&Roboto_24);
   tft.setCursor(LEFT_MARGIN, fromPos + 30);
-  tft.print(artistName);
+  // tft.println(artistName);
+  printSplitString(artistName);
 
   if (tokens.size() >= 2)
   {
-    tft.fillRect(0, fromPos + sectionHeight, SCREEN_WIDTH, 90, TFT_WHITE);
-    if (!SCREEN_LANDSCAPE)
-    {
-      // tft.drawLine(0, fromPos + sectionHeight, SCREEN_WIDTH, fromPos + sectionHeight, TFT_LIGHTGREY);
-    }
-    const char *songName = tokens[1].c_str();
-    tft.setTextColor(TFT_BLACK);
-    tft.setCursor(LEFT_MARGIN, fromPos + sectionHeight + 30);
+    String songName = tokens[1].c_str();
     tft.setFreeFont(&Roboto_Thin_24);
-    tft.print(songName);
+    tft.setCursor(LEFT_MARGIN, tft.getCursorY());
+    // tft.println(songName);
+    printSplitString(songName);
   }
 }
 
@@ -635,7 +652,8 @@ void setup()
   delay(500);
   log_i("Starting");
   tft.begin();
-
+  tft.setTextWrap(true, false);
+  tft.setTextPadding(15);
   tft.setRotation(TFT_ROTATION);
 
 #ifdef HAS_ROTARIES
