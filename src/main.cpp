@@ -80,6 +80,11 @@ void printSplitString(String text)
 {
   int wordStart = 0;
   int wordEnd = 0;
+  if ((text.indexOf(' ', wordStart) < 0))
+  {
+    tft.println(text);
+    return;
+  }
   while ((text.indexOf(' ', wordStart) >= 0) && (wordStart <= text.length()))
   {
     wordEnd = text.indexOf(' ', wordStart + 1);
@@ -93,6 +98,7 @@ void printSplitString(String text)
     tft.print(text.substring(wordStart, wordEnd));
     wordStart = wordEnd;
   }
+
   tft.println();
 }
 
