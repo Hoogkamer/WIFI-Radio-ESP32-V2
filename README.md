@@ -18,12 +18,12 @@ Features:
 
 ### Radio1: Drop-in for an IPOD with remote
 
-![RadioRemote](/readme_info/images/radioandremote.jpg)
+![RadioRemote](/readme_info/images/ipod1.jpg)
 
 ### Radio2: Portable radio with rotary buttons
 
-![RadioRotaries](/readme_info/images/RadioRotaries.jpg)
-![RadioRotaries2](/readme_info/images/radio2.jpg)
+![RadioRotaries](/readme_info/images/radio3.jpg)
+![RadioRotaries2](/readme_info/images/radio4.jpg)
 
 ## Hardware and pinouts
 
@@ -81,18 +81,18 @@ All original electronics of the portable radio is removed, so it does not have a
 
 ## Used pinouts
 
-| ESP32 | LCD         | PCM             | IR        | SD      | wire colors | Rotary1 | Rotary2 |
+| ESP32 | LCD         | PCM             | IR        |         | wire colors | Rotary1 | Rotary2 |
 | ----- | ----------- | --------------- | --------- | ------- | ----------- | ------- | ------- |
-| v5    | 1- VCC      | 6- VIN          | 3- VCC    | 5- VCC  | red         |         |         |
-| GND   | 2- GND      | 5- GND + 1- SCK | 2- GND    | 6- GND  | black       |         |         |
+| v5    | 1- VCC      | 6- VIN          | 3- VCC    |         | red         |         |         |
+| GND   | 2- GND      | 5- GND + 1- SCK | 2- GND    |         | black       |         |         |
 | 22    | 3- CS       |                 |           |         | blue        |         |         |
 | EN    | 4- RESET    |                 |           |         | yellow      |         |         |
 | 21    | 5- DC       |                 |           |         | green       |         |         |
-| 23    | 6- SDI/MOSI |                 |           | 3- MOSI | brown       |         |         |
-| 18    | 7-SCK       |                 |           | 2- SCK  | grey        |         |         |
+| 23    | 6- SDI/MOSI |                 |           |         | brown       |         |         |
+| 18    | 7-SCK       |                 |           |         | grey        |         |         |
 | 32    | 8-LED       |                 |           |         | purple      |         |         |
-| 19    | 9-SDO/MISO  |                 |           | 4- MISO | white       |         |         |
-| 5     |             |                 |           | 1- CS   | orange      |         |         |
+| 19    | 9-SDO/MISO  |                 |           |         | white       |         |         |
+| 5     |             |                 |           |         | orange      |         |         |
 | 26    |             | 4- LCK          |           |         |             |         |         |
 | 25    |             | 3- DIN          |           |         |             |         |         |
 | 27    |             | 2- BCK          |           |         |             |         |         |
@@ -181,7 +181,7 @@ You can copy your own images and scale them to 240px.
 When the Radio cannot connect to a wifi access point, it will startup an access point "WIFI_RADIO"
 Connect with your Phone/Computer to that access point and navigate to 192.168.1.4
 
-[More](https://github.com/tzapu/WiFiManager#using)
+[More info](https://github.com/tzapu/WiFiManager#using)
 
 ### Showing the IP address
 
@@ -269,8 +269,6 @@ You first need to find a case where you can contain the components in. I used a 
 - then fit in the audio board at the bottom and finally put the ESP32 on top
 
 ![IPOD](/readme_info/images/IPOD.jpg)
-![IPOD](/readme_info/images/IPOFRONT.jpg)
-![IPOD](/readme_info/images/npo.jpg)
 
 ### Feeding the wires through the radio
 
@@ -303,11 +301,11 @@ Then drill a hole large enough for the audio cable and the usb cable from the fr
 
 ## Donor radio 2 (Portable)
 
-A Grundig music boy
+[A Grundig music boy](https://www.radiomuseum.org/r/grundig_music_boy_209.html)
 
 ### Removing old stuff
 
-Remove screws at the bottom. Also the 2 knobs and screws at the top and lift the whole top. Then buy a piece of plexiglass, and make it the fit the top properly, cut 3 holes (1 for antenna, 2 for the rotary knobs). Paint the backside of the plexiglass black or any other color, leaving the room free for the LCD screen.
+Remove screws at the bottom. Also the 2 knobs and screws at the top and lift the whole top. Then buy a piece of plexiglass, and make it the fit the top properly, cut 3 holes (1 for antenna, 2 for the rotary knobs). Paint the backside of the plexiglass black or any other color, leaving the room free for the LCD screen, by covering the space when painting. If the edges are not perfect, you can use a black permanent marker to touch up.
 Then solder everything etc.
 
 ![Rotaries open](/readme_info/images/RotariesOpen.jpg)
