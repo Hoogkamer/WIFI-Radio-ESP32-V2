@@ -14,7 +14,7 @@ Features:
 - Each station can have a category. You can switch +/- a radio station within the category
 - You can switch +/- between categories
 - You can save 1 station which is then selected when you switch on the device
-- You can specify images for the categories and the radio stations (via the optional SD card)
+
 
 ### Radio1: Drop-in for an IPOD with remote
 
@@ -27,7 +27,7 @@ Features:
 
 ## Hardware and pinouts
 
-All components are less than 25 EURO. The donor radio was 10 EURO second hand. So the total cost of this fun project was 35 EURO. And a lot of hours :)
+All components are less than 20 EURO. The donor radio (panasonic) was 10 EURO second hand. So the total cost of this fun project was 30 EURO.
 
 ### ESP32:
 
@@ -60,11 +60,6 @@ Ili9341 240\*320 2.8 inch touch
 
 [IRR Aliexpress](https://nl.aliexpress.com/item/1005003194864725.html?spm=a2g0o.order_list.order_list_main.23.2b0c79d2hiKNqB&gatewayAdapt=glo2nld)
 
-### SD Card Reader (optional):
-
-AZDelivery 3 x SPI Reader Micro Memory SD TF Module Card
-
-[SD Amazon](https://www.amazon.nl/dp/B077MCQS9P?psc=1&ref=ppx_yo2ov_dt_b_product_details)
 
 ### Two Rotary Encoder (optional):
 
@@ -75,7 +70,7 @@ KY-040 360 Graden Rotary Encoder Module
 
 ### Amplifier (for portable radio)
 
-All original electronics of the portable radio is removed, so it does not have an amplifier anymore. You should connect an amplifier to the DAC (and speaker)
+All original electronics of the portable grundig radio are removed, so it does not have an amplifier anymore. You should connect an amplifier to the DAC (and speaker)
 
 [5128 Amplifier board](https://nl.aliexpress.com/item/1005004428568482.html?spm=a2g0o.order_list.order_list_main.23.21ef79d2UT6dOU&gatewayAdapt=glo2nld)
 
@@ -112,7 +107,6 @@ dont use 0,2,12,15
 
 ![ESP32-1](/readme_info/images/ESP32-1.jpg)
 ![ESP32-2](/readme_info/images/ESP32-2.jpg)
-![PCM](/readme_info/images/PCM.jpg)
 
 - open filezilla
 - put in ip address (select "input level" on remote to see it)
@@ -159,20 +153,6 @@ PlatformIO > ESP32 > Platform > Build Filesystem Image, and then Upload Filesyst
 This will uploade everything in the "data" folder
 [More] (https://randomnerdtutorials.com/esp32-vs-code-platformio-spiffs/)
 
-### Preparing the SD Card
-
-The SD card is optional, you do not have to use this.
-
-See the folder "SD", copy this to the SD card. Root folder copied should be "wifiradio".
-
-#### Using images for station categories and station names
-
-in the \wifiradio\img\category folder, but the picture to display for the category with exactly the category name and ending with ".jpg"
-Picture for category should be 240x80.
-
-in the \wifiradio\img\radio folder, put the picture to display for the radio with exactly the radio name and edingn with ".jpg"
-Resolution of each image should be 240 pixels wide and max 240 pixels high. Note that there are only 2 example images for the radio station, due to potential copyright issues.
-You can copy your own images and scale them to 240px.
 
 ## Operating the Internet radio
 
@@ -199,7 +179,13 @@ Or Volume Rotary button press.
 
 Navigate on your phone/computer to the IP address mentioned above. You must be connected to the same WIFI access point.
 Then go to edit stations and wait until you see the categories dropdown populated. If not after a while, refresh the page.
-Edit the stations and press "Save" to upload it to the WIFI Radio. Use HTTP, not HTTPS links to the streams!
+At the top you can add/move the categories.
+Then select a category and add stations to the table. Use HTTP, not HTTPS links to the streams (this uses more resources and can lead to performance issues).
+When all is done, press "Save" to upload it to the WIFI Radio. The radio will restart and new stations and categories are available.
+
+![Edit radio](/readme_info/images/edit%20radio.png)
+
+
 
 ### Changing categories and radio stations
 
@@ -207,36 +193,29 @@ Edit the stations and press "Save" to upload it to the WIFI Radio. Use HTTP, not
 
 This depends on the buttons you want to use of the remote.
 In this example the stations are selectable by the left-right keys. And the categories by the up-down keys.
-It only selects it after 3 seconds so you can quickly navigate through the stations (otherwise it halts untill the streaming is workding)
-You can also activate with the OK button, see next section.
+You can also select with the OK button, see next section.
 
 #### Using Rotary
 Turn the Station Rotary button to change the station within the active category.
 OR click to change to the Categorations menu. Rotate to select a category and then click to activate this category.
 
-### Stopping the radio stream
+![select category](/readme_info/images/selectcategory.jpg)
+![select station](/readme_info/images/selectstation.jpg)
+
+### Muting the radio stream
 
 #### Using Remote
 
-Press the STOP button on your remote. Pressing OK starts the stream again.
+Press the STOP button on your remote to mute. Pressing OK starts the stream again.
 
 #### Using Rotary
 
 Press and hold Volume Rotary to mute/unmute.
 Changing the volume by rotating this rotary button also unmutes.
 
-### Activating the station
-
-#### Using Remote
-
-After selecting the station, It will automatically connect after 3 seconds. Or press the OK button on your remote to select it.
-
-#### Using Rotary
-
-When in the radio or category selection menu's, select the item by pressing the station rotary button.
-
-
 ### Saving a radio station
+
+You can save the radio station which should be used at start up.
 
 #### Using Remote
 
