@@ -431,15 +431,16 @@ void switchRadioOff()
 }
 void audio_showstreamtitle(const char *info)
 {
-
   songInfo = info;
   displaySongInfo();
 }
 
 void audio_showstation(const char *info)
 {
-  stationInfo = info;
-  displayStationName();
+  // keep using provided names, instead of steam names
+
+  // stationInfo = info;
+  // displayStationName();
 }
 
 void toggleMute()
