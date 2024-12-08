@@ -49,7 +49,7 @@
 #define VOLUME_STEPS 64
 
 // uncomment if you have an SD card connected (where you put the images and sounds)
-#define HAS_SDCARD
+// #define HAS_SDCARD
 
 // uncomment if you want to show images for the stations: you need to have an SD card, and also a vertical tft layout
-#define SHOW_IMAGES
+// #define SHOW_IMAGES
