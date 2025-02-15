@@ -619,17 +619,15 @@ void startWebServer()
         {
           stationsFile = SPIFFS.open("/stations.json", "w");
         }
-        for (size_t i = 0; i < len; i++)
-        {
-          stationsFile.write(data[i]);
-        }
-        if ((len + index) == total)
+
+        stationsFile.write(data, len); // Write data in chunks
+
+        if ((index + len) == total)
         {
           stationsFile.close();
+          request->send(200);
           ESP.restart();
         }
-
-        request->send(200);
       });
 
   server.serveStatic("/", SPIFFS, "/");

@@ -4,8 +4,8 @@
 //-----------------------------------------
 // select radio config here
 
-// #include "portableradio.h"
-#include "ipodradio.h"
+#include "portableradio.h"
+// #include "ipodradio.h"
 
 //-----------------------------------------
 
