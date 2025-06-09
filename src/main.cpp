@@ -384,10 +384,11 @@ void displayRadioSelection(bool clearScreen)
     // Determine if we must fully redraw
     bool fullRedraw = clearScreen || (scrollOffset != previousScrollOffset);
 
-    if (fullRedraw) {
+    if (clearScreen) {
         tft.fillScreen(TFT_WHITE);
         displayMenuHeader("Stations");
     }
+    
 
     tft.setFreeFont(&Roboto_Thin_24);
 
