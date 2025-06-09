@@ -344,53 +344,80 @@ void printStationName(String stationName)
   nameReplaceUnderscroresBySpaces.replace("_", " ");
   tft.print(nameReplaceUnderscroresBySpaces.c_str());
 }
-void displayRadioSelection(boolean clearScreen)
+void displayRadioSelection(bool clearScreen)
 {
+    static int previousStationIndex = -1;
+    static int previousScrollOffset = -1;
 
-  static int previousStationNr = 0;
-  const int MARGIN_TOP = 30;
+    const int MARGIN_TOP = 30;
+    const int LINE_HEIGHT = 24;
+    const int MAX_VISIBLE = 8;
 
-  setScreenOn();
-  isCategorySelection = false;
-  isRadioSelection = true;
-  std::vector<radStat::RadioStation> radioStations = radStat::getRadioStationsOfActiveCategory();
-  int activeStationNr = radStat::getActiveRadioStation();
-  int radioCount = radStat::getRadioCountOfActiveCategory();
+    setScreenOn();
+    isCategorySelection = false;
+    isRadioSelection = true;
 
-  if (clearScreen)
-  {
-    tft.fillScreen(TFT_WHITE);
-    displayMenuHeader("Stations");
-    previousStationNr = activeStationNr;
-  }
-  tft.setFreeFont(&Roboto_Thin_24);
-  int i = 0;
-  for (const auto &station : radioStations)
-  {
+    std::vector<radStat::RadioStation> radioStations = radStat::getRadioStationsOfActiveCategory();
+    int radioCount = radioStations.size();
 
-    tft.setCursor(LEFT_MARGIN, MARGIN_TOP + i * 22 + 20);
-    if (station.ID != activeStationNr && station.ID == previousStationNr)
-    {
-      tft.fillRect(0, MARGIN_TOP + 22 * i + 3, 320, 21, TFT_WHITE);
-      tft.setTextColor(TFT_BLACK);
-      printStationName(station.Name);
-    }
-    else if (station.ID == activeStationNr)
-    {
-      tft.fillRect(0, MARGIN_TOP + 22 * i + 3, 320, 21, TFT_BLUE);
-      tft.setTextColor(TFT_WHITE);
-      printStationName(station.Name);
-    }
-    else if (clearScreen)
-    {
-      tft.setTextColor(TFT_BLACK);
-      printStationName(station.Name);
+    int activeStationID = radStat::getActiveRadioStation();
+    int activeIndex = 0;
+    for (int i = 0; i < radioCount; ++i) {
+        if (radioStations[i].ID == activeStationID) {
+            activeIndex = i;
+            break;
+        }
     }
 
-    i++;
-  }
-  previousStationNr = activeStationNr;
+    // Scroll management
+    static int scrollOffset = 0;
+    if (activeIndex < scrollOffset)
+        scrollOffset = activeIndex;
+    else if (activeIndex >= scrollOffset + MAX_VISIBLE)
+        scrollOffset = activeIndex - MAX_VISIBLE + 1;
+
+    // Clamp scroll
+    if (scrollOffset < 0) scrollOffset = 0;
+    if (scrollOffset > radioCount - MAX_VISIBLE)
+        scrollOffset = max(0, radioCount - MAX_VISIBLE);
+
+    // Determine if we must fully redraw
+    bool fullRedraw = clearScreen || (scrollOffset != previousScrollOffset);
+
+    if (fullRedraw) {
+        tft.fillScreen(TFT_WHITE);
+        displayMenuHeader("Stations");
+    }
+
+    tft.setFreeFont(&Roboto_Thin_24);
+
+    for (int i = 0; i < MAX_VISIBLE; ++i) {
+        int idx = scrollOffset + i;
+        if (idx >= radioCount) break;
+
+        const auto &station = radioStations[idx];
+
+        int y = MARGIN_TOP + i * LINE_HEIGHT;
+        bool isActive = (idx == activeIndex);
+        bool wasActive = (idx == previousStationIndex);
+
+        if (fullRedraw || isActive || wasActive) {
+            uint16_t bgColor = isActive ? TFT_BLUE : (i % 2 == 0 ? TFT_WHITE : 0xE71C);
+            uint16_t textColor = isActive ? TFT_WHITE : TFT_BLACK;
+
+            tft.fillRect(0, y, 320, LINE_HEIGHT, bgColor);
+            tft.setCursor(LEFT_MARGIN, y + 18);
+            tft.setTextColor(textColor);
+            printStationName(station.Name);
+        }
+    }
+
+    previousStationIndex = activeIndex;
+    previousScrollOffset = scrollOffset;
 }
+
+
+
 
 void setStation()
 {
