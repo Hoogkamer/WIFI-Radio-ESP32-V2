@@ -209,6 +209,7 @@
 #define TFT_DC 21 // Data Command control pin
 // #define TFT_RST   4  // Reset pin (could connect to RST pin)
 #define TFT_RST 17 // Set TFT_RST to -1 if display RESET is connected to ESP32 board RST
+#define TOUCH_CS -1
 
 // For ESP32 Dev board (only tested with GC9A01 display)
 // The hardware SPI can be mapped to any pins

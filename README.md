@@ -117,6 +117,16 @@ This you need for compiling the code and transferring it to the ESP32.
 
 [install platformio in vscode](https://randomnerdtutorials.com/vs-code-platformio-ide-esp32-esp8266-arduino/)
 
+### Set permissions on Linux
+When on linux, make sure to have right permission (uucp). Otherwise you cannot get connection with USB
+
+```
+groups
+sudo usermod -aG uucp $USER
+```
+Restart after applying this.
+
+
 ## clone the github repository
 
 In a terminal window:
