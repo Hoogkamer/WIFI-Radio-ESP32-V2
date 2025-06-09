@@ -18,7 +18,7 @@ h2 {
   font-size:16px;
 }
 .inpurl {
-  width: 40ch;
+  min-width: 60ch;
   font-size: 16px;
 }
 .catdiv {
@@ -113,6 +113,13 @@ a {
 #exportdiv {
   color: red;
   display: none;
+}
+#importdiv {
+  display: none;
+}
+#inputtextdiv {
+  min-height: 40px;
+  width:100%;
 }
 
 #pastetextdiv {

@@ -27,14 +27,6 @@
         >
           Add
         </button>
-        <button
-          class="button-9 widthup"
-          role="button"
-          onclick="moveCategoryUp()"
-          title="Move category up in the order"
-        >
-          UP
-        </button>
       </div>
       <div class="linetitle">Stations</div>
 
@@ -64,9 +56,19 @@
       <div id="exportdiv">
         <br />
         Copy text below
-        <button role="button" onclick="hideExportStations()">Hide text</button>
+        <button role="button" onclick="hideExportStations()">Hide</button>
         <hr />
         <div id="pastetextdiv"></div>
+      </div>
+      <div id="importdiv">
+        <br />
+        Paste text below
+        <button role="button" onclick="processInput()">Process</button>
+        <button role="button" onclick="hideExportStations()">Hide</button>
+        <hr />
+        <textarea id="inputtextdiv" placeholder="[category]
+name=url
+...."></textarea>
       </div>
     </div>
     <script src="./script.js"></script>

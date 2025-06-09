@@ -313,7 +313,7 @@ void displayCategorySelection(boolean clearScreen)
   const int MARGIN_TOP = 30;
   isCategorySelection = true;
   tft.setFreeFont(&Roboto_Thin_24);
-  for (int i = 0; i < nrOfCategories - 1; ++i)
+  for (int i = 0; i < nrOfCategories; ++i)
   {
 
     tft.setCursor(LEFT_MARGIN, MARGIN_TOP + i * 22 + 20);

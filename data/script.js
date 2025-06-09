@@ -18,8 +18,14 @@ async function getData() {
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
     const text = await response.text();
-    console.log(response, text)
-
+    return processData(text)
+  }
+   catch (e) {
+    console.error("Error loading stations data:", e);
+    return fallbackData;
+  }
+}
+function processData(text){
     // Parse the text file format
     const stations = [];
     const categories = [];
@@ -49,10 +55,7 @@ async function getData() {
 
     return { stations, categories };
 
-  } catch (e) {
-    console.error("Error loading stations data:", e);
-    return fallbackData;
-  }
+ 
 }
 
 
@@ -89,9 +92,6 @@ function renderStationFields(selectedCategory) {
     (s) => s[2] === selectedCategory
   );
   if (!stationsWithThisCategory.length) return;
-  const lastId =
-    stationsWithThisCategory[stationsWithThisCategory.length - 1][3];
-  const firstId = stationsWithThisCategory[0][3];
   stationsWithThisCategory.forEach((station, index) => {
     const stationContainer = document.createElement("div");
     stationContainer.id = station[3];
@@ -106,7 +106,6 @@ function renderStationFields(selectedCategory) {
     input1.placeholder = "Name";
     input1.className = "inpname";
     stationContainer.appendChild(input1);
-
     // Create the second column input field
     const input2 = document.createElement("input");
     input2.type = "text";
@@ -116,36 +115,6 @@ function renderStationFields(selectedCategory) {
     input2.placeholder = "URL";
     input2.className = "inpurl";
     stationContainer.appendChild(input2);
-    if (stationContainer.id != firstId) {
-      const button = document.createElement("button");
-      button.className = "button-9 widthup1";
-      button.textContent = "U";
-      button.title = "Move station up";
-      button.onclick = function () {
-        updateStations();
-        swapStation(
-          stationsWithThisCategory[index][3],
-          stationsWithThisCategory[index - 1][3]
-        );
-        renderStationFields(currentCategory);
-      };
-      stationContainer.appendChild(button);
-    }
-    if (stationContainer.id != lastId) {
-      const button = document.createElement("button");
-      button.className = "button-9 widthup1";
-      button.textContent = "D";
-      button.title = "Move station down";
-      button.onclick = function () {
-        updateStations();
-        swapStation(
-          stationsWithThisCategory[index][3],
-          stationsWithThisCategory[index + 1][3]
-        );
-        renderStationFields(currentCategory);
-      };
-      stationContainer.appendChild(button);
-    }
     stationsContainer.appendChild(stationContainer);
   });
 }
@@ -156,21 +125,7 @@ function addStation() {
   data.stations.push(["", "", currentCategory, maxID++]);
   renderStationFields(currentCategory);
 }
-function moveCategoryUp() {
-  const index = data.categories.findIndex((cat) => cat === currentCategory);
 
-  if (index >= 0) {
-    const element = data.categories[index];
-    data.categories.splice(index, 1); // Remove the element from its current position
-
-    if (index === 0) {
-      data.categories.push(element); // Move the element to the last position
-    } else {
-      data.categories.splice(index - 1, 0, element); // Insert the element before the previous element
-    }
-  }
-  populateCategories();
-}
 function updateStations() {
   const div = document.getElementById("stationsContainer");
   const inputFields = div.querySelectorAll("div");
@@ -275,32 +230,34 @@ function addCategory() {
 // Call the function to populate the dropdown on page load
 
 function hideExportStations() {
-  exportdiv.style.display = "none";
+  const exportDiv = document.getElementById("exportdiv");
+  exportDiv.style.display = "none";
 }
 function exportStations() {
-  const exportdiv = document.getElementById("exportdiv");
-  exportdiv.style.display = "block";
-  const pastetextdiv = document.getElementById("pastetextdiv");
-  pastetextdiv.textContent = getSaveText();
+  const importDiv = document.getElementById("importdiv");
+  const exportDiv = document.getElementById("exportdiv");
+  const pasteTextDiv = document.getElementById("pastetextdiv");
+
+  if (importDiv) importDiv.style.display = "none";
+  if (exportDiv) exportDiv.style.display = "block";
+  if (pasteTextDiv) pasteTextDiv.textContent = getSaveText();
+}
+function hideImportStations() {
+  const importDiv = document.getElementById("importdiv");
+  importDiv.style.display = "none";
 }
 function importStations() {
-  let newdata = window.prompt("Paste json", "");
-  let newjson;
-  try {
-    newjson = JSON.parse(newdata);
-  } catch (e) {
-    // alert(
-    //   "wrong json, use the same format as you get with [Export all] button"
-    // );
-  }
+  const exportdiv = document.getElementById("exportdiv");
+  const importdiv = document.getElementById("importdiv");
+  exportdiv.style.display = "none";  // hide export div
+  importdiv.style.display = "block"; // show import div
+}
+function processInput() {
+  const inputtextdiv = document.getElementById("inputtextdiv");
+  const newdata = inputtextdiv.value; // get text from textarea
+  data = processData(newdata);        // parse and update data
 
-  if (!newjson || !newjson.categories || !newjson.stations) {
-    alert(
-      "wrong json, use the same format as you get with [Export all] button"
-    );
-    return;
-  }
-  data = newjson;
+  console.log('1', data);
   populateCategories();
   renderStationFields(currentCategory);
 }
