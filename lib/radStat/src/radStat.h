@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 
+const int MAX_CATEGORIES = 10;
+const int MAX_STATIONS = 100;
+
 namespace radStat
 {
     class RadioStation
@@ -65,43 +68,7 @@ namespace radStat
         return -1; // Return -1 if the string is not found
     }
 
-    std::vector<std::string> stringToArray(const std::string &input)
-    {
-        std::vector<std::string> dataArray;
-        size_t startPos = input.find('[') + 1; // Start position after the opening square bracket
-        size_t endPos;
 
-        while (true)
-        {
-            // Find the next comma or closing square bracket
-            endPos = input.find(',', startPos);
-            if (endPos == std::string::npos)
-            {
-                endPos = input.find(']', startPos);
-            }
-
-            // Extract the element from the substring
-            std::string element = input.substr(startPos, endPos - startPos);
-
-            // Remove surrounding quotes, if any
-            if (element.front() == '"' && element.back() == '"')
-            {
-                element.pop_back();
-                element.erase(0, 1);
-            }
-
-            dataArray.push_back(element);
-
-            // Move to the next position for the next iteration
-            if (input[endPos] == ']')
-            {
-                break;
-            }
-            startPos = endPos + 1;
-        }
-
-        return dataArray;
-    }
     String *getRadioCategories()
     {
         return radioCategories;
@@ -254,101 +221,73 @@ namespace radStat
             prevCategory();
         }
     }
-    void handleStation(std::string station)
+    void handleStation(std::string category, string name, string url)
     {
-        if (station[0] == ']')
-        {
+        if (nrOfStations >= MAX_STATIONS) { // define MAX_STATIONS somewhere
+            Serial.println("Max stations reached, ignoring station");
+            return;
+        }
+        radioStations[nrOfStations] = RadioStation(category, name, url, nrOfStations);
+        nrOfStations++;
+    }
+
+    void handleCategory(std::string category)
+    {
+        if (nrOfCategories >= MAX_CATEGORIES) {
+            Serial.println("Max categories reached, ignoring category");
             return;
         }
 
-        if (!station.empty() && station[0] == ',')
-            station.erase(0, 1); // Remove the first character (the comma)
-
-        std::vector<std::string> result = stringToArray(station);
-
-        radioStations[nrOfStations] = RadioStation(result[2], result[0], result[1], nrOfStations);
-        nrOfStations++;
+        radioCategories[nrOfCategories] = String(category.c_str());
+        nrOfCategories++;
     }
-    void handleCategory(std::string category)
-    {
-        std::vector<std::string> result = stringToArray(category);
-        for (const std::string &str : result)
-        {
-            radioCategories[nrOfCategories] = String(str.c_str());
-            nrOfCategories++;
-        }
-    }
-    void processJSON(File configurations1)
-    {
-        // This should be the file structure:
-        //       {
-        //   "categories": ["NL", "Jazz", "Local", "Retro", "Chill", "News"],
-        //   "stations": [
-        //     ["Veronica", "http://22343.live.streamtheworld.com/VERONICA.mp3", "NL"],
-        //     [
-        //       "SmoothJazz247",
-        //       "http://www.smoothjazz247.com/smoothjazz24-7.m3up",
-        //       "Jazz"
-        //     ],
-        //     [
-        //       "Radio10",
-        //       "http://playerservices.streamtheworld.com/api/livestream-redirect/RADIO10.mp3",
-        //       "NL"
-        //     ]]}
+  
 
-        std::string station;
-        std::string category;
+    void processLine(const char* line, int length, std::string& currentCategory) {
+        if (length <= 0) return;
 
-        bool stations = false;
-        bool categories = false;
-        char prevch = '*';
-        char ch = ' ';
-        while (configurations1.available())
-
-        {
-            ch = configurations1.read();
-            // skip spaces, except when it is in a station name, and skip other non printable characters
-            if (ch == ' ' || ch < 32 || ch == '\n' || ch == '\r' || ch == '\t')
-            {
-                continue;
-            }
-            // std::cout << ch;
-
-            if (ch == '[' && prevch == ':')
-            {
-                categories = true;
-                stations = false;
-                category = "";
-                station = "";
-            }
-            if (ch == '[' && prevch == '[')
-            {
-                stations = true;
-                categories = false;
-                category = "";
-                station = "";
-            }
-            prevch = ch;
-            if (categories)
-            {
-                category += ch;
-                if (ch == ']')
-                {
-                    handleCategory(category);
-                    category = "";
-                }
-            }
-
-            if (stations)
-            {
-
-                station += ch;
-                if (ch == ']')
-                {
-                    handleStation(station);
-                    station = "";
-                }
+        if (line[0] == '[' && line[length - 1] == ']') {
+            // Extract category name without the brackets
+            currentCategory = std::string(line + 1, length - 2);
+            handleCategory(currentCategory);
+        } else {
+            std::string strLine(line, length);
+            size_t eqPos = strLine.find('=');
+            if (eqPos != std::string::npos) {
+                std::string name = strLine.substr(0, eqPos);
+                std::string url = strLine.substr(eqPos + 1);
+                handleStation(currentCategory, name, url);
+            } else {
+                Serial.printf("Invalid station line (no '='): %.*s\n", length, line);
             }
         }
     }
+
+    void processFile(File file) {
+        const int maxLineLength = 256;
+        char line[maxLineLength];
+        int linePos = 0;
+        std::string currentCategory;
+
+        while (file.available()) {
+            char ch = file.read();
+            if (ch == '\r') continue;
+
+            if (ch == '\n' || linePos >= maxLineLength - 1) {
+                // Process the full line when newline or buffer full
+                processLine(line, linePos, currentCategory);
+                linePos = 0;  // Reset line position for next line
+            } else {
+                line[linePos++] = ch;
+            }
+        }
+
+        // Process last line if file doesn't end with newline
+        if (linePos > 0) {
+            processLine(line, linePos, currentCategory);
+        }
+    }
+
 }
+
+

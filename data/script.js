@@ -8,25 +8,53 @@ apiUrl = "";
 let maxID = 3;
 
 async function getData() {
-  let stations = [
-    ["Veronica", "http://22343.live.streamtheworld.com/VERONICA.mp3", "Pop"],
-  ];
-  let categories = ["Jazz", "Chill", "Pop", "News", "Local"];
-  data = { stations: stations, categories: categories };
-  let result;
-  const response = fetch(apiUrl + "/get-data");
+  const fallbackData = {
+    stations: [["Veronica", "http://22343.live.streamtheworld.com/VERONICA.mp3", "Pop"]],
+    categories: ["Jazz", "Chill", "Pop", "News", "Local"]
+  };
+
   try {
-    result = await (await response).json();
+    const response = await fetch(apiUrl + "/get-data");
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const text = await response.text();
+    console.log(response, text)
+
+    // Parse the text file format
+    const stations = [];
+    const categories = [];
+    let currentCategory = null;
+
+    text.split(/\r?\n/).forEach(line => {
+      line = line.trim();
+      if (!line) return; // skip empty lines
+
+      if (line.startsWith('[') && line.endsWith(']')) {
+        currentCategory = line.slice(1, -1);
+        categories.push(currentCategory);
+      } else {
+        const eqIndex = line.indexOf('=');
+        if (eqIndex > 0 && currentCategory) {
+          const name = line.slice(0, eqIndex).trim();
+          const url = line.slice(eqIndex + 1).trim();
+          stations.push([name, url, currentCategory]);
+        }
+      }
+    });
+
+    // Add IDs to stations
+    stations.forEach((r, i) => r.push(i));
+    
+    maxID = stations.length;
+
+    return { stations, categories };
+
   } catch (e) {
-    console.log(e);
-    result = "";
+    console.error("Error loading stations data:", e);
+    return fallbackData;
   }
-  console.log(result);
-  result.stations = result.stations.map((r, i) => [...r, i]);
-  maxID = result.stations.length;
-  if (result) return result;
-  else return data;
 }
+
 
 function swapStation(id1, id2) {
   const index1 = data.stations.findIndex((s) => s[3] === id1);
@@ -190,34 +218,43 @@ function selectCategory() {
   renderStationFields(currentCategory);
 }
 
-function getSaveJSON() {
-  const tosave = {
-    categories: data.categories,
-    stations: data.stations.map((station) => station.slice(0, -1)),
-  };
-  let jsontext = JSON.stringify(tosave);
-  return jsontext;
+function getSaveText() {
+  let text = "";
+  for (let category of data.categories) {
+    text += `[${category}]\n`;
+    const stationsInCategory = data.stations.filter(
+      (station) => station[2] === category
+    );
+    for (let [name, url] of stationsInCategory.map(s => s.slice(0, 2))) {
+      text += `${name}=${url}\n`;
+    }
+    text += `\n`; // Optional: space between categories
+  }
+  return text.trim(); // Remove trailing newline
 }
+
 function Save() {
   updateStations();
   renderStationFields(currentCategory);
-  const jsontext = getSaveJSON();
-  console.log(jsontext);
+  const text = getSaveText();
+  console.log(text); // For debugging
+
   fetch(apiUrl + "/post", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": "text/plain",
     },
-    body: jsontext,
+    body: text,
   })
     .then((response) => response.text())
     .then((data) => {
       alert("Stations saved");
     })
     .catch((error) => {
-      alert("There is an error:" + error);
+      alert("There is an error: " + error);
     });
 }
+
 function deleteCategory() {
   if (confirm("This will also delete the stations for this category")) {
     data.stations = data.stations.filter((s) => s[2] !== currentCategory);
@@ -244,7 +281,7 @@ function exportStations() {
   const exportdiv = document.getElementById("exportdiv");
   exportdiv.style.display = "block";
   const pastetextdiv = document.getElementById("pastetextdiv");
-  pastetextdiv.textContent = getSaveJSON();
+  pastetextdiv.textContent = getSaveText();
 }
 function importStations() {
   let newdata = window.prompt("Paste json", "");

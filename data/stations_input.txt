@@ -1,0 +1,33 @@
+[Retro]
+Radio 10 1980=http://playerservices.streamtheworld.com/api/livestream-redirect/TLPSTR20.mp3
+Radio 10 1990=http://29023.live.streamtheworld.com/TLPSTR22.mp3
+Team FM=http://audiostreamen.nl/gelderland
+Joe 1980-90=http://streams.radio.dpgmedia.cloud/redirect/joe_80s_90s/mp3
+On 1970=http://0n-80s.radionetz.de:8000/0n-70s.mp3
+On 1980=http://0n-80s.radionetz.de:8000/0n-80s.mp3
+On 1990=http://0n-90s.radionetz.de:8000/0n-90s.mp3
+On 2000=http://0n-2000s.radionetz.de:8000/0n-2000s.mp3
+On 2010=http://0n-2010s.radionetz.de:8000/0n-2010s.mp3
+On Oldies=http://0n-oldies.radionetz.de/0n-oldies.mp3
+1FM 1970=http://strm112.1.fm/70s_mobile_mp3
+1FM 1980=http://strm112.1.fm/back280s_mobile_mp3
+1FM 1990=http://strm112.1.fm/90s_mobile_mp3
+
+[Chill]
+1FM Deep House=http://strm112.1.fm/deeptech_mobile_mp3
+Deep In=http://95.211.3.65:8525/listen.pls
+On Chill=http://0n-2000s.radionetz.de/0n-chillout.mp3
+1FM Chill=http://strm112.1.fm/chilloutlounge_mobile_mp3
+1FM PsyChill=http://strm112.1.fm/ambientpsy_mobile_mp3
+Ibiza Deep=http://ibiza-deep-house.vip-radios.fm:8027/stream-128kmp3-IbizaDeep
+Relax FM Chillout=http://pub0201.101.ru/stream/trust/mp3/128/24?
+Ibiza Deep 100=http://stream.zeno.fm/lwv6zqgtv1dtv
+
+[News]
+BNR=http://stream.bnr.nl/bnr_mp3_128_20
+Radio 1=http://icecast.omroep.nl/radio1-bb-mp3
+
+[Jazz]
+ON Smooth Jazz=http://0n-70s.radionetz.de:8000/0n-smoothjazz.mp3
+1FM Bossa=http://strm112.1.fm/bossanova_mobile_mp3
+1FM Jazz=http://strm112.1.fm/smoothjazz_mobile_mp3

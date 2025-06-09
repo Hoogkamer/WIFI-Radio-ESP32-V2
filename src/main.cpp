@@ -121,8 +121,9 @@ std::vector<std::string> splitString(const std::string &str, const std::string &
 
 void loadStations()
 {
-  File configurations1 = SPIFFS.open("/stations.json", "r");
-  radStat::processJSON(configurations1);
+  File configurations1 = SPIFFS.open("/stations.txt", "r");
+  radStat::processFile(configurations1);
+  
   configurations1.close();
 }
 
@@ -606,7 +607,7 @@ void startWebServer()
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/index.html", "text/html"); });
   server.on("/get-data", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(SPIFFS, "/stations.json", "application/json"); });
+            { request->send(SPIFFS, "/stations.txt", "application/json"); });
 
   server.on(
       "/post",
@@ -617,7 +618,7 @@ void startWebServer()
       {
         if (index == 0)
         {
-          stationsFile = SPIFFS.open("/stations.json", "w");
+          stationsFile = SPIFFS.open("/stations.txt", "w");
         }
 
         stationsFile.write(data, len); // Write data in chunks
@@ -706,9 +707,9 @@ void setup()
   }
 
   // this is the file where the stations are stored
-  if (!SPIFFS.exists("/stations.json"))
+  if (!SPIFFS.exists("/stations.txt"))
   {
-    SPIFFS.rename("/stations_input.json", "/stations.json");
+    SPIFFS.rename("/stations_input.txt", "/stations.txt");
   }
 
   loadSettings();
