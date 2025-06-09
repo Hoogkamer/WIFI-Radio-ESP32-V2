@@ -3,6 +3,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
+
 
 const int MAX_CATEGORIES = 10;
 const int MAX_STATIONS = 100;
@@ -67,10 +69,34 @@ namespace radStat
 
         return -1; // Return -1 if the string is not found
     }
+    void sortRadioStationsByName() {
+        // Step 1: Copy to vector
+        std::vector<RadioStation> tempStations;
+        for (int i = 0; i < nrOfStations; ++i) {
+            tempStations.push_back(radioStations[i]);
+        }
 
+        // Step 2: Sort by Name
+        std::sort(tempStations.begin(), tempStations.end(), [](const RadioStation &a, const RadioStation &b) {
+            return a.Name < b.Name;
+        });
 
-    String *getRadioCategories()
-    {
+        // Step 3: Reassign IDs and copy back
+        for (int i = 0; i < tempStations.size(); ++i) {
+            tempStations[i].ID = i;
+            radioStations[i] = tempStations[i];
+        }
+    }
+
+    void sortRadioCatagories() {
+        std::sort(radioCategories, radioCategories + nrOfCategories, [](const String &a, const String &b) {
+            return a.compareTo(b) < 0;
+        });
+    }
+
+    String* getRadioCategories() {
+        // Sort the original array in place
+ 
         return radioCategories;
     }
     int getNrOfRadioCategories()
@@ -83,21 +109,24 @@ namespace radStat
     }
     std::vector<RadioStation> getRadioStationsOfActiveCategory()
     {
-
         std::vector<RadioStation> Stations;
 
-        int i;
-        int count = 0;
-        for (i = 0; i < nrOfStations; i++)
+        for (int i = 0; i < nrOfStations; i++)
         {
             const RadioStation &thisStation = radioStations[i];
             if (thisStation.Category == radioCategories[activeCategory])
             {
                 Stations.push_back(thisStation);
-                count++;
             }
         }
-        stationsInCategoryCount = count;
+
+        stationsInCategoryCount = Stations.size();
+
+        // // Sort stations by Name (ascending)
+        // std::sort(Stations.begin(), Stations.end(), [](const RadioStation &a, const RadioStation &b) {
+        //     return a.Name < b.Name;  // assuming Name is a std::string or comparable type
+        // });
+
         return Stations;
     }
     int getRadioCountOfActiveCategory()
@@ -286,6 +315,8 @@ namespace radStat
         if (linePos > 0) {
             processLine(line, linePos, currentCategory);
         }
+        sortRadioCatagories();
+        sortRadioStationsByName();
     }
 
 }
