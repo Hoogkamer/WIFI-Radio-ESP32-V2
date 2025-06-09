@@ -146,9 +146,9 @@ void clearScreenStation()
 }
 void clearScreenSong()
 {
-  if (TFT_ROTATION) // reset station info
+  if (SCREEN_LANDSCAPE) // reset station info
   {
-    tft.fillRect(0, 150, 320, 240, TFT_WHITE);
+    tft.fillRect(0, 150, SCREEN_WIDTH, SCREEN_HEIGHT, TFT_WHITE);
   }
   else
   {
@@ -170,7 +170,7 @@ void setScreenOff()
 }
 void displayMenuHeader(String header)
 {
-  tft.fillRect(0, 0, 320, 30, TFT_ORANGE);
+  tft.fillRect(0, 0, SCREEN_WIDTH, 30, TFT_ORANGE);
   tft.setTextColor(TFT_BLACK);
   tft.setFreeFont(&Roboto_24);
   tft.setCursor(LEFT_MARGIN, 23);
@@ -319,13 +319,13 @@ void displayCategorySelection(boolean clearScreen)
     tft.setCursor(LEFT_MARGIN, MARGIN_TOP + i * 22 + 20);
     if (i != activeCategoryNr && i == previousCategoryNr)
     {
-      tft.fillRect(0, MARGIN_TOP + 22 * i + 3, 320, 21, TFT_WHITE);
+      tft.fillRect(0, MARGIN_TOP + 22 * i + 3, SCREEN_WIDTH, 21, TFT_WHITE);
       tft.setTextColor(TFT_BLACK);
       tft.print(categories[i]);
     }
     else if (i == activeCategoryNr)
     {
-      tft.fillRect(0, MARGIN_TOP + 22 * i + 3, 320, 21, TFT_BLUE);
+      tft.fillRect(0, MARGIN_TOP + 22 * i + 3, SCREEN_WIDTH, 21, TFT_BLUE);
       tft.setTextColor(TFT_WHITE);
       tft.print(categories[i]);
     }
@@ -349,10 +349,13 @@ void displayRadioSelection(bool clearScreen)
     static int previousStationIndex = -1;
     static int previousScrollOffset = -1;
 
-    const int MARGIN_TOP = 30;
+    const int MARGIN_TOP = 34;
     const int LINE_HEIGHT = 24;
-    const int MAX_VISIBLE = 8;
-
+    #if SCREEN_LANDSCAPE
+      const int MAX_VISIBLE = 11;
+    #else
+      const int MAX_VISIBLE = 8;
+    #endif
     setScreenOn();
     isCategorySelection = false;
     isRadioSelection = true;
@@ -406,7 +409,7 @@ void displayRadioSelection(bool clearScreen)
             uint16_t bgColor = isActive ? TFT_BLUE : (i % 2 == 0 ? TFT_WHITE : 0xE71C);
             uint16_t textColor = isActive ? TFT_WHITE : TFT_BLACK;
 
-            tft.fillRect(0, y, 320, LINE_HEIGHT, bgColor);
+            tft.fillRect(0, y, SCREEN_WIDTH, LINE_HEIGHT, bgColor);
             tft.setCursor(LEFT_MARGIN, y + 18);
             tft.setTextColor(textColor);
             printStationName(station.Name);
