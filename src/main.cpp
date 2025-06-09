@@ -607,7 +607,7 @@ void startWebServer()
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/index.html", "text/html"); });
   server.on("/get-data", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(SPIFFS, "/stations.txt", "application/json"); });
+            { request->send(SPIFFS, "/stations.txt", "text/plain"); });
 
   server.on(
       "/post",
