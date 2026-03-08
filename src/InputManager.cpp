@@ -127,7 +127,7 @@ void InputManager::loopRotaryTuner() {
     if (_rotaryTuner.encoderChanged()) {
         int currentCode = _rotaryTuner.readEncoder();
         if (currentCode > _prevRotaryTunerCode) {
-            notify(STATION_PREV); // Original logic was current > prev -> prev station
+            notify(STATION_PREV);
             if (currentCode > 900) {
                 _rotaryTuner.setEncoderValue(500);
                 _prevRotaryTunerCode = 499;
@@ -161,7 +161,9 @@ void InputManager::handleTunerButton() {
     if (isDown) {
         if (!buttonPressedTime) buttonPressedTime = millis();
         if (!isLongpress && (millis() - buttonPressedTime >= _longPressMillis)) {
-            notify(STATION_SAVE);
+            // Changed from STATION_SAVE to SETTINGS_EXIT or keep SAVE if preferred.
+            // Let's use Long Tuner for SAVE and Long Volume for SETTINGS.
+            notify(STATION_SAVE); 
             isLongpress = true;
         }
     } else {
@@ -178,7 +180,7 @@ void InputManager::handleVolumeButton() {
     if (isDown) {
         if (!buttonPressedTime) buttonPressedTime = millis();
         if (!isLongpress && (millis() - buttonPressedTime >= _longPressMillis)) {
-            notify(SHOW_DETAILS);
+            notify(SETTINGS_ENTER);
             isLongpress = true;
         }
     } else {

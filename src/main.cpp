@@ -12,21 +12,100 @@ DisplayManager display;
 InputManager input;
 NetworkManager network;
 
-// Global constants
-const int SCREEN_TIMEOUT_SEC = 60;
-
 // Application State
 bool isRadioOn = true;
 bool shouldPlay = true;
+
+// Settings State
+struct AudioSettings {
+    int8_t bass = 0;
+    int8_t mid = 0;
+    int8_t treble = 0;
+    bool mono = false;
+    int8_t balance = 0;
+    uint8_t brightness = 100;
+} audioSettings;
+
+int activeSettingIndex = 0; 
+bool isEditingSetting = false; 
+
+void applyAudioSettings() {
+    audioManager.setTone(audioSettings.bass, audioSettings.mid, audioSettings.treble);
+    audioManager.setMono(audioSettings.mono);
+    audioManager.setBalance(audioSettings.balance);
+    display.setBrightness(audioSettings.brightness);
+}
 
 // Action handler
 void handleAction(InputManager::Action action) {
     if (!isRadioOn && action != InputManager::SCREEN_ON) return;
 
+    // Handle Settings Mode
+    if (display.isSettingsMode()) {
+        switch(action) {
+            case InputManager::SETTINGS_ENTER: 
+            case InputManager::SCREEN_TOGGLE: 
+                display.displayStation();
+                isEditingSetting = false;
+                return;
+
+            case InputManager::VOLUME_TOGGLE_MUTE: 
+                isEditingSetting = !isEditingSetting;
+                display.displaySettings(activeSettingIndex, audioSettings.bass, audioSettings.mid, audioSettings.treble, audioSettings.mono, audioSettings.balance, audioSettings.brightness, isEditingSetting);
+                break;
+
+            case InputManager::VOLUME_CHANGED:
+                {
+                    int8_t dir = 0;
+                    static uint8_t lastVol = 0;
+                    uint8_t currVol = input.getVolume();
+                    if (currVol > lastVol) dir = 1;
+                    else if (currVol < lastVol) dir = -1;
+                    lastVol = currVol;
+
+                    if (dir == 0) return;
+
+                    if (isEditingSetting) {
+                        if (activeSettingIndex == 0) audioSettings.bass = constrain(audioSettings.bass + dir, -40, 6);
+                        else if (activeSettingIndex == 1) audioSettings.mid = constrain(audioSettings.mid + dir, -40, 6);
+                        else if (activeSettingIndex == 2) audioSettings.treble = constrain(audioSettings.treble + dir, -40, 6);
+                        else if (activeSettingIndex == 3) audioSettings.mono = !audioSettings.mono;
+                        else if (activeSettingIndex == 4) audioSettings.balance = constrain(audioSettings.balance + dir, -16, 16);
+                        else if (activeSettingIndex == 5) audioSettings.brightness = constrain(audioSettings.brightness + (dir * 5), 10, 100);
+                        applyAudioSettings();
+                    } else {
+                        activeSettingIndex += dir;
+                        if (activeSettingIndex < 0) activeSettingIndex = 5;
+                        if (activeSettingIndex > 5) activeSettingIndex = 0;
+                    }
+                    display.displaySettings(activeSettingIndex, audioSettings.bass, audioSettings.mid, audioSettings.treble, audioSettings.mono, audioSettings.balance, audioSettings.brightness, isEditingSetting);
+                }
+                break;
+
+            case InputManager::STATION_SAVE:
+                display.displayStation();
+                StationManager::saveCurrentStation();
+                StationManager::saveVolume(audioManager.getVolume());
+                display.displaySaved();
+                break;
+
+            default:
+                break;
+        }
+        if (action == InputManager::VOLUME_TOGGLE_MUTE || action == InputManager::VOLUME_CHANGED) return;
+    }
+
+    // Normal Radio Mode Handling
     switch(action) {
         case InputManager::SCREEN_ON:
             isRadioOn = true;
             display.setScreenOn();
+            break;
+
+        case InputManager::SETTINGS_ENTER:
+            activeSettingIndex = 0;
+            isEditingSetting = false;
+            display.displaySettings(activeSettingIndex, audioSettings.bass, audioSettings.mid, audioSettings.treble, audioSettings.mono, audioSettings.balance, audioSettings.brightness, isEditingSetting);
             break;
 
         case InputManager::SCREEN_TOGGLE:
@@ -36,7 +115,6 @@ void handleAction(InputManager::Action action) {
                 } else if (display.isCategorySelection()) {
                     display.displayRadioSelection(true);
                 } else {
-                    // Back to main view
                     if (radStat::activeRadioStation.Name != radStat::previousRadioStation.Name) {
                         radStat::resetPreviousRadioStation();
                         audioManager.connectToStation(radStat::activeRadioStation);
@@ -89,9 +167,7 @@ void handleAction(InputManager::Action action) {
             break;
 
         case InputManager::VOLUME_CHANGED:
-#ifdef HAS_ROTARIES
             audioManager.setVolume(input.getVolume());
-#endif
             break;
 
         case InputManager::VOLUME_TOGGLE_MUTE:
@@ -110,7 +186,6 @@ void handleAction(InputManager::Action action) {
             break;
 
         case InputManager::RADIO_OFF:
-            // Placeholder for sleep logic
             break;
             
         default:
@@ -118,10 +193,11 @@ void handleAction(InputManager::Action action) {
     }
 }
 
-// Global callback for Audio library (mandatory)
 void audio_showstreamtitle(const char *info) {
     display.setSongInfo(info);
-    display.displayStation();
+    if (!display.isCategorySelection() && !display.isRadioSelection() && !display.isSettingsMode()) {
+        display.displayStation();
+    }
 }
 
 void setup() {
@@ -130,11 +206,10 @@ void setup() {
 
     SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
     
-    // Initialize Managers
     StationManager::begin();
     display.begin();
     display.clearAllWhite();
-    display.printError("Starting..."); // Reuse printError for boot message
+    display.printError("Starting...");
     
     StationManager::loadStations();
     StationManager::loadSavedStation();
@@ -146,6 +221,7 @@ void setup() {
     
     audioManager.begin(I2S_BCLK, I2S_LRC, I2S_DOUT);
     audioManager.setVolume(savedVolume);
+    applyAudioSettings();
     
     input.begin();
 #ifdef HAS_ROTARIES

@@ -51,6 +51,18 @@ void AudioManager::toggleMute() {
     }
 }
 
+void AudioManager::setTone(int8_t bass, int8_t mid, int8_t treble) {
+    _audio.setTone(bass, mid, treble);
+}
+
+void AudioManager::setMono(bool mono) {
+    _audio.forceMono(mono);
+}
+
+void AudioManager::setBalance(int8_t balance) {
+    _audio.setBalance(balance);
+}
+
 void AudioManager::stop() {
     _audio.stopSong();
 }

@@ -13,9 +13,14 @@ DisplayManager::DisplayManager() :
     _screenOnMillis(0), 
     _screenTimeoutSec(60),
     _songInfo(""),
+    _lastSongInfo("---"),
     _stationInfo(""),
+    _lastStationInfo("---"),
+    _lastStationName("---"),
+    _ip(""),
     _isCategorySelection(false),
-    _isRadioSelection(false) {
+    _isRadioSelection(false),
+    _isSettingsMode(false) {
     
 #if TFT_ROTATION == 1 || TFT_ROTATION == 3
     _screenWidth = 320;
@@ -31,23 +36,32 @@ DisplayManager::DisplayManager() :
 void DisplayManager::begin() {
     _tft.begin();
     _tft.setTextWrap(true, false);
-    _tft.setTextPadding(15);
     _tft.setRotation(TFT_ROTATION);
     setBrightness(100);
 }
 
 void DisplayManager::setBrightness(uint8_t duty) {
+#ifdef TFT_BL
     if (TFT_BL == -1) return;
 
 #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
-    ledcAttach(TFT_BL, 1200, 8);
+    static bool ledcConfigured = false;
+    if (!ledcConfigured) {
+        ledcAttach(TFT_BL, 1200, 8);
+        ledcConfigured = true;
+    }
     uint8_t d = round((double)duty * 2.55);
     ledcWrite(TFT_BL, d);
 #else
-    ledcSetup(0, 1200, 8);
-    ledcAttachPin(TFT_BL, 0);
+    static bool ledcConfigured = false;
+    if (!ledcConfigured) {
+        ledcSetup(0, 1200, 8);
+        ledcAttachPin(TFT_BL, 0);
+        ledcConfigured = true;
+    }
     uint8_t d = round((double)duty * 2.55);
     ledcWrite(0, d);
+#endif
 #endif
 }
 
@@ -101,108 +115,125 @@ void DisplayManager::displayMute(bool muted) {
 }
 
 void DisplayManager::displayStationName() {
-    int sectionHeight = 40;
-    _tft.fillRect(0, 35, _screenWidth, sectionHeight, TFT_WHITE);
+    String currentName = radStat::activeRadioStation.Name.c_str();
+    if (currentName == _lastStationName && _stationInfo == _lastStationInfo) return;
+
+    // Clear station name area
+    _tft.fillRect(0, 35, _screenWidth, 40, TFT_WHITE);
+    
     _tft.setTextColor(TFT_BLUE);
     _tft.setFreeFont(&Orbitron_Light_24);
     _tft.setCursor(LEFT_MARGIN, 65);
 
     if (_stationInfo.length() > 0) {
-        _tft.setTextWrap(false, false);
         _tft.print(_stationInfo);
-        _tft.setTextWrap(true, false);
     } else {
-        String name = radStat::activeRadioStation.Name.c_str();
+        String name = currentName;
         name.replace("_", " ");
         _tft.print(name.c_str());
     }
+    _lastStationName = currentName;
+    _lastStationInfo = _stationInfo;
 }
 
 void DisplayManager::displaySongInfo() {
-    if (_isCategorySelection || _isRadioSelection) return;
+    if (_isCategorySelection || _isRadioSelection || _isSettingsMode) return;
+    if (_songInfo == _lastSongInfo) return;
 
     int fromPos = 75;
-    int sectionHeight = _screenLandscape ? 40 : 80;
+    // Clear song info area (between the lines)
+    _tft.fillRect(0, fromPos + 1, _screenWidth, (_screenHeight - 35) - fromPos - 1, TFT_WHITE);
 
-    _tft.fillRect(0, fromPos, _screenWidth, sectionHeight + 90, TFT_WHITE);
-    _tft.drawLine(0, fromPos, _screenWidth, fromPos, TFT_BLUE);
-
-    if (_songInfo.length() == 0) return;
+    if (_songInfo.length() == 0) {
+        _lastSongInfo = _songInfo;
+        return;
+    }
 
     std::vector<std::string> tokens = splitString(_songInfo.c_str(), " - ");
     String artistName = tokens[0].c_str();
+    
     _tft.setTextColor(TFT_BLACK);
     _tft.setFreeFont(&Roboto_24);
     _tft.setCursor(LEFT_MARGIN, fromPos + 30);
-    printSplitString(artistName);
+    printSplitString(artistName, TFT_WHITE);
 
     if (tokens.size() >= 2) {
         String songName = tokens[1].c_str();
         _tft.setFreeFont(&Roboto_Thin_24);
         _tft.setCursor(LEFT_MARGIN, _tft.getCursorY());
-        printSplitString(songName);
+        printSplitString(songName, TFT_WHITE);
     }
+    _lastSongInfo = _songInfo;
 }
 
 void DisplayManager::displayIP(const String& ip) {
+    if (ip != "") _ip = ip;
+    if (_ip == "") return;
+
+    // Clear IP area
+    _tft.fillRect(0, _screenHeight - 34, _screenWidth, 34, TFT_WHITE);
     _tft.setTextColor(TFT_BLACK);
     _tft.setFreeFont(FF1);
-    _tft.fillRect(0, _screenHeight - 35, _screenWidth, 35, TFT_WHITE);
-    _tft.drawLine(0, _screenHeight - 35, _screenWidth, _screenHeight - 35, TFT_BLUE);
     _tft.setCursor(LEFT_MARGIN, _screenHeight - 12);
-    _tft.print("IP:");
-    _tft.setCursor(LEFT_MARGIN + 40, _screenHeight - 12);
-    _tft.print(ip);
+    _tft.print("IP: " + _ip);
 }
 
 void DisplayManager::displaySaved() {
-    _tft.fillRect(0, _screenHeight - 35, _screenWidth, 35, TFT_WHITE);
-    _tft.drawLine(0, _screenHeight - 35, _screenWidth, _screenHeight - 35, TFT_BLUE);
+    _tft.fillRect(0, _screenHeight - 34, _screenWidth, 34, TFT_WHITE);
     _tft.setFreeFont(&Roboto_Thin_24);
     _tft.setTextColor(TFT_BLUE);
     _tft.setCursor(LEFT_MARGIN, _screenHeight - 12);
     _tft.print("Station Saved");
 }
 
-void DisplayManager::displayStation() {
+void DisplayManager::displayStation(bool forceRedraw) {
+    bool wasOtherMode = _isSettingsMode || _isCategorySelection || _isRadioSelection;
     _isCategorySelection = false;
     _isRadioSelection = false;
-    _tft.fillScreen(TFT_WHITE);
-    displayCategory();
+    _isSettingsMode = false;
+
+    if (forceRedraw || wasOtherMode) {
+        _tft.fillScreen(TFT_WHITE);
+        displayCategory();
+        _tft.drawLine(0, 75, _screenWidth, 75, TFT_BLUE);
+        _tft.drawLine(0, _screenHeight - 35, _screenWidth, _screenHeight - 35, TFT_BLUE);
+        _lastSongInfo = "---"; 
+        _lastStationName = "---";
+        displayIP();
+    }
+    
     displayStationName();
     displaySongInfo();
 }
 
 void DisplayManager::displayCategorySelection(bool clearScreen) {
-    static int previousCategoryNr = 0;
+    static int previousCategoryNr = -1;
     std::string *categories = radStat::getRadioCategories();
     int nrOfCategories = radStat::getNrOfRadioCategories();
     int activeCategoryNr = radStat::getActiveCategoryNr();
     
-    if (clearScreen) {
+    if (clearScreen || !_isCategorySelection) {
         _tft.fillScreen(TFT_WHITE);
         displayMenuHeader("Categories");
-        previousCategoryNr = activeCategoryNr;
+        previousCategoryNr = -1;
     }
     
-    setScreenOn();
-    const int MARGIN_TOP = 30;
     _isCategorySelection = true;
     _isRadioSelection = false;
+    _isSettingsMode = false;
+    setScreenOn();
+
+    const int MARGIN_TOP = 30;
     _tft.setFreeFont(&Roboto_Thin_24);
     
     for (int i = 0; i < nrOfCategories; ++i) {
-        _tft.setCursor(LEFT_MARGIN, MARGIN_TOP + i * 22 + 20);
-        if (i != activeCategoryNr && i == previousCategoryNr) {
-            _tft.fillRect(0, MARGIN_TOP + 22 * i + 3, _screenWidth, 21, TFT_WHITE);
-            _tft.setTextColor(TFT_BLACK);
-            _tft.print(categories[i].c_str());
-        } else if (i == activeCategoryNr) {
-            _tft.fillRect(0, MARGIN_TOP + 22 * i + 3, _screenWidth, 21, TFT_BLUE);
-            _tft.setTextColor(TFT_WHITE);
-            _tft.print(categories[i].c_str());
-        } else if (clearScreen) {
-            _tft.setTextColor(TFT_BLACK);
+        if (i == activeCategoryNr || i == previousCategoryNr || clearScreen) {
+            uint16_t bgColor = (i == activeCategoryNr) ? TFT_BLUE : TFT_WHITE;
+            uint16_t textColor = (i == activeCategoryNr) ? TFT_WHITE : TFT_BLACK;
+            
+            _tft.fillRect(0, MARGIN_TOP + 22 * i + 3, _screenWidth, 21, bgColor);
+            _tft.setTextColor(textColor);
+            _tft.setCursor(LEFT_MARGIN, MARGIN_TOP + i * 22 + 20);
             _tft.print(categories[i].c_str());
         }
     }
@@ -217,9 +248,11 @@ void DisplayManager::displayRadioSelection(bool clearScreen) {
     const int LINE_HEIGHT = 24;
     int maxVisible = _screenLandscape ? 11 : 8;
     
-    setScreenOn();
+    bool initialEntry = !_isRadioSelection;
     _isCategorySelection = false;
     _isRadioSelection = true;
+    _isSettingsMode = false;
+    setScreenOn();
 
     std::vector<radStat::RadioStation> radioStations = radStat::getRadioStationsOfActiveCategory();
     int radioCount = radioStations.size();
@@ -240,9 +273,9 @@ void DisplayManager::displayRadioSelection(bool clearScreen) {
     if (scrollOffset < 0) scrollOffset = 0;
     if (scrollOffset > radioCount - maxVisible) scrollOffset = max(0, radioCount - maxVisible);
 
-    bool fullRedraw = clearScreen || (scrollOffset != previousScrollOffset);
+    bool fullRedraw = clearScreen || initialEntry || (scrollOffset != previousScrollOffset);
 
-    if (clearScreen) {
+    if (fullRedraw) {
         _tft.fillScreen(TFT_WHITE);
         displayMenuHeader("Stations");
     }
@@ -253,18 +286,16 @@ void DisplayManager::displayRadioSelection(bool clearScreen) {
         int idx = scrollOffset + i;
         if (idx >= radioCount) break;
 
-        const auto &station = radioStations[idx];
-        int y = MARGIN_TOP + i * LINE_HEIGHT;
-        bool isActive = (idx == activeIndex);
-        bool wasActive = (idx == previousStationIndex);
-
-        if (fullRedraw || isActive || wasActive) {
+        if (fullRedraw || idx == activeIndex || idx == previousStationIndex) {
+            const auto &station = radioStations[idx];
+            int y = MARGIN_TOP + i * LINE_HEIGHT;
+            bool isActive = (idx == activeIndex);
             uint16_t bgColor = isActive ? TFT_BLUE : (i % 2 == 0 ? TFT_WHITE : 0xE71C);
             uint16_t textColor = isActive ? TFT_WHITE : TFT_BLACK;
 
             _tft.fillRect(0, y, _screenWidth, LINE_HEIGHT, bgColor);
-            _tft.setCursor(LEFT_MARGIN, y + 18);
             _tft.setTextColor(textColor);
+            _tft.setCursor(LEFT_MARGIN, y + 18);
             printStationName(station.Name.c_str());
         }
     }
@@ -274,16 +305,73 @@ void DisplayManager::displayRadioSelection(bool clearScreen) {
 }
 
 void DisplayManager::displayDetails(const String& ip) {
-    setScreenOn();
-    _tft.setFreeFont(&Roboto_Thin_24);
     _tft.fillScreen(TFT_WHITE);
+    displayMenuHeader("System Details");
     _tft.setTextColor(TFT_BLACK);
-    _tft.setCursor(2, 40);
-    _tft.print("IP:");
-    _tft.setCursor(2, 70);
-    _tft.print(ip);
-    _tft.setCursor(2, 120);
-    _tft.print("Connect with your pc/phone to this IP address to configure the stations.");
+    _tft.setFreeFont(&Roboto_Thin_24);
+    _tft.setCursor(LEFT_MARGIN, 60);
+    _tft.print("IP: " + ip);
+    _tft.setCursor(LEFT_MARGIN, 100);
+    _tft.print("Web config enabled.");
+    setScreenOn();
+}
+
+void DisplayManager::displaySettings(int activeIndex, int8_t bass, int8_t mid, int8_t treble, bool mono, int8_t balance, uint8_t brightness, bool isEditing) {
+    bool initialEntry = !_isSettingsMode;
+    _isSettingsMode = true;
+    _isCategorySelection = false;
+    _isRadioSelection = false;
+    
+    if (initialEntry) {
+        _tft.fillScreen(TFT_WHITE);
+        displayMenuHeader("Audio Settings");
+        _lastActiveIndex = -1; 
+    }
+    
+    const int MARGIN_TOP = 40;
+    const int LINE_HEIGHT = 30; // Slightly smaller to fit 6
+    const char* labels[] = {"Bass", "Mid", "Treble", "Mode", "Bal", "Light"};
+    String values[6] = {
+        String(bass), String(mid), String(treble), 
+        mono ? "Mono" : "Stereo", String(balance), String(brightness)
+    };
+    
+    _tft.setFreeFont(&Roboto_24);
+    
+    for (int i = 0; i < 6; i++) {
+        bool needsRedraw = (i == activeIndex) || (i == _lastActiveIndex) || initialEntry;
+        if (i == 0 && bass != _lastBass) needsRedraw = true;
+        if (i == 1 && mid != _lastMid) needsRedraw = true;
+        if (i == 2 && treble != _lastTreble) needsRedraw = true;
+        if (i == 3 && mono != _lastMono) needsRedraw = true;
+        if (i == 4 && balance != _lastBalance) needsRedraw = true;
+        if (i == 5 && brightness != _lastBrightness) needsRedraw = true;
+        if (i == activeIndex && isEditing != _lastIsEditing) needsRedraw = true;
+
+        if (needsRedraw) {
+            int y = MARGIN_TOP + i * LINE_HEIGHT;
+            uint16_t bgColor = TFT_WHITE;
+            uint16_t textColor = TFT_BLACK;
+            
+            if (i == activeIndex) {
+                bgColor = isEditing ? 0xFDA0 : TFT_BLUE; 
+                textColor = TFT_WHITE;
+            }
+            
+            _tft.fillRect(0, y, _screenWidth, LINE_HEIGHT - 2, bgColor);
+            _tft.setTextColor(textColor);
+            _tft.setCursor(LEFT_MARGIN, y + 22);
+            _tft.print(labels[i]);
+            _tft.setCursor(_screenWidth - 80, y + 22);
+            _tft.print(values[i]);
+        }
+    }
+    
+    _lastActiveIndex = activeIndex;
+    _lastBass = bass; _lastMid = mid; _lastTreble = treble; _lastMono = mono;
+    _lastBalance = balance; _lastBrightness = brightness;
+    _lastIsEditing = isEditing;
+    setScreenOn();
 }
 
 void DisplayManager::printError(const char *error) {
@@ -294,20 +382,22 @@ void DisplayManager::printError(const char *error) {
     _tft.print(error);
 }
 
-void DisplayManager::printSplitString(const String& text) {
+void DisplayManager::printSplitString(const String& text, uint16_t bgColor) {
     int wordStart = 0;
     int wordEnd = 0;
-    if ((text.indexOf(' ', wordStart) < 0)) {
+    if (text.indexOf(' ') < 0) {
         _tft.println(text);
         return;
     }
-    while ((text.indexOf(' ', wordStart) >= 0) && (wordStart <= (int)text.length())) {
+    while (wordStart < (int)text.length()) {
         wordEnd = text.indexOf(' ', wordStart + 1);
+        if (wordEnd < 0) wordEnd = text.length();
+        
         uint16_t len = _tft.textWidth(text.substring(wordStart, wordEnd));
-        if (_tft.getCursorX() + len >= _tft.width()) {
+        if (_tft.getCursorX() + len >= _screenWidth) {
             _tft.println();
-            wordStart++;
             _tft.setCursor(LEFT_MARGIN, _tft.getCursorY());
+            if (text[wordStart] == ' ') wordStart++;
         }
         _tft.print(text.substring(wordStart, wordEnd));
         wordStart = wordEnd;
@@ -318,7 +408,7 @@ void DisplayManager::printSplitString(const String& text) {
 void DisplayManager::printStationName(const String& stationName) {
     String name = stationName;
     name.replace("_", " ");
-    _tft.print(name.c_str());
+    _tft.print(name);
 }
 
 std::vector<std::string> DisplayManager::splitString(const std::string &str, const std::string &delimiter) {

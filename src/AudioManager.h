@@ -19,6 +19,11 @@ public:
     void toggleMute();
     bool isMuted() const { return _isMuted; }
     
+    // DSP Settings
+    void setTone(int8_t bass, int8_t mid, int8_t treble);
+    void setMono(bool mono);
+    void setBalance(int8_t balance); // -16 (left) to 16 (right)
+    
     bool isRunning() { return _audio.isRunning(); }
     void loop() { _audio.loop(); }
     

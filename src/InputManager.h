@@ -22,6 +22,8 @@ public:
         SCREEN_ON,
         STATION_SAVE,
         SHOW_DETAILS,
+        SETTINGS_ENTER,
+        SETTINGS_EXIT,
         RADIO_OFF
     };
 
