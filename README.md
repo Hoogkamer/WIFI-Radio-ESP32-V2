@@ -160,7 +160,7 @@ This contains the website.
 In VSCODE:
 PlatformIO > ESP32 > Platform > Build Filesystem Image, and then Upload Filesystem Image
 
-This will uploade everything in the "data" folder
+This will upload everything in the "data" folder
 [More] (https://randomnerdtutorials.com/esp32-vs-code-platformio-spiffs/)
 
 
@@ -194,8 +194,6 @@ Then select a category and add stations to the table. Use HTTP, not HTTPS links 
 When all is done, press "Save" to upload it to the WIFI Radio. The radio will restart and new stations and categories are available.
 
 ![Edit radio](/readme_info/images/edit%20radio.png)
-
-
 
 ### Changing categories and radio stations
 

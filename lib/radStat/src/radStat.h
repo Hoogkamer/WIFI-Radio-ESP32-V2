@@ -5,320 +5,255 @@
 #include <vector>
 #include <algorithm>
 
+#ifdef ARDUINO
+#include <Arduino.h>
+#include <FS.h>
+#else
+// Mock some Arduino things for native testing
+#include <stdarg.h>
+#include <stdio.h>
 
-const int MAX_CATEGORIES = 10;
-const int MAX_STATIONS = 100;
+typedef std::string String;
 
-namespace radStat
-{
-    class RadioStation
-    {
+class MockSerial {
+public:
+    void print(const char* s) { printf("%s", s); }
+    void print(int i) { printf("%d", i); }
+    void println(const char* s = "") { printf("%s\n", s); }
+    void printf(const char* format, ...) {
+        va_list args;
+        va_start(args, format);
+        vprintf(format, args);
+        va_end(args);
+    }
+};
+
+// Mock File for native
+class File {
+public:
+    virtual bool available() = 0;
+    virtual char read() = 0;
+};
+#endif
+
+namespace radStat {
+    class RadioStation {
     public:
-        String Name;
-        String Category;
-        String URL;
+        std::string Name;
+        std::string Category;
+        std::string URL;
         int ID;
 
-        RadioStation() {}
+        RadioStation() : ID(-1) {}
 
-        RadioStation(string c, string n, string u, int id)
-        {
-            Name = String(n.c_str());
-            Name.trim();
-            Category = String(c.c_str());
-            Category.trim();
-            URL = String(u.c_str());
-            URL.trim();
-            ID = id;
+        RadioStation(const std::string& c, const std::string& n, const std::string& u, int id)
+            : Name(n), Category(c), URL(u), ID(id) {
+            trim(Name);
+            trim(Category);
+            trim(URL);
         }
 
-        void printDetails()
-        {
-            Serial.print("name:");
-            Serial.print(Name.c_str());
-            Serial.print(", category:");
-            Serial.print(Category.c_str());
-            Serial.print(", url:");
-            Serial.print(URL.c_str());
-            Serial.print(", id:");
-            Serial.print(ID);
+        void printDetails();
+
+    private:
+        void trim(std::string& s) {
+            s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+                return !std::isspace(ch);
+            }));
+            s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+                return !std::isspace(ch);
+            }).base(), s.end());
         }
     };
 
-    int nrOfStations = 0;
-    int nrOfCategories = 0;
-    int activeCategory = 0;
+    const int MAX_STATIONS = 100;
+    const int MAX_CATEGORIES = 30;
 
-    int radioStation = 0;
-    int stationsInCategoryCount = 0;
-    RadioStation activeRadioStation;
-    RadioStation previousRadioStation;
+    extern int nrOfStations;
+    extern int nrOfCategories;
+    extern int activeCategory;
+    extern int radioStation;
+    extern int stationsInCategoryCount;
 
-    RadioStation radioStations[100];
-    String radioCategories[30];
+    extern RadioStation activeRadioStation;
+    extern RadioStation previousRadioStation;
+    extern RadioStation radioStations[MAX_STATIONS];
+    extern std::string radioCategories[MAX_CATEGORIES];
 
-    int findStringIndex(String arr[], int size, String target)
-    {
-        for (int i = 0; i < size; ++i)
-        {
-            if (arr[i] == target)
-            {
-                return i; // Return the index when a match is found
-            }
+#ifndef ARDUINO
+    extern MockSerial Serial;
+#endif
+
+    inline int findCategoryIndex(const std::string& target) {
+        for (int i = 0; i < nrOfCategories; ++i) {
+            if (radioCategories[i] == target) return i;
         }
-
-        return -1; // Return -1 if the string is not found
+        return -1;
     }
-    void sortRadioStationsByName() {
-        // Step 1: Copy to vector
-        std::vector<RadioStation> tempStations;
-        for (int i = 0; i < nrOfStations; ++i) {
-            tempStations.push_back(radioStations[i]);
-        }
 
-        // Step 2: Sort by Name
-        std::sort(tempStations.begin(), tempStations.end(), [](const RadioStation &a, const RadioStation &b) {
+    inline void sortRadioStationsByName() {
+        std::vector<RadioStation> tempStations;
+        for (int i = 0; i < nrOfStations; ++i) tempStations.push_back(radioStations[i]);
+        
+        std::sort(tempStations.begin(), tempStations.end(), [](const RadioStation& a, const RadioStation& b) {
             return a.Name < b.Name;
         });
 
-        // Step 3: Reassign IDs and copy back
-        for (int i = 0; i < tempStations.size(); ++i) {
+        for (int i = 0; i < (int)tempStations.size(); ++i) {
             tempStations[i].ID = i;
             radioStations[i] = tempStations[i];
         }
     }
 
-    void sortRadioCatagories() {
-        std::sort(radioCategories, radioCategories + nrOfCategories, [](const String &a, const String &b) {
-            return a.compareTo(b) < 0;
-        });
+    inline void sortRadioCategories() {
+        std::sort(radioCategories, radioCategories + nrOfCategories);
     }
 
-    String* getRadioCategories() {
-        // Sort the original array in place
- 
+    inline std::string* getRadioCategories() {
         return radioCategories;
     }
-    int getNrOfRadioCategories()
-    {
-        return nrOfCategories;
-    }
-    int getActiveCategoryNr()
-    {
-        return activeCategory;
-    }
-    std::vector<RadioStation> getRadioStationsOfActiveCategory()
-    {
-        std::vector<RadioStation> Stations;
 
-        for (int i = 0; i < nrOfStations; i++)
-        {
-            const RadioStation &thisStation = radioStations[i];
-            if (thisStation.Category == radioCategories[activeCategory])
-            {
-                Stations.push_back(thisStation);
+    inline int getNrOfRadioCategories() { return nrOfCategories; }
+    inline int getActiveCategoryNr() { return activeCategory; }
+
+    inline std::vector<RadioStation> getRadioStationsOfActiveCategory() {
+        std::vector<RadioStation> Stations;
+        if (activeCategory < 0 || activeCategory >= nrOfCategories) return Stations;
+
+        for (int i = 0; i < nrOfStations; i++) {
+            if (radioStations[i].Category == radioCategories[activeCategory]) {
+                Stations.push_back(radioStations[i]);
             }
         }
-
         stationsInCategoryCount = Stations.size();
-
-        // // Sort stations by Name (ascending)
-        // std::sort(Stations.begin(), Stations.end(), [](const RadioStation &a, const RadioStation &b) {
-        //     return a.Name < b.Name;  // assuming Name is a std::string or comparable type
-        // });
-
         return Stations;
     }
-    int getRadioCountOfActiveCategory()
-    {
-        return stationsInCategoryCount;
-    }
-    int getActiveRadioStation()
-    {
-        return radioStation;
-    }
-    void setActiveRadioStation(int nr)
-    {
 
+    inline int getRadioCountOfActiveCategory() { return stationsInCategoryCount; }
+    inline int getActiveRadioStation() { return radioStation; }
+
+    inline void setActiveRadioStation(int nr) {
+        if (nr < 0 || nr >= nrOfStations) return;
         activeRadioStation = radioStations[nr];
-        activeCategory = findStringIndex(radioCategories, nrOfCategories, activeRadioStation.Category);
-        if (activeCategory < 0)
-        {
-            activeCategory = 0;
-        }
+        radioStation = nr;
+        activeCategory = findCategoryIndex(activeRadioStation.Category);
+        if (activeCategory < 0) activeCategory = 0;
     }
-    void resetPreviousRadioStation()
-    {
-        previousRadioStation = activeRadioStation;
-    }
-    void setActiveRadioStationName(String stationName)
-    {
-        int i = 0;
-        bool found = false;
-        for (i = 0; i < nrOfStations; i++)
-        {
-            if (radioStations[i].Name == stationName)
-            {
-                radioStation = i;
-                found = true;
+
+    inline void resetPreviousRadioStation() { previousRadioStation = activeRadioStation; }
+
+    inline void setActiveRadioStationName(const std::string& stationName) {
+        int foundIdx = 0;
+        for (int i = 0; i < nrOfStations; i++) {
+            if (radioStations[i].Name == stationName) {
+                foundIdx = i;
                 break;
             }
         }
-        if (!found)
-        {
-            i = 0;
-        }
-        setActiveRadioStation(i);
+        setActiveRadioStation(foundIdx);
         previousRadioStation = activeRadioStation;
-        // activeRadioStation.printDetails();
     }
-    void nextStation()
-    {
 
-        radioStation++;
-        if (radioStation > nrOfStations)
-        {
-            radioStation = 0;
-        }
-        RadioStation thisStation = radioStations[radioStation];
-        if (thisStation.Category != radioCategories[activeCategory])
-        {
-            nextStation();
-        }
-        else
-        {
-            setActiveRadioStation(radioStation);
-        }
-    }
-    void prevStation()
-    {
-        radioStation--;
-        if (radioStation < 0)
-        {
-            radioStation = nrOfStations - 1;
-        }
-        RadioStation thisStation = radioStations[radioStation];
-        if (thisStation.Category != radioCategories[activeCategory])
-        {
-            prevStation();
-        }
-        else
-        {
-            setActiveRadioStation(radioStation);
-        }
-    }
-    bool findStationCat()
-    {
-        bool found = false;
-        for (int i = 0; i < nrOfStations; i++)
-        {
-            if (radioStations[i].Category == radioCategories[activeCategory])
-            {
-                radioStation = i;
-                found = true;
-                break;
+    inline bool findStationInActiveCategory() {
+        for (int i = 0; i < nrOfStations; i++) {
+            if (radioStations[i].Category == radioCategories[activeCategory]) {
+                setActiveRadioStation(i);
+                return true;
             }
         }
-        if (found)
-        {
-            setActiveRadioStation(radioStation);
-        }
-        return found;
+        return false;
     }
-    void nextCategory()
-    {
 
-        activeCategory++;
-        if (activeCategory > nrOfCategories)
-        {
-            activeCategory = 0;
-        }
-        if (!findStationCat())
-        {
-            nextCategory();
-        }
+    inline void nextStation() {
+        int start = radioStation;
+        do {
+            radioStation++;
+            if (radioStation >= nrOfStations) radioStation = 0;
+            if (radioStations[radioStation].Category == radioCategories[activeCategory]) {
+                setActiveRadioStation(radioStation);
+                return;
+            }
+        } while (radioStation != start);
     }
-    void prevCategory()
-    {
-        activeCategory--;
-        if (activeCategory < 0)
-        {
-            activeCategory = nrOfCategories - 1;
-        }
-        if (!findStationCat())
-        {
-            prevCategory();
-        }
+
+    inline void prevStation() {
+        int start = radioStation;
+        do {
+            radioStation--;
+            if (radioStation < 0) radioStation = nrOfStations - 1;
+            if (radioStations[radioStation].Category == radioCategories[activeCategory]) {
+                setActiveRadioStation(radioStation);
+                return;
+            }
+        } while (radioStation != start);
     }
-    void handleStation(std::string category, string name, string url)
-    {
-        if (nrOfStations >= MAX_STATIONS) { // define MAX_STATIONS somewhere
-            Serial.println("Max stations reached, ignoring station");
-            return;
-        }
+
+    inline void nextCategory() {
+        if (nrOfCategories == 0) return;
+        activeCategory = (activeCategory + 1) % nrOfCategories;
+        if (!findStationInActiveCategory()) nextCategory();
+    }
+
+    inline void prevCategory() {
+        if (nrOfCategories == 0) return;
+        activeCategory = (activeCategory - 1 + nrOfCategories) % nrOfCategories;
+        if (!findStationInActiveCategory()) prevCategory();
+    }
+
+    inline void handleStation(const std::string& category, const std::string& name, const std::string& url) {
+        if (nrOfStations >= MAX_STATIONS) return;
         radioStations[nrOfStations] = RadioStation(category, name, url, nrOfStations);
         nrOfStations++;
     }
 
-    void handleCategory(std::string category)
-    {
-        if (nrOfCategories >= MAX_CATEGORIES) {
-            Serial.println("Max categories reached, ignoring category");
-            return;
+    inline void handleCategory(const std::string& category) {
+        if (nrOfCategories >= MAX_CATEGORIES) return;
+        // Avoid duplicates
+        for(int i=0; i<nrOfCategories; ++i) {
+            if (radioCategories[i] == category) return;
         }
-
-        radioCategories[nrOfCategories] = String(category.c_str());
+        radioCategories[nrOfCategories] = category;
         nrOfCategories++;
     }
-  
 
-    void processLine(const char* line, int length, std::string& currentCategory) {
-        if (length <= 0) return;
-
-        if (line[0] == '[' && line[length - 1] == ']') {
-            // Extract category name without the brackets
-            currentCategory = std::string(line + 1, length - 2);
+    inline void processLine(const std::string& line, std::string& currentCategory) {
+        if (line.empty()) return;
+        if (line[0] == '[' && line.back() == ']') {
+            currentCategory = line.substr(1, line.size() - 2);
             handleCategory(currentCategory);
         } else {
-            std::string strLine(line, length);
-            size_t eqPos = strLine.find('=');
+            size_t eqPos = line.find('=');
             if (eqPos != std::string::npos) {
-                std::string name = strLine.substr(0, eqPos);
-                std::string url = strLine.substr(eqPos + 1);
+                std::string name = line.substr(0, eqPos);
+                std::string url = line.substr(eqPos + 1);
                 handleStation(currentCategory, name, url);
-            } else {
-                Serial.printf("Invalid station line (no '='): %.*s\n", length, line);
             }
         }
     }
 
-    void processFile(File file) {
-        const int maxLineLength = 256;
-        char line[maxLineLength];
-        int linePos = 0;
+    // Platform-independent logic for processing string content
+    inline void processContent(const std::string& content) {
+        std::string line;
         std::string currentCategory;
-
-        while (file.available()) {
-            char ch = file.read();
+        for (char ch : content) {
             if (ch == '\r') continue;
-
-            if (ch == '\n' || linePos >= maxLineLength - 1) {
-                // Process the full line when newline or buffer full
-                processLine(line, linePos, currentCategory);
-                linePos = 0;  // Reset line position for next line
+            if (ch == '\n') {
+                processLine(line, currentCategory);
+                line.clear();
             } else {
-                line[linePos++] = ch;
+                line += ch;
             }
         }
-
-        // Process last line if file doesn't end with newline
-        if (linePos > 0) {
-            processLine(line, linePos, currentCategory);
-        }
-        sortRadioCatagories();
+        if (!line.empty()) processLine(line, currentCategory);
+        sortRadioCategories();
         sortRadioStationsByName();
     }
 
+#ifdef ARDUINO
+    inline void processFile(fs::File file) {
+        std::string content;
+        while (file.available()) content += (char)file.read();
+        processContent(content);
+    }
+#endif
 }
-
-
