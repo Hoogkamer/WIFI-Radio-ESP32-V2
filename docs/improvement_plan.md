@@ -16,7 +16,8 @@ This document outlines the progress and future plans for the WIFI Radio project.
 
 ## 3. UI/UX Enhancements (Next Phase 🚀)
 - [ ] **Web Remote Control Dashboard**:
-    - [ ] Update `index.html` with a "Now Playing" view (Volume slider, Play/Stop, Station/Song info).
+    - [x] **Station Management**: Improved UI with drag-and-drop-like reordering, station testing, and integrated search (radio-browser.info).
+    - [ ] **"Now Playing" View**: Add volume slider, play/stop, and real-time station/song info.
 - [ ] **Advanced Display Logic**:
     - [ ] **Marquee Text**: Implement smooth scrolling for long song titles.
     - [ ] **Buffering Animation**: Show visual feedback while the stream is loading.

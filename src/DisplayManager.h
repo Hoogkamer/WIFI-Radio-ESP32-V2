@@ -29,6 +29,7 @@ public:
     void displaySaved();
     void displayIP(const String& ip = "");
     void displaySettings(int activeIndex, int8_t bass, int8_t mid, int8_t treble, bool mono, int8_t balance, uint8_t brightness, bool isEditing = false);
+    void displayWiFiInstructions(const String& apName);
     
     void setSongInfo(const String& info) { _songInfo = info; }
     void setStationInfo(const String& info) { _stationInfo = info; }

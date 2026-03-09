@@ -1,4 +1,7 @@
 #include "NetworkManager.h"
+#include "DisplayManager.h"
+
+extern DisplayManager display;
 
 NetworkManager::NetworkManager() : _server(80) {
 }
@@ -7,6 +10,7 @@ void NetworkManager::begin() {
     _wifiManager.setAPCallback(warnNotConnected);
     if (!_wifiManager.autoConnect("WIFI_RADIO")) {
         log_w("Failed to connect to WiFi");
+        display.printError("Connection Failed");
     } else {
         log_i("WiFi Connected. IP: %s", getIP().c_str());
     }
@@ -19,6 +23,7 @@ void NetworkManager::update() {
 
 void NetworkManager::warnNotConnected(WiFiManager *myWiFiManager) {
     log_i("Could not connect. Connect your computer/phone to 'WIFI_RADIO' to configure wifi.");
+    display.displayWiFiInstructions(myWiFiManager->getConfigPortalSSID());
 }
 
 void NetworkManager::startWebServer() {

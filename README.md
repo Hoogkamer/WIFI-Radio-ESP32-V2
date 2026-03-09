@@ -79,8 +79,10 @@ Total cost remains under 30 EURO.
 
 ## Web Dashboard
 Navigate to the radio's IP address in your browser to:
-- Add/Remove Radio Stations.
-- Organize categories.
-- Update firmware remotely.
+- **Search & Add**: Integrated search for thousands of stations via `radio-browser.info`.
+- **Test Before Saving**: Live "Play" button to verify stream URLs in your browser.
+- **Easy Reordering**: Move stations up/down within categories with a single click.
+- **Modern UI**: Fully responsive, mobile-friendly interface for easy management on any device.
+- **Backup & Restore**: Export your entire station list as text for safe keeping.
 
 ![Edit radio](/readme_info/images/edit%20radio.png)

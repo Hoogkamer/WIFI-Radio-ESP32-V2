@@ -11,11 +11,12 @@ Plug the device into a 5V USB power source. The screen will display **"Starting.
 
 ### First-Time WiFi Setup
 If the radio cannot find a known WiFi network, it will enter "Setup Mode":
-1.  On your phone or computer, look for a WiFi network named **"WIFI_RADIO"**.
-2.  Connect to it (no password required).
-3.  A window should pop up automatically. If not, open your browser and go to `192.168.4.1`.
-4.  Select your home WiFi network, enter your password, and click **Save**.
-5.  The radio will restart and connect to your network.
+1.  The radio screen will show clear **WiFi Config** instructions.
+2.  On your phone or computer, look for a WiFi network named **"WIFI_RADIO"**.
+3.  Connect to it (no password required).
+4.  A window should pop up automatically. If not, open your browser and go to `192.168.4.1`.
+5.  Select your home WiFi network, enter your password, and click **Save**.
+6.  The radio will restart and connect to your network.
 
 ---
 
@@ -68,10 +69,11 @@ You can manage your station list using any web browser on the same WiFi.
 1.  **Find your IP**: The IP address is displayed at the bottom of the radio screen (e.g., `192.168.1.50`).
 2.  **Open Dashboard**: Type that IP address into your browser.
 3.  **Edit Stations**: 
-    - You can add new stream URLs.
-    - Create or rename categories.
-    - Reorder stations.
-4.  **Save**: Click **Save** at the bottom. The radio will restart with your new list.
+    - **Find New Stations**: Use the search bar to find thousands of stations from `radio-browser.info`.
+    - **Test Stream**: Click the **▶ (Play)** button next to a URL to test it in your browser before saving.
+    - **Reorder**: Use the **↑ (Up)** and **↓ (Down)** buttons to arrange stations exactly how you want them.
+    - **Manage Categories**: Add or delete entire categories of music.
+4.  **Save**: Click **SAVE ALL** at the top right. The radio will restart with your new list.
 
 *Tip: Use HTTP links for streams. HTTPS links may sometimes cause audio stuttering on older ESP32 chips.*
 

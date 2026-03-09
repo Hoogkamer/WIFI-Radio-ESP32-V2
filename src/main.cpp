@@ -229,7 +229,7 @@ void setup() {
 #endif
     input.setActionCallback(handleAction);
     
-    display.displayStation();
+    display.displayStation(true);
     display.displayIP(network.getIP());
     
     log_i("Radio Ready!");

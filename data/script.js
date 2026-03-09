@@ -1,271 +1,324 @@
-// Sample array data (replace with your own data)
+let data = { stations: [], categories: [] };
+console.log("WIFI Radio Script v2.1 Loaded");
+let currentCategory = "";
+let apiUrl = "";
+let hasChanges = false;
 
-let data;
-let currentCategory;
-let apiUrl = "http://192.168.11.65";
-apiUrl = "";
-
-let maxID = 3;
+// Warn about unsaved changes
+window.onbeforeunload = function() {
+  if (hasChanges) return "You have unsaved changes. Are you sure you want to leave?";
+};
 
 async function getData() {
   const fallbackData = {
     stations: [["Veronica", "http://22343.live.streamtheworld.com/VERONICA.mp3", "Pop"]],
-    categories: ["Jazz", "Chill", "Pop", "News", "Local"]
+    categories: ["Pop"]
   };
 
   try {
     const response = await fetch(apiUrl + "/get-data");
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
     const text = await response.text();
-    return processData(text)
-  }
-   catch (e) {
+    return processData(text);
+  } catch (e) {
     console.error("Error loading stations data:", e);
     return fallbackData;
   }
 }
-function processData(text){
-    // Parse the text file format
-    const stations = [];
-    const categories = [];
-    let currentCategory = null;
 
-    text.split(/\r?\n/).forEach(line => {
-      line = line.trim();
-      if (!line) return; // skip empty lines
+function processData(text) {
+  const stations = [];
+  const categories = [];
+  let currentCat = null;
 
-      if (line.startsWith('[') && line.endsWith(']')) {
-        currentCategory = line.slice(1, -1);
-        categories.push(currentCategory);
-      } else {
-        const eqIndex = line.indexOf('=');
-        if (eqIndex > 0 && currentCategory) {
-          const name = line.slice(0, eqIndex).trim();
-          const url = line.slice(eqIndex + 1).trim();
-          stations.push([name, url, currentCategory]);
-        }
-      }
-    });
+  text.split(/\r?\n/).forEach(line => {
+    line = line.trim();
+    if (!line) return;
 
-    // Add IDs to stations
-    stations.forEach((r, i) => r.push(i));
-    
-    maxID = stations.length;
-
-    return { stations, categories };
-
- 
-}
-
-
-function swapStation(id1, id2) {
-  const index1 = data.stations.findIndex((s) => s[3] === id1);
-  const index2 = data.stations.findIndex((s) => s[3] === id2);
-  console.log(
-    "swapping",
-    id1,
-    id2,
-    index1,
-    index2,
-    data.stations[index1],
-    data.stations[index2]
-  );
-
-  if (index1 !== -1 && index2 !== -1) {
-    [data.stations[index1], data.stations[index2]] = [
-      data.stations[index2],
-      data.stations[index1],
-    ];
-  }
-}
-// Function to create input fields for each row in the array
-function renderStationFields(selectedCategory) {
-  
-  data.stations.forEach((station, index) => {
-    station[3] = index;
-  });
-  console.log("render", data.stations);
-  const stationsContainer = document.getElementById("stationsContainer");
-  stationsContainer.innerHTML = "";
-  const stationsWithThisCategory = data.stations.filter(
-    (s) => s[2] === selectedCategory
-  );
-  if (!stationsWithThisCategory.length) return;
-  stationsWithThisCategory.forEach((station, index) => {
-    const stationContainer = document.createElement("div");
-    stationContainer.id = station[3];
-    stationContainer.className = "stationDiv";
-
-    // Create the first column input field
-    const input1 = document.createElement("input");
-    input1.type = "text";
-    //   input1.name = `item-${index}`;
-    input1.name = "name";
-    input1.value = station[0];
-    input1.placeholder = "Name";
-    input1.className = "inpname";
-    stationContainer.appendChild(input1);
-    // Create the second column input field
-    const input2 = document.createElement("input");
-    input2.type = "text";
-    //   input2.name = `value-${index}`;
-    input2.name = "url";
-    input2.value = station[1];
-    input2.placeholder = "URL";
-    input2.className = "inpurl";
-    stationContainer.appendChild(input2);
-    stationsContainer.appendChild(stationContainer);
-  });
-}
-
-// Function to add a new station to the array
-function addStation() {
-  updateStations();
-  data.stations.push(["", "", currentCategory, maxID++]);
-  renderStationFields(currentCategory);
-}
-
-function updateStations() {
-  const div = document.getElementById("stationsContainer");
-  const inputFields = div.querySelectorAll("div");
-  let name, url;
-  inputFields.forEach((stationDiv) => {
-    let stationNr = parseInt(stationDiv.id);
-    name = stationDiv.querySelectorAll('input[name="name"]')[0].value;
-    url = stationDiv.querySelectorAll('input[name="url"]')[0].value;
-    if (name && url) {
-      let theStation = data.stations.find((s) => s[3] == stationNr);
-      console.log(stationNr, theStation);
-      theStation[0] = name;
-      theStation[1] = url;
+    if (line.startsWith('[') && line.endsWith(']')) {
+      currentCat = line.slice(1, -1);
+      if (!categories.includes(currentCat)) categories.push(currentCat);
     } else {
-      data.stations = data.stations.filter((s) => s[3] != stationNr);
+      const eqIndex = line.indexOf('=');
+      if (eqIndex > 0 && currentCat) {
+        const name = line.slice(0, eqIndex).trim();
+        const url = line.slice(eqIndex + 1).trim();
+        stations.push([name, url, currentCat, stations.length]);
+      }
+    }
+  });
+
+  return { stations, categories };
+}
+
+function renderStationFields() {
+  const container = document.getElementById("stationsContainer");
+  container.innerHTML = "";
+  
+  const filtered = data.stations.filter(s => s[2] === currentCategory);
+  
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="padding: 20px; text-align: center; color: #888;">No stations in this category.</div>';
+    return;
+  }
+
+  filtered.forEach((station, index) => {
+    const div = document.createElement("div");
+    div.className = "stationDiv";
+    div.dataset.id = station[3];
+
+    // Inputs
+    const nameInp = `<input type="text" class="inpname" value="${station[0]}" placeholder="Name" onchange="markChanged()">`;
+    const urlInp = `<input type="text" class="inpurl" value="${station[1]}" placeholder="URL" onchange="markChanged()">`;
+    
+    // Controls (Using SVGs for cross-browser compatibility)
+    const upBtn = `<button class="button-9 btn-icon" onclick="moveStation(${station[3]}, -1)" title="Move Up">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+    </button>`;
+    
+    const downBtn = `<button class="button-9 btn-icon" onclick="moveStation(${station[3]}, 1)" title="Move Down">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </button>`;
+    
+    const playBtn = `<button class="button-9 btn-icon" style="background: #fb0" onclick="testStation('${station[1]}')" title="Test Stream">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="m7 3 14 9-14 9z"/></svg>
+    </button>`;
+    
+    const delBtn = `<button class="button-9 btn-icon button-danger" onclick="deleteStation(${station[3]})" title="Delete">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>`;
+
+    div.innerHTML = `
+      ${nameInp}
+      ${urlInp}
+      <div class="controls-right">
+        ${playBtn}
+        ${upBtn}
+        ${downBtn}
+        ${delBtn}
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function updateDataFromInputs() {
+  const container = document.getElementById("stationsContainer");
+  const rows = container.querySelectorAll(".stationDiv");
+  
+  rows.forEach(row => {
+    const id = parseInt(row.dataset.id);
+    const name = row.querySelector(".inpname").value.trim();
+    const url = row.querySelector(".inpurl").value.trim();
+    
+    const idx = data.stations.findIndex(s => s[3] === id);
+    if (idx !== -1) {
+      data.stations[idx][0] = name;
+      data.stations[idx][1] = url;
     }
   });
 }
 
-// Render the initial input fields on page load
-
-// Function to create and populate the dropdown options
-function populateCategories() {
-  const categoryDropdown = document.getElementById("categoryDropdown");
-
-  // Clear existing options
-  categoryDropdown.innerHTML = "";
-
-  // Create and add new options based on the array data
-  data.categories.forEach((value) => {
-    if (!value) return;
-    const option = document.createElement("option");
-    option.text = value;
-    categoryDropdown.add(option);
-  });
-  if (!currentCategory || !data.categories.includes(currentCategory))
-    currentCategory = data.categories[0];
-
-  categoryDropdown.value = currentCategory;
+function moveStation(id, dir) {
+  updateDataFromInputs();
+  const idx = data.stations.findIndex(s => s[3] === id);
+  const currentStat = data.stations[idx];
+  
+  // Find relative position within category
+  const catStations = data.stations.filter(s => s[2] === currentCategory);
+  const catIdx = catStations.findIndex(s => s[3] === id);
+  
+  if (dir === -1 && catIdx > 0) {
+    const prevStat = catStations[catIdx - 1];
+    const realIdx1 = data.stations.indexOf(currentStat);
+    const realIdx2 = data.stations.indexOf(prevStat);
+    [data.stations[realIdx1], data.stations[realIdx2]] = [data.stations[realIdx2], data.stations[realIdx1]];
+    hasChanges = true;
+  } else if (dir === 1 && catIdx < catStations.length - 1) {
+    const nextStat = catStations[catIdx + 1];
+    const realIdx1 = data.stations.indexOf(currentStat);
+    const realIdx2 = data.stations.indexOf(nextStat);
+    [data.stations[realIdx1], data.stations[realIdx2]] = [data.stations[realIdx2], data.stations[realIdx1]];
+    hasChanges = true;
+  }
+  
+  renderStationFields();
 }
+
+function deleteStation(id) {
+  if (confirm("Delete this station?")) {
+    data.stations = data.stations.filter(s => s[3] !== id);
+    hasChanges = true;
+    renderStationFields();
+  }
+}
+
+function addStation() {
+  updateDataFromInputs();
+  const maxId = data.stations.length > 0 ? Math.max(...data.stations.map(s => s[3])) + 1 : 0;
+  data.stations.push(["New Station", "http://", currentCategory, maxId]);
+  hasChanges = true;
+  renderStationFields();
+}
+
+function populateCategories() {
+  const dropdown = document.getElementById("categoryDropdown");
+  dropdown.innerHTML = "";
+  data.categories.forEach(cat => {
+    const opt = document.createElement("option");
+    opt.value = opt.text = cat;
+    dropdown.add(opt);
+  });
+  if (!currentCategory || !data.categories.includes(currentCategory)) {
+    currentCategory = data.categories[0] || "";
+  }
+  dropdown.value = currentCategory;
+}
+
 function selectCategory() {
-  updateStations();
-  const categoryDropdown = document.getElementById("categoryDropdown");
-  currentCategory = categoryDropdown.value;
-  renderStationFields(currentCategory);
+  updateDataFromInputs();
+  currentCategory = document.getElementById("categoryDropdown").value;
+  renderStationFields();
+}
+
+function addCategory() {
+  const name = prompt("New Category Name:");
+  if (name && !data.categories.includes(name)) {
+    data.categories.push(name);
+    currentCategory = name;
+    populateCategories();
+    renderStationFields();
+    hasChanges = true;
+  }
+}
+
+function deleteCategory() {
+  if (confirm(`Delete category "${currentCategory}" and ALL its stations?`)) {
+    data.stations = data.stations.filter(s => s[2] !== currentCategory);
+    data.categories = data.categories.filter(c => c !== currentCategory);
+    currentCategory = data.categories[0] || "";
+    populateCategories();
+    renderStationFields();
+    hasChanges = true;
+  }
+}
+
+function testStation(url) {
+  if (!url || url === "http://") return alert("Enter a URL first");
+  window.open(url, "_blank");
+}
+
+function markChanged() {
+  hasChanges = true;
+}
+
+async function searchStations() {
+  const q = document.getElementById("searchInput").value.trim();
+  if (q.length < 3) return alert("Please enter at least 3 characters");
+  
+  const resultsDiv = document.getElementById("searchResults");
+  resultsDiv.innerHTML = "Searching...";
+  
+  try {
+    // Using de1 mirror which is generally more reliable
+    const response = await fetch(`https://de1.api.radio-browser.info/json/stations/byname/${encodeURIComponent(q)}?limit=20`);
+    
+    if (!response.ok) throw new Error("API returned an error");
+    
+    const results = await response.json();
+    
+    resultsDiv.innerHTML = "";
+    if (results.length === 0) {
+      resultsDiv.innerHTML = "No results found.";
+      return;
+    }
+    
+    results.forEach(s => {
+      const item = document.createElement("div");
+      item.className = "search-item";
+      item.innerHTML = `
+        <div style="flex: 1; margin-right: 10px; overflow: hidden;">
+          <strong style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">${s.name}</strong>
+          <small style="color: #666; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.country || ''} ${s.tags ? '• ' + s.tags : ''}</small>
+        </div>
+        <button class="button-9 widthsmall button-success" onclick="addFoundStation('${s.name.replace(/'/g, "\\'")}', '${s.url_resolved}')">Add</button>
+      `;
+      resultsDiv.appendChild(item);
+    });
+  } catch (e) {
+    console.error("Search error:", e);
+    resultsDiv.innerHTML = `<div style="padding: 10px; color: #d9534f;">
+      Error connecting to search API.<br>
+      <small>Note: Ad-blockers or "Private Window" mode may block this search. Try disabling them.</small>
+    </div>`;
+  }
+}
+
+function addFoundStation(name, url) {
+  if (!currentCategory) return alert("Select or create a category first!");
+  const maxId = data.stations.length > 0 ? Math.max(...data.stations.map(s => s[3])) + 1 : 0;
+  data.stations.push([name, url, currentCategory, maxId]);
+  hasChanges = true;
+  renderStationFields();
+  alert(`Added ${name} to ${currentCategory}`);
 }
 
 function getSaveText() {
   let text = "";
-  for (let category of data.categories) {
-    text += `[${category}]\n`;
-    const stationsInCategory = data.stations.filter(
-      (station) => station[2] === category
-    );
-    for (let [name, url] of stationsInCategory.map(s => s.slice(0, 2))) {
-      text += `${name}=${url}\n`;
-    }
-    text += `\n`; // Optional: space between categories
-  }
-  return text.trim(); // Remove trailing newline
+  data.categories.forEach(cat => {
+    text += `[${cat}]\n`;
+    data.stations.filter(s => s[2] === cat).forEach(s => {
+      text += `${s[0]}=${s[1]}\n`;
+    });
+    text += `\n`;
+  });
+  return text.trim();
 }
 
 function Save() {
-  updateStations();
-  renderStationFields(currentCategory);
+  updateDataFromInputs();
   const text = getSaveText();
-  console.log(text); // For debugging
-
+  
   fetch(apiUrl + "/post", {
     method: "POST",
-    headers: {
-      "Content-Type": "text/plain",
-    },
+    headers: { "Content-Type": "text/plain" },
     body: text,
   })
-    .then((response) => response.text())
-    .then((data) => {
-      alert("Stations saved");
-    })
-    .catch((error) => {
-      alert("There is an error: " + error);
-    });
+  .then(() => {
+    hasChanges = false;
+    alert("Stations saved successfully! The radio will now restart.");
+  })
+  .catch(err => alert("Error saving: " + err));
 }
 
-function deleteCategory() {
-  if (confirm("This will also delete the stations for this category")) {
-    data.stations = data.stations.filter((s) => s[2] !== currentCategory);
-    data.categories = data.categories.filter((c) => c !== currentCategory);
-    populateCategories();
-    renderStationFields(currentCategory);
-  }
+function exportStations() {
+  updateDataFromInputs();
+  document.getElementById("exportdiv").style.display = "block";
+  document.getElementById("pastetextdiv").textContent = getSaveText();
 }
-function addCategory() {
-  const newcat = prompt("Category Name:");
-  if (!data.categories.includes(newcat)) {
-    data.categories.push(newcat);
-  }
-  currentCategory = newcat;
-  populateCategories();
-  renderStationFields(currentCategory);
+
+function importStations() {
+  document.getElementById("importdiv").style.display = "block";
 }
-// Call the function to populate the dropdown on page load
 
 function hideExportStations() {
-  const exportDiv = document.getElementById("exportdiv");
-  exportDiv.style.display = "none";
+  document.getElementById("exportdiv").style.display = "none";
+  document.getElementById("importdiv").style.display = "none";
 }
-function exportStations() {
-  const importDiv = document.getElementById("importdiv");
-  const exportDiv = document.getElementById("exportdiv");
-  const pasteTextDiv = document.getElementById("pastetextdiv");
 
-  if (importDiv) importDiv.style.display = "none";
-  if (exportDiv) exportDiv.style.display = "block";
-  if (pasteTextDiv) pasteTextDiv.textContent = getSaveText();
-}
-function hideImportStations() {
-  const importDiv = document.getElementById("importdiv");
-  importDiv.style.display = "none";
-}
-function importStations() {
-  const exportdiv = document.getElementById("exportdiv");
-  const importdiv = document.getElementById("importdiv");
-  exportdiv.style.display = "none";  // hide export div
-  importdiv.style.display = "block"; // show import div
-}
 function processInput() {
-  const inputtextdiv = document.getElementById("inputtextdiv");
-  const newdata = inputtextdiv.value; // get text from textarea
-  data = processData(newdata);        // parse and update data
-
-  console.log('1', data);
+  const text = document.getElementById("inputtextdiv").value;
+  if (!text) return;
+  data = processData(text);
+  hasChanges = true;
   populateCategories();
-  renderStationFields(currentCategory);
+  renderStationFields();
+  hideExportStations();
 }
-function init() {
-  data = getData().then((dt) => {
-    data = dt;
-    populateCategories();
-    renderStationFields(currentCategory);
-  });
-}
-init();
+
+// Initialize
+getData().then(dt => {
+  data = dt;
+  populateCategories();
+  renderStationFields();
+});

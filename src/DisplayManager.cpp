@@ -374,6 +374,26 @@ void DisplayManager::displaySettings(int activeIndex, int8_t bass, int8_t mid, i
     setScreenOn();
 }
 
+void DisplayManager::displayWiFiInstructions(const String& apName) {
+    _tft.fillScreen(TFT_WHITE);
+    displayMenuHeader("WiFi Config");
+    _tft.setTextColor(TFT_BLACK);
+    _tft.setFreeFont(&Roboto_24);
+    _tft.setCursor(LEFT_MARGIN, 60);
+    _tft.print("No WiFi connected!");
+    _tft.setFreeFont(&Roboto_Thin_24);
+    _tft.setCursor(LEFT_MARGIN, 100);
+    _tft.print("1. Connect your device to:");
+    _tft.setCursor(LEFT_MARGIN, 130);
+    _tft.setTextColor(TFT_BLUE);
+    _tft.print(apName);
+    _tft.setTextColor(TFT_BLACK);
+    _tft.setCursor(LEFT_MARGIN, 170);
+    _tft.print("2. Go to 192.168.4.1");
+    _tft.setCursor(LEFT_MARGIN, 200);
+    _tft.print("3. Enter your WiFi credentials");
+}
+
 void DisplayManager::printError(const char *error) {
     clearAllWhite();
     _tft.setTextColor(TFT_RED);
