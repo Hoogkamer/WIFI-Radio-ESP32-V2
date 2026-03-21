@@ -56,3 +56,29 @@ void StationManager::saveVolume(uint8_t volume) {
         file.close();
     }
 }
+
+void StationManager::loadAudioSettings(int8_t &bass, int8_t &mid, int8_t &treble, bool &mono, int8_t &balance, uint8_t &brightness) {
+    File file = LittleFS.open("/audioSettings.txt", "r");
+    if (file) {
+        bass = (int8_t)file.readStringUntil('\n').toInt();
+        mid = (int8_t)file.readStringUntil('\n').toInt();
+        treble = (int8_t)file.readStringUntil('\n').toInt();
+        mono = (bool)file.readStringUntil('\n').toInt();
+        balance = (int8_t)file.readStringUntil('\n').toInt();
+        brightness = (uint8_t)file.readStringUntil('\n').toInt();
+        file.close();
+    }
+}
+
+void StationManager::saveAudioSettings(int8_t bass, int8_t mid, int8_t treble, bool mono, int8_t balance, uint8_t brightness) {
+    File file = LittleFS.open("/audioSettings.txt", "w", true);
+    if (file) {
+        file.println(bass);
+        file.println(mid);
+        file.println(treble);
+        file.println(mono ? 1 : 0);
+        file.println(balance);
+        file.println(brightness);
+        file.close();
+    }
+}

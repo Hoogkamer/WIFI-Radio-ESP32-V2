@@ -34,10 +34,20 @@ public:
     void update();
     void setActionCallback(ActionCallback cb) { _callback = cb; }
     
+    uint8_t getVolume() { 
 #ifdef HAS_ROTARIES
-    uint8_t getVolume() { return (uint8_t)_rotaryVolume.readEncoder(); }
-    void setVolume(uint8_t volume) { _rotaryVolume.setEncoderValue(volume); }
+        return (uint8_t)_rotaryVolume.readEncoder(); 
+#else
+        return _volume;
 #endif
+    }
+
+    void setVolume(uint8_t volume) { 
+#ifdef HAS_ROTARIES
+        _rotaryVolume.setEncoderValue(volume); 
+#endif
+        _volume = volume;
+    }
 
 private:
 #ifdef HAS_ROTARIES
@@ -61,5 +71,6 @@ private:
     ActionCallback _callback;
     void notify(Action action);
     
+    uint8_t _volume;
     unsigned long _longPressMillis;
 };

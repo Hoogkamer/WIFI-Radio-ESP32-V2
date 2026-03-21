@@ -6,11 +6,12 @@ A fully functional, professional-grade internet radio built with ESP32. This pro
 
 - **Modular Architecture**: Decoupled monolithic code into dedicated Managers (`Display`, `Audio`, `Input`, `Network`, `Station`).
 - **Flicker-Free UI**: Implemented partial screen updates and state tracking for smooth transitions.
-- **Audio Settings Menu**: Intuitive "Point & Click" menu to adjust:
+- **Audio Settings Menu**: Intuitive "Point & Click" menu to adjust audio parameters, which are now **saved to permanent storage** (LittleFS) automatically upon exit.
   - **Bass / Mid / Treble** (-40dB to +6dB)
   - **Mono / Stereo** Toggle
   - **Balance** (Left/Right)
   - **Screen Brightness** (Backlight PWM control)
+- **Enhanced Input Support**: Full navigation of all menus (including audio settings) via both **Rotary Encoders** and **IR Remote Control** (dedicated settings button).
 - **Memory Optimized**: Significantly reduced heap fragmentation by minimizing `String` usage.
 - **Fast Compilation**: Conditional compilation of IR protocols and library management via PlatformIO.
 

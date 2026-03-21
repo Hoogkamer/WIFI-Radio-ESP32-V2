@@ -43,7 +43,21 @@ If you want the radio to always start with a specific station:
 
 ---
 
-## 3. Audio Settings (The Pro Menu)
+## 3. Operation (Remote Control)
+
+If your device is equipped with an Infrared (IR) receiver, you can also use a remote control (standard Apple-style remote mapping).
+
+*   **Menu**: Enter or Exit the **Audio Settings Menu**.
+*   **Center Button**: Toggle Screen / Edit Setting.
+*   **Up / Down / Left / Right**: 
+    - *Radio Mode*: Change Station or Category.
+    - *Settings Mode*: Navigate list or adjust values.
+*   **Play/Pause**: Mute / Unmute (or Toggle Edit Setting).
+*   **Hold Play/Pause**: Save current station as favorite.
+
+---
+
+## 4. Audio Settings (The Pro Menu)
 
 To fine-tune your sound, you can access the **Audio Settings Menu**.
 
@@ -51,8 +65,8 @@ To fine-tune your sound, you can access the **Audio Settings Menu**.
 2.  **Navigate**: Rotate the **Volume Knob** to move the **Blue Cursor** up and down.
 3.  **Select**: Briefly press the **Volume Knob** on a setting. The cursor turns **Orange** (Edit Mode).
 4.  **Adjust**: Rotate the knob to change the value (e.g., increase Bass).
-5.  **Confirm**: Briefly press the knob again to save the change and return to the list.
-6.  **Exit**: Press and hold the **Volume Knob** again to return to the radio.
+5.  **Confirm**: Briefly press the knob again to apply the change and return to the list.
+6.  **Exit**: Press and hold the **Volume Knob** again to return to the radio. **All settings are automatically saved when you exit this menu.**
 
 **Available Settings:**
 *   **Bass / Mid / Treble**: Adjust the tone of the music.

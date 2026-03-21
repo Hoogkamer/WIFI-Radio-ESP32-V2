@@ -7,6 +7,10 @@
 #include "StationManager.h"
 #include "main1.h"
 
+#ifndef VOLUME_DEFAULT
+#define VOLUME_DEFAULT 20
+#endif
+
 // Manager instances
 DisplayManager display;
 InputManager input;
@@ -42,57 +46,64 @@ void handleAction(InputManager::Action action) {
 
     // Handle Settings Mode
     if (display.isSettingsMode()) {
+        int8_t dir = 0;
         switch(action) {
             case InputManager::SETTINGS_ENTER: 
-            case InputManager::SCREEN_TOGGLE: 
                 display.displayStation();
                 isEditingSetting = false;
+                StationManager::saveAudioSettings(audioSettings.bass, audioSettings.mid, audioSettings.treble, audioSettings.mono, audioSettings.balance, audioSettings.brightness);
                 return;
 
+            case InputManager::SCREEN_TOGGLE: 
             case InputManager::VOLUME_TOGGLE_MUTE: 
                 isEditingSetting = !isEditingSetting;
                 display.displaySettings(activeSettingIndex, audioSettings.bass, audioSettings.mid, audioSettings.treble, audioSettings.mono, audioSettings.balance, audioSettings.brightness, isEditingSetting);
                 break;
 
+            case InputManager::STATION_PREV:
+            case InputManager::CATEGORY_PREV:
+                dir = -1;
+                break;
+            case InputManager::STATION_NEXT:
+            case InputManager::CATEGORY_NEXT:
+                dir = 1;
+                break;
+
             case InputManager::VOLUME_CHANGED:
                 {
-                    int8_t dir = 0;
                     static uint8_t lastVol = 0;
                     uint8_t currVol = input.getVolume();
                     if (currVol > lastVol) dir = 1;
                     else if (currVol < lastVol) dir = -1;
                     lastVol = currVol;
-
-                    if (dir == 0) return;
-
-                    if (isEditingSetting) {
-                        if (activeSettingIndex == 0) audioSettings.bass = constrain(audioSettings.bass + dir, -40, 6);
-                        else if (activeSettingIndex == 1) audioSettings.mid = constrain(audioSettings.mid + dir, -40, 6);
-                        else if (activeSettingIndex == 2) audioSettings.treble = constrain(audioSettings.treble + dir, -40, 6);
-                        else if (activeSettingIndex == 3) audioSettings.mono = !audioSettings.mono;
-                        else if (activeSettingIndex == 4) audioSettings.balance = constrain(audioSettings.balance + dir, -16, 16);
-                        else if (activeSettingIndex == 5) audioSettings.brightness = constrain(audioSettings.brightness + (dir * 5), 10, 100);
-                        applyAudioSettings();
-                    } else {
-                        activeSettingIndex += dir;
-                        if (activeSettingIndex < 0) activeSettingIndex = 5;
-                        if (activeSettingIndex > 5) activeSettingIndex = 0;
-                    }
-                    display.displaySettings(activeSettingIndex, audioSettings.bass, audioSettings.mid, audioSettings.treble, audioSettings.mono, audioSettings.balance, audioSettings.brightness, isEditingSetting);
                 }
-                break;
-
-            case InputManager::STATION_SAVE:
-                display.displayStation();
-                StationManager::saveCurrentStation();
-                StationManager::saveVolume(audioManager.getVolume());
-                display.displaySaved();
                 break;
 
             default:
                 break;
         }
-        if (action == InputManager::VOLUME_TOGGLE_MUTE || action == InputManager::VOLUME_CHANGED) return;
+
+        if (dir != 0) {
+            if (isEditingSetting) {
+                if (activeSettingIndex == 0) audioSettings.bass = constrain(audioSettings.bass + dir, -40, 6);
+                else if (activeSettingIndex == 1) audioSettings.mid = constrain(audioSettings.mid + dir, -40, 6);
+                else if (activeSettingIndex == 2) audioSettings.treble = constrain(audioSettings.treble + dir, -40, 6);
+                else if (activeSettingIndex == 3) audioSettings.mono = !audioSettings.mono;
+                else if (activeSettingIndex == 4) audioSettings.balance = constrain(audioSettings.balance + dir, -16, 16);
+                else if (activeSettingIndex == 5) audioSettings.brightness = constrain(audioSettings.brightness + (dir * 5), 10, 100);
+                applyAudioSettings();
+            } else {
+                activeSettingIndex += dir;
+                if (activeSettingIndex < 0) activeSettingIndex = 5;
+                if (activeSettingIndex > 5) activeSettingIndex = 0;
+            }
+            display.displaySettings(activeSettingIndex, audioSettings.bass, audioSettings.mid, audioSettings.treble, audioSettings.mono, audioSettings.balance, audioSettings.brightness, isEditingSetting);
+        }
+
+        if (action == InputManager::VOLUME_TOGGLE_MUTE || action == InputManager::VOLUME_CHANGED || 
+            action == InputManager::STATION_NEXT || action == InputManager::STATION_PREV ||
+            action == InputManager::CATEGORY_NEXT || action == InputManager::CATEGORY_PREV ||
+            action == InputManager::SCREEN_TOGGLE) return;
     }
 
     // Normal Radio Mode Handling
@@ -216,6 +227,7 @@ void setup() {
     
     uint8_t savedVolume = VOLUME_DEFAULT;
     StationManager::loadSavedVolume(savedVolume);
+    StationManager::loadAudioSettings(audioSettings.bass, audioSettings.mid, audioSettings.treble, audioSettings.mono, audioSettings.balance, audioSettings.brightness);
 
     network.begin();
     

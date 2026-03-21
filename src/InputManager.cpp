@@ -1,5 +1,13 @@
 #include "InputManager.h"
 
+#ifndef VOLUME_MAX
+#define VOLUME_MAX 100
+#endif
+
+#ifndef VOLUME_DEFAULT
+#define VOLUME_DEFAULT 20
+#endif
+
 #ifdef HAS_ROTARIES
 #define ROTARY_ENCODER_A_PIN 13
 #define ROTARY_ENCODER_B_PIN 17
@@ -10,14 +18,6 @@
 #define ROTARY_ENCODER2_B_PIN 34
 #define ROTARY_ENCODER2_BUTTON_PIN 33
 #define ROTARY_ENCODER2_STEPS 4
-
-#ifndef VOLUME_MAX
-#define VOLUME_MAX 100
-#endif
-
-#ifndef VOLUME_DEFAULT
-#define VOLUME_DEFAULT 20
-#endif
 
 // Static pointer for ISR
 static AiEsp32RotaryEncoder *s_rotaryTuner = nullptr;
@@ -51,6 +51,7 @@ InputManager::InputManager() :
     _irrecv(15), // kRecvPin
 #endif
     _callback(nullptr),
+    _volume(VOLUME_DEFAULT),
     _longPressMillis(1000) {
     
 #ifdef HAS_ROTARIES
@@ -113,7 +114,7 @@ void InputManager::handleRemotePress(int64_t remotecode) {
         case RC_NEXT_CATEGORY: notify(CATEGORY_NEXT); break;
         case RC_PREVIOUS_CATEGORY: notify(CATEGORY_PREV); break;
         case RC_TURN_ON_SCREEN: notify(SCREEN_TOGGLE); break;
-        case RC_SHOW_DETAILS: notify(SHOW_DETAILS); break;
+        case RC_SHOW_DETAILS: notify(SETTINGS_ENTER); break;
         case RC_SAVE_STATION: notify(STATION_SAVE); break;
         case RC_RADIO_OFF1:
         case RC_RADIO_OFF2:
