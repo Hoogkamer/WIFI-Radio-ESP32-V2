@@ -1,0 +1,8 @@
+{
+  "name": "wifi-radio-esp32-v2-web",
+  "version": "1.0.0",
+  "description": "Local development server for WIFI Radio web UI",
+  "scripts": {
+    "start": "npx http-server data -p 8080"
+  }
+}

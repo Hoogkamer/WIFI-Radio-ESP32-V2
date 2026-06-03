@@ -4,6 +4,20 @@ let currentCategory = "";
 let apiUrl = "";
 let hasChanges = false;
 
+const isLocalMode = window.isLocalMode = window.location.hostname === "localhost" || 
+                    window.location.hostname === "127.0.0.1" || 
+                    window.location.hostname === "" || 
+                    window.location.protocol === "file:";
+
+if (isLocalMode) {
+  window.addEventListener("DOMContentLoaded", () => {
+    const banner = document.createElement("div");
+    banner.style.cssText = "background: #f0ad4e; color: white; text-align: center; padding: 8px; font-weight: bold; font-family: sans-serif; position: sticky; top: 0; z-index: 1000; font-size: 0.9rem;";
+    banner.textContent = "Demo / Local Mode: Stations saved to browser storage";
+    document.body.insertBefore(banner, document.body.firstChild);
+  });
+}
+
 // Warn about unsaved changes
 window.onbeforeunload = function() {
   if (hasChanges) return "You have unsaved changes. Are you sure you want to leave?";
@@ -15,6 +29,24 @@ async function getData() {
     categories: ["Pop"]
   };
 
+  if (isLocalMode) {
+    const localData = localStorage.getItem("stations_data");
+    if (localData) {
+      return processData(localData);
+    }
+    try {
+      const response = await fetch("stations_input.txt");
+      if (response.ok) {
+        const text = await response.text();
+        localStorage.setItem("stations_data", text);
+        return processData(text);
+      }
+    } catch (e) {
+      console.warn("Could not load local stations_input.txt, using fallback", e);
+    }
+    return fallbackData;
+  }
+
   try {
     const response = await fetch(apiUrl + "/get-data");
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -25,6 +57,7 @@ async function getData() {
     return fallbackData;
   }
 }
+
 
 function processData(text) {
   const stations = [];
@@ -278,6 +311,13 @@ function getSaveText() {
 function Save() {
   updateDataFromInputs();
   const text = getSaveText();
+  
+  if (isLocalMode) {
+    localStorage.setItem("stations_data", text);
+    hasChanges = false;
+    alert("Saved successfully to browser storage (Local Demo Mode)!");
+    return;
+  }
   
   fetch(apiUrl + "/post", {
     method: "POST",

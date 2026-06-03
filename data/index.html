@@ -1,23 +1,130 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIFI Radio</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WIFI Radio Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="./style.css" />
   </head>
   <body>
     <div class="container">
-      <h2>WIFI Radio</h2>
-      <br>
-      <br>
-        <button class="button-9 widthmax" role="link">
-            <a href="./edit.html">Edit Stations</a>
-        </button>
-        <button class="button-9 widthmax" role="link">
-          <a href="https://www.radio-browser.info/" target="find" >Find Stations</a>
-      </button>
-      </form>
+      <h2>WIFI Radio Control Panel</h2>
+
+      <!-- Navigation Tabs -->
+      <div class="tabs-nav">
+        <button id="tab-stations" class="tab-btn active" onclick="switchTab('stations')">📂 Manage Stations</button>
+        <button id="tab-search" class="tab-btn" onclick="switchTab('search')">🔍 Search & Add</button>
+        <button id="tab-backup" class="tab-btn" onclick="switchTab('backup')">⚙️ System & Backup</button>
+      </div>
+
+      <!-- Tab 1: Stations Management -->
+      <div id="view-stations" class="tab-view">
+        <div class="catdiv">
+          <div class="linetitle">Current Category</div>
+          <select id="categoryDropdown" onchange="selectCategory()"></select>
+
+          <button class="button-9 button-danger widthsmall" onclick="deleteCategory()">
+            Delete
+          </button>
+          <button class="button-9 button-success widthsmall" onclick="addCategory()">
+            Add New
+          </button>
+        </div>
+
+        <div class="linetitle">Stations in this Category</div>
+        <div id="stationsContainer">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+          <button class="button-9" onclick="addStation()">+ Add Station</button>
+          <button class="button-9 button-success right" onclick="Save()">SAVE ALL TO RADIO</button>
+        </div>
+      </div>
+
+      <!-- Tab 2: Search Stations -->
+      <div id="view-search" class="tab-view" style="display: none;">
+        <div class="search-section">
+          <div class="linetitle">Find New Stations (radio-browser.info)</div>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">
+            Search the global radio directory by name, tag, or country. Add found stations directly to your active category.
+          </p>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="searchInput" class="inpname" style="flex: 1" placeholder="e.g. Smooth Jazz, Chill, BBC..." onkeyup="if(event.key==='Enter') searchStations()" />
+            <button class="button-9 widthsmall" onclick="searchStations()">Search</button>
+          </div>
+          <div id="searchResults">
+            <div style="padding: 20px; text-align: center; color: var(--text-muted);">
+              Enter a search query to find online streams.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: System Details & Backup -->
+      <div id="view-backup" class="tab-view" style="display: none;">
+        <div class="linetitle">Backup Operations</div>
+        <div style="display: flex; gap: 12px; margin-bottom: 25px;">
+          <button class="button-9" style="flex: 1;" onclick="exportStations()">Export Config</button>
+          <button class="button-9" style="flex: 1; background: #6b7280;" onclick="importStations()">Import Config</button>
+        </div>
+
+        <!-- Export/Import Dialogs -->
+        <div id="exportdiv">
+          <h3>Export Config</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Copy the text below to backup your stations:</p>
+          <div id="pastetextdiv" style="padding: 14px; max-height: 250px; overflow: auto; white-space: pre-wrap; word-break: break-all;"></div>
+          <button class="button-9 mt-2" onclick="hideExportStations()">Close</button>
+        </div>
+
+        <div id="importdiv">
+          <h3>Import Config</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Paste your backup configurations below (formatted as INI):</p>
+          <textarea id="inputtextdiv" placeholder="[Category]&#10;Name=URL&#10;..."></textarea>
+          <div style="display: flex; gap: 10px;">
+            <button class="button-9 button-success" onclick="processInput()">Process & Update</button>
+            <button class="button-9" onclick="hideExportStations()">Cancel</button>
+          </div>
+        </div>
+
+        <div class="linetitle" style="margin-top: 40px;">System Connection</div>
+        <div style="background: rgba(15, 23, 42, 0.4); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color);">
+          <div id="connection-status" style="display: flex; align-items: center; gap: 10px; font-weight: 500;">
+            <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--success-color);"></span>
+            Active Host Connection
+          </div>
+          <p id="host-details" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 8px; font-family: monospace;">
+            URL: Loading...
+          </p>
+        </div>
+      </div>
     </div>
+
     <script src="./script.js"></script>
+    <script>
+      // Tab switching helper logic
+      function switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-view').forEach(view => view.style.display = 'none');
+        
+        document.getElementById('tab-' + tabId).classList.add('active');
+        document.getElementById('view-' + tabId).style.display = 'block';
+      }
+
+      // Display backend URL details
+      window.addEventListener('DOMContentLoaded', () => {
+        const hostEl = document.getElementById('host-details');
+        const statusDot = document.querySelector('#connection-status span');
+        const statusText = document.getElementById('connection-status');
+        if (window.isLocalMode) {
+          hostEl.textContent = "Mode: Local Offline Dev Mode\nStorage: browser.localStorage";
+          statusDot.style.background = "#f0ad4e";
+          statusText.innerHTML = '<span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #f0ad4e;"></span> Offline Demo Connection';
+        } else {
+          hostEl.textContent = "Mode: ESP32 Connected\nIP: " + (window.location.hostname || "192.168.4.1");
+        }
+      });
+    </script>
   </body>
 </html>

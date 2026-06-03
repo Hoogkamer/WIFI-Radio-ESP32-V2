@@ -50,6 +50,7 @@ private:
     unsigned long _screenOnMillis;
     int _screenTimeoutSec;
 
+    void drawQRCode(const String& url);
     void displayMenuHeader(const String& header);
     void displayCategory();
     void displayStationName();

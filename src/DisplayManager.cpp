@@ -1,4 +1,5 @@
 #include "DisplayManager.h"
+#include <qrcode.h>
 
 #ifndef TFT_ROTATION
 #define TFT_ROTATION 1
@@ -314,6 +315,9 @@ void DisplayManager::displayDetails(const String& ip) {
     _tft.setCursor(LEFT_MARGIN, 100);
     _tft.print("Web config enabled.");
     setScreenOn();
+    if (ip != "" && ip != "0.0.0.0") {
+        drawQRCode("http://" + ip);
+    }
 }
 
 void DisplayManager::displaySettings(int activeIndex, int8_t bass, int8_t mid, int8_t treble, bool mono, int8_t balance, uint8_t brightness, bool isEditing) {
@@ -380,18 +384,24 @@ void DisplayManager::displayWiFiInstructions(const String& apName) {
     _tft.setTextColor(TFT_BLACK);
     _tft.setFreeFont(&Roboto_24);
     _tft.setCursor(LEFT_MARGIN, 60);
-    _tft.print("No WiFi connected!");
+    _tft.print("Connect to AP:");
+    
     _tft.setFreeFont(&Roboto_Thin_24);
-    _tft.setCursor(LEFT_MARGIN, 100);
-    _tft.print("1. Connect your device to:");
-    _tft.setCursor(LEFT_MARGIN, 130);
+    _tft.setCursor(LEFT_MARGIN, 90);
     _tft.setTextColor(TFT_BLUE);
     _tft.print(apName);
+    
     _tft.setTextColor(TFT_BLACK);
-    _tft.setCursor(LEFT_MARGIN, 170);
-    _tft.print("2. Go to 192.168.4.1");
-    _tft.setCursor(LEFT_MARGIN, 200);
-    _tft.print("3. Enter your WiFi credentials");
+    _tft.setCursor(LEFT_MARGIN, 125);
+    _tft.print("Scan QR code");
+    _tft.setCursor(LEFT_MARGIN, 155);
+    _tft.print("or open link:");
+    
+    _tft.setTextColor(TFT_BLUE);
+    _tft.setCursor(LEFT_MARGIN, 190);
+    _tft.print("192.168.4.1");
+    
+    drawQRCode("http://192.168.4.1");
 }
 
 void DisplayManager::printError(const char *error) {
@@ -441,3 +451,32 @@ std::vector<std::string> DisplayManager::splitString(const std::string &str, con
     tokens.push_back(str.substr(start));
     return tokens;
 }
+
+void DisplayManager::drawQRCode(const String& url) {
+    QRCode qrcode;
+    uint8_t qrcodeData[qrcode_getBufferSize(4)];
+    qrcode_initText(&qrcode, qrcodeData, 4, ECC_LOW, url.c_str());
+    
+    int scale = 4;
+    int qrSize = qrcode.size * scale;
+    
+    int x, y;
+    if (_screenLandscape) {
+        x = 175;
+        y = 50;
+    } else {
+        x = (_screenWidth - qrSize) / 2;
+        y = 170;
+    }
+    
+    _tft.fillRect(x - scale, y - scale, qrSize + 2 * scale, qrSize + 2 * scale, TFT_WHITE);
+    
+    for (uint8_t y_qr = 0; y_qr < qrcode.size; y_qr++) {
+        for (uint8_t x_qr = 0; x_qr < qrcode.size; x_qr++) {
+            if (qrcode_getModule(&qrcode, x_qr, y_qr)) {
+                _tft.fillRect(x + x_qr * scale, y + y_qr * scale, scale, scale, TFT_BLACK);
+            }
+        }
+    }
+}
+
