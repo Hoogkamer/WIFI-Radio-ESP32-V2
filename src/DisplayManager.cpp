@@ -310,10 +310,19 @@ void DisplayManager::displayDetails(const String& ip) {
     displayMenuHeader("System Details");
     _tft.setTextColor(TFT_BLACK);
     _tft.setFreeFont(&Roboto_Thin_24);
-    _tft.setCursor(LEFT_MARGIN, 60);
-    _tft.print("IP: " + ip);
-    _tft.setCursor(LEFT_MARGIN, 100);
-    _tft.print("Web config enabled.");
+    
+    if (_screenLandscape) {
+        _tft.setCursor(LEFT_MARGIN, 90);
+        _tft.print("Web config enabled.");
+        _tft.setCursor(LEFT_MARGIN, 215);
+        _tft.print("IP: " + ip);
+    } else {
+        _tft.setCursor(LEFT_MARGIN, 80);
+        _tft.print("Web config enabled.");
+        _tft.setCursor(LEFT_MARGIN, 295);
+        _tft.print("IP: " + ip);
+    }
+    
     setScreenOn();
     if (ip != "" && ip != "0.0.0.0") {
         drawQRCode("http://" + ip);
@@ -328,21 +337,22 @@ void DisplayManager::displaySettings(int activeIndex, int8_t bass, int8_t mid, i
     
     if (initialEntry) {
         _tft.fillScreen(TFT_WHITE);
-        displayMenuHeader("Audio Settings");
+        displayMenuHeader("Settings");
         _lastActiveIndex = -1; 
     }
     
-    const int MARGIN_TOP = 40;
-    const int LINE_HEIGHT = 30; // Slightly smaller to fit 6
-    const char* labels[] = {"Bass", "Mid", "Treble", "Mode", "Bal", "Light"};
-    String values[6] = {
+    const int MARGIN_TOP = 35;
+    const int LINE_HEIGHT = 27; 
+    const char* labels[] = {"Bass", "Mid", "Treble", "Mode", "Bal", "Light", "Web UI"};
+    String values[7] = {
         String(bass), String(mid), String(treble), 
-        mono ? "Mono" : "Stereo", String(balance), String(brightness)
+        mono ? "Mono" : "Stereo", String(balance), String(brightness),
+        "Show QR"
     };
     
     _tft.setFreeFont(&Roboto_24);
     
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 7; i++) {
         bool needsRedraw = (i == activeIndex) || (i == _lastActiveIndex) || initialEntry;
         if (i == 0 && bass != _lastBass) needsRedraw = true;
         if (i == 1 && mid != _lastMid) needsRedraw = true;
@@ -364,9 +374,9 @@ void DisplayManager::displaySettings(int activeIndex, int8_t bass, int8_t mid, i
             
             _tft.fillRect(0, y, _screenWidth, LINE_HEIGHT - 2, bgColor);
             _tft.setTextColor(textColor);
-            _tft.setCursor(LEFT_MARGIN, y + 22);
+            _tft.setCursor(LEFT_MARGIN, y + 20);
             _tft.print(labels[i]);
-            _tft.setCursor(_screenWidth - 80, y + 22);
+            _tft.setCursor(_screenWidth - 95, y + 20);
             _tft.print(values[i]);
         }
     }
@@ -466,7 +476,7 @@ void DisplayManager::drawQRCode(const String& url) {
         y = 50;
     } else {
         x = (_screenWidth - qrSize) / 2;
-        y = 170;
+        y = 120;
     }
     
     _tft.fillRect(x - scale, y - scale, qrSize + 2 * scale, qrSize + 2 * scale, TFT_WHITE);

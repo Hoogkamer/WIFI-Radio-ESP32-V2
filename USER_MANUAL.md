@@ -1,6 +1,6 @@
 # WIFI Radio ESP32 - User Manual
 
-Welcome to your new WIFI Radio! This guide will help you set up and operate your device.
+Welcome to your WIFI Radio! This guide will help you set up and operate your device.
 
 ---
 
@@ -10,13 +10,12 @@ Welcome to your new WIFI Radio! This guide will help you set up and operate your
 Plug the device into a 5V USB power source. The screen will display **"Starting..."** followed by the main radio interface.
 
 ### First-Time WiFi Setup
-If the radio cannot find a known WiFi network, it will enter "Setup Mode":
-1.  The radio screen will show clear **WiFi Config** instructions.
-2.  On your phone or computer, look for a WiFi network named **"WIFI_RADIO"**.
-3.  Connect to it (no password required).
-4.  A window should pop up automatically. If not, open your browser and go to `192.168.4.1`.
-5.  Select your home WiFi network, enter your password, and click **Save**.
-6.  The radio will restart and connect to your network.
+If the radio cannot find a known WiFi network, it will enter "WiFi Setup Mode":
+1.  The radio screen will show **WiFi Config** instructions and a **QR Code**.
+2.  On your phone or tablet, scan the **QR Code** on the radio screen OR connect to the WiFi network named **"WIFI_RADIO"** (no password required).
+3.  If you scanned the QR code or your browser opened, you will see the configuration portal. Otherwise, open a browser and go to `http://192.168.4.1`.
+4.  Select your home WiFi network, enter your password, and click **Save**.
+5.  The radio will restart and connect to your home WiFi.
 
 ---
 
@@ -47,7 +46,7 @@ If you want the radio to always start with a specific station:
 
 If your device is equipped with an Infrared (IR) receiver, you can also use a remote control (standard Apple-style remote mapping).
 
-*   **Menu**: Enter or Exit the **Audio Settings Menu**.
+*   **Menu**: Enter or Exit the **Settings Menu**.
 *   **Center Button**: Toggle Screen / Edit Setting.
 *   **Up / Down / Left / Right**: 
     - *Radio Mode*: Change Station or Category.
@@ -57,15 +56,15 @@ If your device is equipped with an Infrared (IR) receiver, you can also use a re
 
 ---
 
-## 4. Audio Settings (The Pro Menu)
+## 4. Settings Menu
 
-To fine-tune your sound, you can access the **Audio Settings Menu**.
+To adjust settings, you can access the **Settings Menu**.
 
 1.  **Enter Menu**: **Press and hold** the **Volume Knob** for 1 second.
 2.  **Navigate**: Rotate the **Volume Knob** to move the **Blue Cursor** up and down.
-3.  **Select**: Briefly press the **Volume Knob** on a setting. The cursor turns **Orange** (Edit Mode).
+3.  **Select/Edit**: Briefly press the **Volume Knob** on a setting. The cursor turns **Orange** (Edit Mode).
 4.  **Adjust**: Rotate the knob to change the value (e.g., increase Bass).
-5.  **Confirm**: Briefly press the knob again to apply the change and return to the list.
+5.  **Confirm**: Briefly press the knob again to apply changes and return to the list.
 6.  **Exit**: Press and hold the **Volume Knob** again to return to the radio. **All settings are automatically saved when you exit this menu.**
 
 **Available Settings:**
@@ -73,27 +72,39 @@ To fine-tune your sound, you can access the **Audio Settings Menu**.
 *   **Mode**: Switch between Stereo and Mono.
 *   **Bal**: Adjust Balance between Left and Right speakers.
 *   **Light**: Adjust the screen brightness.
+*   **Web UI**: Displays a **"Show QR"** label. Select this option (short click) to clear the screen and show the **System Details** page, featuring the radio's IP address and a **QR Code** to easily open the web portal on your phone. Press any button to return to the settings list.
 
 ---
 
-## 4. Web Configuration (Advanced)
+## 5. Web Configuration (Advanced)
 
 You can manage your station list using any web browser on the same WiFi.
 
-1.  **Find your IP**: The IP address is displayed at the bottom of the radio screen (e.g., `192.168.1.50`).
-2.  **Open Dashboard**: Type that IP address into your browser.
-3.  **Edit Stations**: 
-    - **Find New Stations**: Use the search bar to find thousands of stations from `radio-browser.info`.
-    - **Test Stream**: Click the **▶ (Play)** button next to a URL to test it in your browser before saving.
-    - **Reorder**: Use the **↑ (Up)** and **↓ (Down)** buttons to arrange stations exactly how you want them.
-    - **Manage Categories**: Add or delete entire categories of music.
-4.  **Save**: Click **SAVE ALL** at the top right. The radio will restart with your new list.
+1.  **Open Portal**: Select the **Web UI** option under **Settings** on the radio screen to display the **QR Code**, and scan it with your phone, OR type the radio's IP address (shown at the bottom of the details page or main screen) into your browser.
+2.  **Edit Stations**: 
+    - **Find & Add Stations**: Search thousands of online streams from `radio-browser.info` directly from the search tab and click "Add". 
+    **Go back to "Manage Stations" to save changes to the device**
+    - **Reorder**: Use the **↑ (Up)** and **↓ (Down)** buttons to arrange stations.
+    - **Manage Categories**: Add or delete categories of music.
+3.  **Backup**: Use **Export Config** to copy your station list to a text file. Use **Import Config** to paste it back.
+4.  **Save**: Click **SAVE ALL TO RADIO**. The radio will restart with your new list.
 
-*Tip: Use HTTP links for streams. HTTPS links may sometimes cause audio stuttering on older ESP32 chips.*
+> [!WARNING]
+> **Rebuilding / uploading the filesystem** (`uploadfs` target in PlatformIO) will overwrite `/stations.txt` on the ESP32. Export your station backup first and import it back after uploading the filesystem!
 
 ---
 
-## 5. Troubleshooting
+## 6. Local Development & Testing
+
+You can develop, test, and run the website completely offline on your computer:
+1.  Navigate to the project root directory.
+2.  Run `npm start` (requires Node/NPM) or `npx http-server data -p 8080`.
+3.  Open `http://localhost:8080` in your browser.
+4.  The page will load in **Demo Mode**. Any changes you make will be saved in your browser's local storage for easy visual testing!
+
+---
+
+## 7. Troubleshooting
 
 *   **No Sound**: Check if the Volume is up and the device is not Muted.
 *   **Stuttering Audio**: This is usually caused by a weak WiFi signal. Try moving the radio closer to your router or using an external antenna.

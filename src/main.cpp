@@ -32,6 +32,7 @@ struct AudioSettings {
 
 int activeSettingIndex = 0; 
 bool isEditingSetting = false; 
+bool showingDetailsInSettings = false;
 
 void applyAudioSettings() {
     audioManager.setTone(audioSettings.bass, audioSettings.mid, audioSettings.treble);
@@ -45,7 +46,21 @@ void handleAction(InputManager::Action action) {
     if (!isRadioOn && action != InputManager::SCREEN_ON) return;
 
     // Handle Settings Mode
-    if (display.isSettingsMode()) {
+    if (display.isSettingsMode() || showingDetailsInSettings) {
+        if (action == InputManager::SETTINGS_ENTER) {
+            showingDetailsInSettings = false;
+            display.displayStation();
+            isEditingSetting = false;
+            StationManager::saveAudioSettings(audioSettings.bass, audioSettings.mid, audioSettings.treble, audioSettings.mono, audioSettings.balance, audioSettings.brightness);
+            return;
+        }
+
+        if (showingDetailsInSettings) {
+            showingDetailsInSettings = false;
+            display.displaySettings(activeSettingIndex, audioSettings.bass, audioSettings.mid, audioSettings.treble, audioSettings.mono, audioSettings.balance, audioSettings.brightness, false);
+            return;
+        }
+
         int8_t dir = 0;
         switch(action) {
             case InputManager::SETTINGS_ENTER: 
@@ -56,8 +71,13 @@ void handleAction(InputManager::Action action) {
 
             case InputManager::SCREEN_TOGGLE: 
             case InputManager::VOLUME_TOGGLE_MUTE: 
-                isEditingSetting = !isEditingSetting;
-                display.displaySettings(activeSettingIndex, audioSettings.bass, audioSettings.mid, audioSettings.treble, audioSettings.mono, audioSettings.balance, audioSettings.brightness, isEditingSetting);
+                if (activeSettingIndex == 6) {
+                    showingDetailsInSettings = true;
+                    display.displayDetails(network.getIP());
+                } else {
+                    isEditingSetting = !isEditingSetting;
+                    display.displaySettings(activeSettingIndex, audioSettings.bass, audioSettings.mid, audioSettings.treble, audioSettings.mono, audioSettings.balance, audioSettings.brightness, isEditingSetting);
+                }
                 break;
 
             case InputManager::STATION_PREV:
@@ -94,8 +114,8 @@ void handleAction(InputManager::Action action) {
                 applyAudioSettings();
             } else {
                 activeSettingIndex += dir;
-                if (activeSettingIndex < 0) activeSettingIndex = 5;
-                if (activeSettingIndex > 5) activeSettingIndex = 0;
+                if (activeSettingIndex < 0) activeSettingIndex = 6;
+                if (activeSettingIndex > 6) activeSettingIndex = 0;
             }
             display.displaySettings(activeSettingIndex, audioSettings.bass, audioSettings.mid, audioSettings.treble, audioSettings.mono, audioSettings.balance, audioSettings.brightness, isEditingSetting);
         }
