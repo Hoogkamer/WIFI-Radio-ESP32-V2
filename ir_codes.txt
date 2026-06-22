@@ -1,0 +1,118 @@
+=== WIFI Radio Remote Programmer ===
+Open this file in VS Code to see instructions and progress in real-time.
+
+Connecting to ESP32 on /dev/ttyUSB0 at 115200...
+Connected! Flushing buffer...
+
+[1/12] >>> Please press remote button for: Power / Radio ON / Screen ON <<<
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=66759 (0x104C7), Stripped (No Toggle Bit)=1223 (0x4C7), Protocol=RC6 (20 bits)
+Captured: 1223 (0x4C7) [Bits: 20]
+
+[2/12] >>> Please press remote button for: Standby / Radio OFF <<<
+--> Pressed button: Code=1223 (0x4C7), Stripped (No Toggle Bit)=1223 (0x4C7), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=66759 (0x104C7), Stripped (No Toggle Bit)=1223 (0x4C7), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=1223 (0x4C7), Stripped (No Toggle Bit)=1223 (0x4C7), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=66759 (0x104C7), Stripped (No Toggle Bit)=1223 (0x4C7), Protocol=RC6 (20 bits)
+--> Pressed button: Code=1223 (0x4C7), Stripped (No Toggle Bit)=1223 (0x4C7), Protocol=RC6 (20 bits)
+--> Pressed button: Code=66759 (0x104C7), Stripped (No Toggle Bit)=1223 (0x4C7), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=1223 (0x4C7), Stripped (No Toggle Bit)=1223 (0x4C7), Protocol=RC6 (20 bits)
+--> Pressed button: Code=66759 (0x104C7), Stripped (No Toggle Bit)=1223 (0x4C7), Protocol=RC6 (20 bits)
+--> Pressed button: Code=1223 (0x4C7), Stripped (No Toggle Bit)=1223 (0x4C7), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=66759 (0x104C7), Stripped (No Toggle Bit)=1223 (0x4C7), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+Captured: 1223 (0x4C7) [Bits: 20]
+
+[3/12] >>> Please press remote button for: Previous Station / Left <<<
+--> Pressed button: Code=1223 (0x4C7), Stripped (No Toggle Bit)=1223 (0x4C7), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=66650 (0x1045A), Stripped (No Toggle Bit)=1114 (0x45A), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=1114 (0x45A), Stripped (No Toggle Bit)=1114 (0x45A), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=66650 (0x1045A), Stripped (No Toggle Bit)=1114 (0x45A), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=1114 (0x45A), Stripped (No Toggle Bit)=1114 (0x45A), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=66650 (0x1045A), Stripped (No Toggle Bit)=1114 (0x45A), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=1114 (0x45A), Stripped (No Toggle Bit)=1114 (0x45A), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=66650 (0x1045A), Stripped (No Toggle Bit)=1114 (0x45A), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=1114 (0x45A), Stripped (No Toggle Bit)=1114 (0x45A), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=66650 (0x1045A), Stripped (No Toggle Bit)=1114 (0x45A), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=1114 (0x45A), Stripped (No Toggle Bit)=1114 (0x45A), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (2 bits)
+--> Pressed button: Code=66650 (0x1045A), Stripped (No Toggle Bit)=1114 (0x45A), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=1114 (0x45A), Stripped (No Toggle Bit)=1114 (0x45A), Protocol=RC6 (20 bits)
+--> Pressed button: Code=66650 (0x1045A), Stripped (No Toggle Bit)=1114 (0x45A), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=1114 (0x45A), Stripped (No Toggle Bit)=1114 (0x45A), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+Captured: 66650 (0x1045A) [Bits: 20]
+
+[4/12] >>> Please press remote button for: Next Station / Right <<<
+--> Pressed button: Code=66650 (0x1045A), Stripped (No Toggle Bit)=1114 (0x45A), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=1115 (0x45B), Stripped (No Toggle Bit)=1115 (0x45B), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (2 bits)
+--> Pressed button: Code=66651 (0x1045B), Stripped (No Toggle Bit)=1115 (0x45B), Protocol=RC6 (20 bits)
+Captured: 66651 (0x1045B) [Bits: 20]
+
+[5/12] >>> Please press remote button for: Next Category / Up <<<
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=1112 (0x458), Stripped (No Toggle Bit)=1112 (0x458), Protocol=RC6 (20 bits)
+Captured: 66648 (0x10458) [Bits: 20]
+
+[6/12] >>> Please press remote button for: Previous Category / Down <<<
+--> Pressed button: Code=66648 (0x10458), Stripped (No Toggle Bit)=1112 (0x458), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+Captured: 1113 (0x459) [Bits: 20]
+
+[7/12] >>> Please press remote button for: Toggle Screen Mode / Center Button <<<
+--> Pressed button: Code=1113 (0x459), Stripped (No Toggle Bit)=1113 (0x459), Protocol=RC6 (20 bits)
+--> Pressed button: Code=66649 (0x10459), Stripped (No Toggle Bit)=1113 (0x459), Protocol=RC6 (20 bits)
+--> Pressed button: Code=1116 (0x45C), Stripped (No Toggle Bit)=1116 (0x45C), Protocol=RC6 (20 bits)
+--> Pressed button: Code=66652 (0x1045C), Stripped (No Toggle Bit)=1116 (0x45C), Protocol=RC6 (20 bits)
+Captured: 66652 (0x1045C) [Bits: 20]
+
+[8/12] >>> Please press remote button for: Show Details / Settings / Menu <<<
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (2 bits)
+--> Pressed button: Code=1233 (0x4D1), Stripped (No Toggle Bit)=1233 (0x4D1), Protocol=RC6 (20 bits)
+Captured: 66769 (0x104D1) [Bits: 20]
+
+[9/12] >>> Please press remote button for: Save Station / Hold Play/Pause <<<
+--> Pressed button: Code=66769 (0x104D1), Stripped (No Toggle Bit)=1233 (0x4D1), Protocol=RC6 (20 bits)
+Captured: 1154 (0x482) [Bits: 20]
+
+[10/12] >>> Please press remote button for: Mute Toggle / Play/Pause <<<
+--> Pressed button: Code=1154 (0x482), Stripped (No Toggle Bit)=1154 (0x482), Protocol=RC6 (20 bits)
+--> Pressed button: Code=66573 (0x1040D), Stripped (No Toggle Bit)=1037 (0x40D), Protocol=RC6 (20 bits)
+Captured: 1037 (0x40D) [Bits: 20]
+
+[11/12] >>> Please press remote button for: Mute Toggle 2 (Press same or other key) <<<
+--> Pressed button: Code=1037 (0x40D), Stripped (No Toggle Bit)=1037 (0x40D), Protocol=RC6 (20 bits)
+--> Pressed button: Code=66573 (0x1040D), Stripped (No Toggle Bit)=1037 (0x40D), Protocol=RC6 (20 bits)
+--> Pressed button: Code=1037 (0x40D), Stripped (No Toggle Bit)=1037 (0x40D), Protocol=RC6 (20 bits)
+--> Pressed button: Code=66573 (0x1040D), Stripped (No Toggle Bit)=1037 (0x40D), Protocol=RC6 (20 bits)
+Captured: 1037 (0x40D) [Bits: 20]
+
+[12/12] >>> Please press remote button for: Mute Toggle 3 (Press same or other key) <<<
+--> Pressed button: Code=1037 (0x40D), Stripped (No Toggle Bit)=1037 (0x40D), Protocol=RC6 (20 bits)
+--> Pressed button: Code=0 (0x0), Protocol=RC6 (1 bits)
+--> Pressed button: Code=66573 (0x1040D), Stripped (No Toggle Bit)=1037 (0x40D), Protocol=RC6 (20 bits)
+--> Pressed button: Code=1037 (0x40D), Stripped (No Toggle Bit)=1037 (0x40D), Protocol=RC6 (20 bits)
+Captured: 66573 (0x1040D) [Bits: 20]
+
+Generating src/cassetteradio.h...
+Successfully wrote remote codes to /home/michael/develop/WIFI-Radio-ESP32-V2/src/cassetteradio.h!
+--> Pressed button: Code=66573 (0x1040D), Stripped (No Toggle Bit)=1037 (0x40D), Protocol=RC6 (20 bits)
