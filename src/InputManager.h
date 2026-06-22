@@ -24,7 +24,8 @@ public:
         SHOW_DETAILS,
         SETTINGS_ENTER,
         SETTINGS_EXIT,
-        RADIO_OFF
+        RADIO_OFF,
+        POWER_TOGGLE
     };
 
     typedef void (*ActionCallback)(Action action);

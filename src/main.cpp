@@ -43,7 +43,7 @@ void applyAudioSettings() {
 
 // Action handler
 void handleAction(InputManager::Action action) {
-    if (!isRadioOn && action != InputManager::SCREEN_ON) return;
+    if (!isRadioOn && action != InputManager::SCREEN_ON && action != InputManager::POWER_TOGGLE) return;
 
     // Handle Settings Mode
     if (display.isSettingsMode() || showingDetailsInSettings) {
@@ -217,6 +217,22 @@ void handleAction(InputManager::Action action) {
             break;
 
         case InputManager::RADIO_OFF:
+            isRadioOn = false;
+            display.setScreenOff();
+            shouldPlay = false;
+            audioManager.stop();
+            break;
+
+        case InputManager::POWER_TOGGLE:
+            isRadioOn = !isRadioOn;
+            if (isRadioOn) {
+                display.setScreenOn();
+                shouldPlay = true;
+            } else {
+                display.setScreenOff();
+                shouldPlay = false;
+                audioManager.stop();
+            }
             break;
             
         default:

@@ -93,8 +93,19 @@ void InputManager::update() {
 #ifdef HAS_REMOTE
     decode_results results;
     if (_irrecv.decode(&results)) {
-        Serial.printf("IR Code received: %llu (0x%llX)\n", (unsigned long long)results.value, (unsigned long long)results.value);
-        handleRemotePress(results.value);
+        Serial.printf("IR Code received: %llu (0x%llX), Protocol: %s, Bits: %d\n", 
+                      (unsigned long long)results.value, 
+                      (unsigned long long)results.value, 
+                      typeToString(results.decode_type).c_str(), 
+                      results.bits);
+                      
+        int64_t code = results.value;
+        // Strip toggle bit (bit 16 / 0x10000) for RC5/RC6
+        if (results.decode_type == decode_type_t::RC5 || results.decode_type == decode_type_t::RC6) {
+            code &= ~0x10000;
+        }
+        
+        handleRemotePress(code);
         _irrecv.resume();
     }
 #endif
@@ -114,8 +125,12 @@ void InputManager::notify(Action action) {
 #ifdef HAS_REMOTE
 void InputManager::handleRemotePress(int64_t remotecode) {
     switch(remotecode) {
+#ifdef REMOTE_CASSETTE
+        case RC_POWER: notify(POWER_TOGGLE); break;
+#else
         case RC_RADIO_ON: notify(SCREEN_ON); break;
         case RC_STANDBY: notify(RADIO_OFF); break;
+#endif
         case RC_PREVIOUS_STATION: notify(STATION_PREV); break;
         case RC_NEXT_STATION: notify(STATION_NEXT); break;
         case RC_NEXT_CATEGORY: notify(CATEGORY_NEXT); break;
