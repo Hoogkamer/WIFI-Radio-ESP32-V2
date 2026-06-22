@@ -76,6 +76,7 @@ Total cost remains under 30 EURO.
     - Build and Upload the **LittleFS** filesystem image via PlatformIO (contains the web dashboard).
 5.  **Build**:
     - `pio run -e ipod -t upload` (for IR version)
+    - `pio run -e cassette -t upload` (same as ipod, but with landscape screen)
     - `pio run -e portable -t upload` (for Rotary version)
 
 ## Web Dashboard

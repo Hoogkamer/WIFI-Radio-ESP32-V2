@@ -1,7 +1,13 @@
 #pragma once
 
 #ifdef HAS_REMOTE
+#if defined(REMOTE_CASSETTE)
+#include "cassetteradio.h"
+#elif defined(REMOTE_IPOD)
 #include "ipodradio.h"
+#else
+#include "ipodradio.h"
+#endif
 #endif
 #ifdef HAS_ROTARIES
 #include "portableradio.h"

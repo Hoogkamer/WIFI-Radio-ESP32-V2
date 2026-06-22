@@ -30,7 +30,13 @@ void IRAM_ATTR InputManager::readEncoderISR() {
 #endif
 
 #ifdef HAS_REMOTE
+#if defined(REMOTE_CASSETTE)
+#include "cassetteradio.h"
+#elif defined(REMOTE_IPOD)
 #include "ipodradio.h"
+#else
+#include "ipodradio.h"
+#endif
 #endif
 
 InputManager::InputManager() : 
@@ -87,6 +93,7 @@ void InputManager::update() {
 #ifdef HAS_REMOTE
     decode_results results;
     if (_irrecv.decode(&results)) {
+        Serial.printf("IR Code received: %llu (0x%llX)\n", (unsigned long long)results.value, (unsigned long long)results.value);
         handleRemotePress(results.value);
         _irrecv.resume();
     }
