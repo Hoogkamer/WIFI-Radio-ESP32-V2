@@ -8,12 +8,49 @@ NetworkManager::NetworkManager() : _server(80) {
 
 void NetworkManager::begin() {
     _wifiManager.setAPCallback(warnNotConnected);
-    if (!_wifiManager.autoConnect("WIFI_RADIO")) {
-        log_w("Failed to connect to WiFi");
-        display.printError("Connection Failed");
-    } else {
-        log_i("WiFi Connected. IP: %s", getIP().c_str());
+    _wifiManager.setConfigPortalTimeout(120); // 2 minutes config portal timeout
+
+    // Try direct connection with stored credentials first.
+    // This bypasses WiFiManager's internal credential check (esp_wifi_get_config)
+    // which can fail on alternating boots due to NVS WiFi mode state issues.
+    WiFi.mode(WIFI_STA);
+    WiFi.setAutoReconnect(true);
+    delay(500);
+
+    log_i("Attempting direct WiFi connection with stored credentials...");
+    display.printError("Connecting...");
+    WiFi.begin(); // uses NVS-stored SSID/password
+
+    unsigned long start = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - start < 15000) {
+        wl_status_t s = WiFi.status();
+        // Exit early on terminal failures (no stored creds, wrong password, etc.)
+        if (s == WL_NO_SSID_AVAIL || s == WL_CONNECT_FAILED) {
+            log_w("WiFi.begin() failed immediately (status=%d)", s);
+            break;
+        }
+        delay(250);
     }
+
+    if (WiFi.status() == WL_CONNECTED) {
+        log_i("WiFi Connected directly. IP: %s", getIP().c_str());
+        startWebServer();
+        return;
+    }
+
+    // Direct connection failed — fall back to WiFiManager config portal
+    log_w("Direct WiFi connection failed (status=%d), starting config portal...", WiFi.status());
+    WiFi.disconnect(true);
+    delay(500);
+
+    if (!_wifiManager.autoConnect("WIFI_RADIO")) {
+        log_w("Config portal timed out, restarting...");
+        display.printError("Restarting...");
+        delay(3000);
+        ESP.restart();
+    }
+
+    log_i("WiFi Connected via portal. IP: %s", getIP().c_str());
     startWebServer();
 }
 
