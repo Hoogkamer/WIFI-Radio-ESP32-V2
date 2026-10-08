@@ -158,6 +158,46 @@ select:focus {
   min-width: 250px;
 }
 
+.inpurl.warning {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 1px #f59e0b;
+}
+
+.url-warning-msg {
+  width: 100%;
+  font-size: 0.82rem;
+  color: #fbbf24;
+  margin-top: -4px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  margin-left: 6px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.badge-ok {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.badge-warn {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
 .inpname:focus, .inpurl:focus {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);

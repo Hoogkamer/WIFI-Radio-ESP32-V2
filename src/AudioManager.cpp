@@ -26,6 +26,16 @@ void AudioManager::begin(int bclk, int lrc, int dout) {
 }
 
 void AudioManager::connectToHost(const char* url) {
+    if (!url || strlen(url) == 0) {
+        log_w("Empty URL provided, skipping connect");
+        return;
+    }
+    String u = url;
+    u.toLowerCase();
+    if (u.indexOf(".aac") >= 0 || u.indexOf("-aac") >= 0 || u.indexOf("/aac") >= 0 || u.indexOf("codec=aac") >= 0 || u.indexOf(".flac") >= 0) {
+        log_e("Refusing to connect to unsupported stream '%s' (no PSRAM, prevents crash)", url);
+        return;
+    }
     log_i("Connecting to host: %s", url);
     _audio.connecttohost(url);
 }

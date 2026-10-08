@@ -260,6 +260,11 @@ void setup() {
     
     StationManager::loadStations();
     StationManager::loadSavedStation();
+    if (radStat::activeRadioStation.URL.empty() && radStat::nrOfStations > 0) {
+        log_i("No saved station, defaulting to first station: %s", radStat::radioStations[0].Name.c_str());
+        radStat::setActiveRadioStation(0);
+        StationManager::saveCurrentStation();
+    }
     
     uint8_t savedVolume = VOLUME_DEFAULT;
     StationManager::loadSavedVolume(savedVolume);
@@ -289,8 +294,12 @@ void loop() {
     network.update();
     
     if (shouldPlay) {
-        if (!audioManager.isRunning()) {
-            audioManager.connectToStation(radStat::activeRadioStation);
+        static unsigned long lastConnectAttempt = 0;
+        if (!audioManager.isRunning() && !radStat::activeRadioStation.URL.empty()) {
+            if (millis() - lastConnectAttempt > 5000) {
+                lastConnectAttempt = millis();
+                audioManager.connectToStation(radStat::activeRadioStation);
+            }
         }
         audioManager.loop();
     }

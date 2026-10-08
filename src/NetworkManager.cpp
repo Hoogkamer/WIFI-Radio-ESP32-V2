@@ -64,10 +64,6 @@ void NetworkManager::warnNotConnected(WiFiManager *myWiFiManager) {
 }
 
 void NetworkManager::startWebServer() {
-    _server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(LittleFS, "/index.html", "text/html");
-    });
-    
     _server.on("/get-data", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(LittleFS, "/stations.txt", "text/plain");
     });
@@ -90,7 +86,10 @@ void NetworkManager::startWebServer() {
         }
     );
 
-    _server.serveStatic("/", LittleFS, "/");
+    _server.serveStatic("/", LittleFS, "/")
+        .setDefaultFile("index.html")
+        .setTryGzipFirst(true)
+        .setCacheControl("max-age=600");
 
 #ifdef CORS_DEBUG
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");

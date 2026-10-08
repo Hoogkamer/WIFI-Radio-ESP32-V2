@@ -84,6 +84,41 @@ function processData(text) {
   return { stations, categories };
 }
 
+function checkUrlWarning(url) {
+  if (!url) return null;
+  const lower = url.toLowerCase().trim();
+  if (lower.includes(".aac") || lower.includes("-aac") || lower.includes("/aac") || lower.includes("codec=aac") || lower.includes(".m4a")) {
+    return "AAC stream: ESP32 lacks PSRAM. AAC causes out-of-memory resets! Use MP3 instead.";
+  }
+  if (lower.includes(".flac")) {
+    return "FLAC stream: Requires PSRAM. Will crash/reset this ESP32.";
+  }
+  return null;
+}
+
+function onUrlInput(input) {
+  const url = input.value.trim();
+  const warn = checkUrlWarning(url);
+  const parent = input.closest(".stationDiv");
+  let warnElem = parent.querySelector(".url-warning-msg");
+  
+  if (warn) {
+    input.classList.add("warning");
+    if (!warnElem) {
+      warnElem = document.createElement("div");
+      warnElem.className = "url-warning-msg";
+      parent.appendChild(warnElem);
+    }
+    warnElem.innerHTML = `⚠️ ${warn}`;
+  } else {
+    input.classList.remove("warning");
+    if (warnElem) {
+      warnElem.remove();
+    }
+  }
+  markChanged();
+}
+
 function renderStationFields() {
   const container = document.getElementById("stationsContainer");
   container.innerHTML = "";
@@ -100,9 +135,13 @@ function renderStationFields() {
     div.className = "stationDiv";
     div.dataset.id = station[3];
 
+    const warn = checkUrlWarning(station[1]);
+    const warnClass = warn ? " warning" : "";
+    const warnHtml = warn ? `<div class="url-warning-msg">⚠️ ${warn}</div>` : "";
+
     // Inputs
     const nameInp = `<input type="text" class="inpname" value="${station[0]}" placeholder="Name" onchange="markChanged()">`;
-    const urlInp = `<input type="text" class="inpurl" value="${station[1]}" placeholder="URL" onchange="markChanged()">`;
+    const urlInp = `<input type="text" class="inpurl${warnClass}" value="${station[1]}" placeholder="URL" oninput="onUrlInput(this)" onchange="markChanged()">`;
     
     // Controls (Using SVGs for cross-browser compatibility)
     const upBtn = `<button class="button-9 btn-icon" onclick="moveStation(${station[3]}, -1)" title="Move Up">
@@ -130,6 +169,7 @@ function renderStationFields() {
         ${downBtn}
         ${delBtn}
       </div>
+      ${warnHtml}
     `;
     container.appendChild(div);
   });
@@ -269,10 +309,14 @@ async function searchStations() {
     results.forEach(s => {
       const item = document.createElement("div");
       item.className = "search-item";
+      const isAac = (s.codec && s.codec.toUpperCase().includes("AAC")) || checkUrlWarning(s.url_resolved);
+      const codecBadge = s.codec ? `<span class="badge ${isAac ? 'badge-warn' : 'badge-ok'}">${s.codec}</span>` : '';
+      const warnText = isAac ? `<small style="color: #fbbf24; display: block;">⚠️ AAC stream (ESP32 has no PSRAM - may crash radio)</small>` : '';
       item.innerHTML = `
         <div style="flex: 1; margin-right: 10px; overflow: hidden;">
-          <strong style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">${s.name}</strong>
+          <strong style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">${s.name} ${codecBadge}</strong>
           <small style="color: #666; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.country || ''} ${s.tags ? '• ' + s.tags : ''}</small>
+          ${warnText}
         </div>
         <button class="button-9 widthsmall button-success" onclick="addFoundStation('${s.name.replace(/'/g, "\\'")}', '${s.url_resolved}')">Add</button>
       `;
@@ -289,6 +333,12 @@ async function searchStations() {
 
 function addFoundStation(name, url) {
   if (!currentCategory) return alert("Select or create a category first!");
+  const warn = checkUrlWarning(url);
+  if (warn) {
+    if (!confirm(`⚠️ Warning: "${name}" appears to be an AAC/unsupported stream:\n${url}\n\nThis ESP32 has no PSRAM and AAC will cause it to crash and reboot.\n\nAdd anyway?`)) {
+      return;
+    }
+  }
   const maxId = data.stations.length > 0 ? Math.max(...data.stations.map(s => s[3])) + 1 : 0;
   data.stations.push([name, url, currentCategory, maxId]);
   hasChanges = true;
@@ -310,6 +360,16 @@ function getSaveText() {
 
 function Save() {
   updateDataFromInputs();
+
+  // Check for any problematic stations
+  const badStations = data.stations.filter(s => checkUrlWarning(s[1]));
+  if (badStations.length > 0) {
+    const list = badStations.map(s => `• ${s[0]}: ${s[1]}`).join("\n");
+    if (!confirm(`⚠️ WARNING: The following station(s) use AAC or unsupported streams:\n\n${list}\n\nThis ESP32 has no PSRAM and AAC streams cause out-of-memory resets!\n\nDo you want to save anyway?`)) {
+      return;
+    }
+  }
+
   const text = getSaveText();
   
   if (isLocalMode) {
